@@ -122,6 +122,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <div class="form-group" style="text-align:left;"><label>Председатель ПЦК *</label><select id="input-pck"></select></div>
         <div class="form-group" style="text-align:left;"><label>Категория *</label><select id="input-category"><option value="">— выберите —</option><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
         <button class="btn-primary" onclick="saveProfile()">Начать работу</button>
+        <p style="margin-top:16px;font-size:13px;"><a href="#" onclick="showScreen('screen-login');return false;" style="color:#4A6CF7;">Вход с другого устройства →</a></p>
     </div>
 </div>
 
@@ -202,7 +203,8 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     </div>
 
     <button class="btn-primary" onclick="sendToCloud()" id="send-btn">📤 Отправить данные</button>
-    <button class="btn-primary" onclick="downloadFromCloud()" id="download-btn" style="margin-top:10px;background:white;color:#4A6CF7;border:2px solid #e6ecff;box-shadow:none;">📥 Загрузить с облака</button>
+    <button class="btn-primary" onclick="downloadFromCloud()" id="download-btn" style="margin-top:10px;background:white;color:#4A6CF7;border:2px solid #e6ecff;box-shadow:none;">📥 Обновить статистику</button>
+    <button class="btn-primary" onclick="forceUpdate()" style="margin-top:10px;background:white;color:#8892a0;border:2px solid #eef1f5;box-shadow:none;font-size:14px;">🔄 Обновить приложение</button>
 </div>
 
 <!-- УНИВЕРСАЛЬНАЯ ФОРМА -->
@@ -224,7 +226,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <!-- ДОПОЛНИТЕЛЬНО (приказы) -->
 <div id="screen-orders" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>📎 Дополнительно</h2></div>
-    <div id="orders-content"><p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Нажмите «Загрузить с облака», чтобы получить данные из приказов.</p></div>
+    <div id="orders-content"><p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Нажмите «Обновить статистику», чтобы получить данные из приказов.</p></div>
 </div>
 
 <!-- МОДАЛ ПРОФИЛЯ -->
@@ -259,16 +261,12 @@ let profile = null;
 let currentFormType = 'event';
 let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
-let diplomasCounter = 0;
 let db = null;
 
-// ═══ ИНИЦИАЛИЗАЦИЯ ═══
 window.addEventListener('DOMContentLoaded', async () => {
-    // Заполняем список ПЦК
     const pckSelect = document.getElementById('input-pck');
     pckSelect.innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
 
-    // Проверяем, есть ли сохранённый профиль
     const savedProfile = await getSetting('profile');
     if (savedProfile) {
         profile = savedProfile;
@@ -286,13 +284,6 @@ function showScreen(id) {
 }
 function backToMain() { showScreen('screen-main'); }
 
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
-}
-
 // ═══ ПРОФИЛЬ ═══
 async function saveProfile() {
     const fio = document.getElementById('input-fio').value.trim();
@@ -307,20 +298,6 @@ async function saveProfile() {
 
     profile = { fio, login, pck, category };
     await saveSetting('profile', profile);
-
-    // Проверяем, есть ли уже такая папка
-    const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
-    try {
-        const res = await fetch(
-            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
-            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-        );
-        if (res.ok) {
-            const conf = confirm('Папка с такими ФИО и логином уже существует.\n\nЕсли это вы с другого устройства — данные будут подгружены при «Загрузить с облака».\n\nПродолжить?');
-            if (!conf) return;
-        }
-    } catch (e) {}
-
     updateProfileUI();
     showToast('Профиль сохранён');
     showScreen('screen-main');
@@ -333,10 +310,20 @@ function updateProfileUI() {
     document.getElementById('teacher-sub').textContent = `${profile.category} • ПЦК: ${profile.pck}`;
 }
 
-async function showProfileSwitcher() {
+function showProfileSwitcher() {
     document.getElementById('modal-profile').classList.add('active');
+    const list = document.getElementById('profiles-list');
+    list.innerHTML = `<div class="profile-item active"><span>${profile.fio}</span><span>✓</span></div>
+        <div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">Сбросить профиль</div>`;
 }
 function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
+async function resetProfile() {
+    if (!confirm('Сбросить профиль? Данные в телефоне сохранятся, но потребуется новый вход.')) return;
+    await saveSetting('profile', null);
+    profile = null;
+    closeModal();
+    location.reload();
+}
 
 // ═══ ЛОГИН С ДРУГОГО УСТРОЙСТВА ═══
 async function tryLogin() {
@@ -344,7 +331,6 @@ async function tryLogin() {
     const login = document.getElementById('login-login').value.trim();
     if (!fio || !login) { showToast('Введите ФИО и логин'); return; }
 
-    // Пробуем найти профиль среди ПЦК
     let found = null;
     for (const pck of PCK_LIST) {
         const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(pck)}/${slug(fio)}_${login}`;
@@ -357,14 +343,13 @@ async function tryLogin() {
         } catch (e) {}
     }
 
-    if (!found) { showToast('Профиль не найден. Проверьте ФИО и логин'); return; }
+    if (!found) { showToast('Профиль не найден'); return; }
 
-    // Скачиваем profile.json
     try {
         const profilePath = `${getYearFolder()}/Входящие/ПЦК_${slug(found.pck)}/${slug(fio)}_${login}/profile.json`;
         const data = await downloadJson(profilePath);
-        if (data) { profile = data; }
-        else { profile = found; }
+        if (data) profile = data;
+        else profile = found;
     } catch (e) { profile = found; }
 
     await saveSetting('profile', profile);
@@ -373,7 +358,7 @@ async function tryLogin() {
     showScreen('screen-main');
 }
 
-// ═══ ПЕРЕКЛЮЧЕНИЕ ФОРМ ═══
+// ═══ ФОРМЫ ═══
 function openForm(type) {
     currentFormType = type;
     document.getElementById('form-title').textContent =
@@ -408,8 +393,6 @@ function bindPhotoPreview() {
         };
     });
 }
-
-// ═══ HTML ШАБЛОНЫ ФОРМ ═══
 
 function renderEventForm() {
     return `
@@ -637,7 +620,6 @@ function onAssessmentTypeChange() {
 }
 
 // ═══ ДИНАМИЧЕСКИЕ БЛОКИ ═══
-
 function addTeacherRole() {
     teacherRolesCounter++;
     const id = teacherRolesCounter;
@@ -728,7 +710,7 @@ async function deleteRecordById(id) {
     return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; });
 }
 
-// ═══ СОХРАНЕНИЕ ЗАПИСИ ═══
+// ═══ СОХРАНЕНИЕ ═══
 async function saveRecord() {
     const type = currentFormType;
     let record = { type, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, year: getYearFolder(), createdAt: new Date().toISOString(), sent: false };
@@ -888,7 +870,7 @@ async function deleteRecord(id) {
     showLocalRecords();
 }
 
-// ═══ ДОПОЛНИТЕЛЬНО (приказы) ═══
+// ═══ ДОПОЛНИТЕЛЬНО ═══
 async function showOrders() {
     document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     showScreen('screen-orders');
@@ -908,7 +890,7 @@ async function showOrders() {
     }
 }
 
-// ═══ РАБОТА С ОБЛАКОМ ═══
+// ═══ ОБЛАКО ═══
 function getYearFolder() {
     const now = new Date();
     const y = now.getFullYear();
@@ -984,10 +966,8 @@ async function sendToCloud() {
         await ensureFolder(baseFolder);
         await ensureFolder(`${baseFolder}/photos`);
 
-        // Профиль
         await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
 
-        // Фото
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
@@ -1028,7 +1008,6 @@ async function downloadFromCloud() {
         const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
         const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
         let total = 0;
-        // Очищаем старые записи этого пользователя
         const all = await getAllRecords();
         for (const r of all.filter(r => r.teacher === profile.fio)) {
             await deleteRecordById(r.id);
@@ -1047,7 +1026,34 @@ async function downloadFromCloud() {
         }
         showToast(`📥 Загружено: ${total}`);
     } catch (e) { console.error(e); showToast('Не удалось загрузить'); }
-    btn.disabled = false; btn.textContent = '📥 Загрузить с облака';
+    btn.disabled = false; btn.textContent = '📥 Обновить статистику';
+}
+
+// ═══ ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ═══
+async function forceUpdate() {
+    if (!confirm('Обновить приложение? Данные в телефоне сохранятся.')) return;
+    showToast('⏳ Обновляем...');
+    try {
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) { await r.unregister(); }
+        }
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            for (const k of keys) { await caches.delete(k); }
+        }
+        showToast('✅ Готово. Перезагрузка...');
+        setTimeout(() => { window.location.reload(true); }, 800);
+    } catch (e) { alert('Ошибка: ' + e.message); }
+}
+
+// ═══ УВЕДОМЛЕНИЯ ═══
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 </script>
 <script>
