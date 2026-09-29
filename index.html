@@ -229,6 +229,21 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <div id="orders-content"><p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Нажмите «Обновить статистику», чтобы получить данные из приказов.</p></div>
 </div>
 
+<!-- РЕДАКТИРОВАНИЕ ПРОФИЛЯ -->
+<div id="screen-edit-profile" class="screen">
+    <div class="form-header">
+        <button class="back-btn" onclick="backToMain()">←</button>
+        <h2>✏️ Редактировать профиль</h2>
+    </div>
+    <div class="card">
+        <div class="form-group"><label>ФИО</label><input type="text" id="edit-fio"></div>
+        <div class="form-group"><label>Логин</label><input type="text" id="edit-login"><div class="hint">При изменении логина папка в облаке переименуется</div></div>
+        <div class="form-group"><label>Председатель ПЦК</label><select id="edit-pck"></select></div>
+        <div class="form-group"><label>Категория</label><select id="edit-category"><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
+    </div>
+    <button class="save-btn" onclick="saveEditedProfile()">💾 Сохранить изменения</button>
+</div>
+
 <!-- МОДАЛ ПРОФИЛЯ -->
 <div id="modal-profile" class="modal">
     <div class="modal-content">
@@ -317,6 +332,15 @@ function showProfileSwitcher() {
         <div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>
         <div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>`;
 }
+function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
+
+async function resetProfile() {
+    if (!confirm('Сбросить профиль? Данные в телефоне сохранятся, но потребуется новый вход.')) return;
+    await saveSetting('profile', null);
+    profile = null;
+    closeModal();
+    location.reload();
+}
 
 function openEditProfile() {
     closeModal();
@@ -340,7 +364,6 @@ async function saveEditedProfile() {
     const oldLogin = profile.login;
     const oldPck = profile.pck;
 
-    // Если ФИО, логин или ПЦК изменились — нужно переименовать папку в облаке
     if (oldFio !== newFio || oldLogin !== newLogin || oldPck !== newPck) {
         if (!confirm('Папка в облаке будет переименована. Данные сохранятся. Продолжить?')) return;
         showToast('⏳ Перемещение папки...');
@@ -349,9 +372,7 @@ async function saveEditedProfile() {
         const newPath = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
 
         try {
-            // Создаём новую ПЦК-папку, если её нет
             await ensureFolder(`${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}`);
-            // Перемещаем папку
             const moveRes = await fetch(
                 `https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(oldPath)}&path=${encodeURIComponent(newPath)}&overwrite=true`,
                 { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
@@ -363,11 +384,9 @@ async function saveEditedProfile() {
         } catch (e) { console.error(e); }
     }
 
-    // Обновляем профиль
     profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory };
     await saveSetting('profile', profile);
 
-    // Обновляем все локальные записи (teacher = ФИО)
     const records = await getAllRecords();
     for (const r of records) {
         if (r.teacher === oldFio) {
@@ -378,7 +397,6 @@ async function saveEditedProfile() {
         }
     }
 
-    // Отправляем обновлённый profile.json в облако
     try {
         const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
         await ensureFolder(baseFolder);
@@ -388,14 +406,6 @@ async function saveEditedProfile() {
     updateProfileUI();
     showToast('✅ Профиль обновлён');
     backToMain();
-}
-function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
-async function resetProfile() {
-    if (!confirm('Сбросить профиль? Данные в телефоне сохранятся, но потребуется новый вход.')) return;
-    await saveSetting('profile', null);
-    profile = null;
-    closeModal();
-    location.reload();
 }
 
 // ═══ ЛОГИН С ДРУГОГО УСТРОЙСТВА ═══
