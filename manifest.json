@@ -1,0 +1,11 @@
+{
+  "name": "Блокнот преподавателя",
+  "short_name": "Блокнот",
+  "description": "Сбор данных о профессиональной активности",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#4A6CF7",
+  "orientation": "portrait",
+  "lang": "ru"
+}
