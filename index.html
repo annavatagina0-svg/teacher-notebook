@@ -223,7 +223,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <div id="records-list"></div>
 </div>
 
-<!-- ДОПОЛНИТЕЛЬНО (приказы) -->
+<!-- ДОПОЛНИТЕЛЬНО -->
 <div id="screen-orders" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>📎 Дополнительно</h2></div>
     <div id="orders-content"><p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Нажмите «Обновить статистику», чтобы получить данные из приказов.</p></div>
@@ -257,6 +257,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
+const ROOT_FOLDER = 'Приложение_Блокнот';
 
 const PCK_LIST = [
     'Березина М.С.',
@@ -276,6 +277,11 @@ let currentFormType = 'event';
 let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
 let db = null;
+
+// ═══ ПУТЬ ═══
+function getUserFolder(fio, login) {
+    return `${ROOT_FOLDER}/Входящие/${slug(fio)}_${login}`;
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
@@ -310,11 +316,18 @@ async function saveProfile() {
     if (!pck) { showToast('Выберите ПЦК'); return; }
     if (!category) { showToast('Выберите категорию'); return; }
 
-    profile = { fio, login, pck, category };
+    profile = { fio, login, pck, category, year: getYear() };
     await saveSetting('profile', profile);
     updateProfileUI();
     showScreen('screen-main');
     showToast('Профиль сохранён');
+
+    // Отправляем profile.json сразу
+    try {
+        const folder = getUserFolder(profile.fio, profile.login);
+        await ensureFolder(folder);
+        await uploadToYandex(`${folder}/profile.json`, JSON.stringify(profile, null, 2));
+    } catch (e) { console.warn('Не удалось отправить профиль:', e); }
 }
 
 function updateProfileUI() {
@@ -362,29 +375,26 @@ async function saveEditedProfile() {
 
     const oldFio = profile.fio;
     const oldLogin = profile.login;
-    const oldPck = profile.pck;
 
-    if (oldFio !== newFio || oldLogin !== newLogin || oldPck !== newPck) {
+    if (oldFio !== newFio || oldLogin !== newLogin) {
         if (!confirm('Папка в облаке будет переименована. Данные сохранятся. Продолжить?')) return;
         showToast('⏳ Перемещение папки...');
 
-        const oldPath = `${getYearFolder()}/Входящие/ПЦК_${slug(oldPck)}/${slug(oldFio)}_${oldLogin}`;
-        const newPath = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
+        const oldPath = getUserFolder(oldFio, oldLogin);
+        const newPath = getUserFolder(newFio, newLogin);
 
         try {
-            await ensureFolder(`${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}`);
             const moveRes = await fetch(
                 `https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(oldPath)}&path=${encodeURIComponent(newPath)}&overwrite=true`,
                 { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
             );
             if (!moveRes.ok && moveRes.status !== 409) {
-                const err = await moveRes.json().catch(() => ({}));
-                console.warn('Не удалось переместить папку:', err);
+                console.warn('Перемещение не удалось');
             }
         } catch (e) { console.error(e); }
     }
 
-    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory };
+    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory, year: getYear() };
     await saveSetting('profile', profile);
 
     const records = await getAllRecords();
@@ -398,12 +408,9 @@ async function saveEditedProfile() {
     }
 
     try {
-        const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
-        await ensureFolder(baseFolder);
-        await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
-        await fetch(`https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(baseFolder)}`, {
-            method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` }
-        }).catch(() => {});
+        const folder = getUserFolder(newFio, newLogin);
+        await ensureFolder(folder);
+        await uploadToYandex(`${folder}/profile.json`, JSON.stringify(profile, null, 2));
     } catch (e) { console.error(e); }
 
     updateProfileUI();
@@ -411,38 +418,43 @@ async function saveEditedProfile() {
     backToMain();
 }
 
-// ═══ ЛОГИН С ДРУГОГО УСТРОЙСТВА ═══
+// ═══ ВХОД С ДРУГОГО УСТРОЙСТВА ═══
 async function tryLogin() {
     const fio = document.getElementById('login-fio').value.trim();
     const login = document.getElementById('login-login').value.trim();
     if (!fio || !login) { showToast('Введите ФИО и логин'); return; }
 
-    let found = null;
-    for (const pck of PCK_LIST) {
-        const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(pck)}/${slug(fio)}_${login}`;
-        try {
-            const res = await fetch(
-                `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
-                { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-            );
-            if (res.ok) { found = { fio, login, pck, category: '—' }; break; }
-        } catch (e) {}
-    }
+    const folderPath = getUserFolder(fio, login);
 
-    if (!found) { showToast('Профиль не найден'); return; }
-
+    // Проверяем наличие папки
+    let exists = false;
     try {
-        const profilePath = `${getYearFolder()}/Входящие/ПЦК_${slug(found.pck)}/${slug(fio)}_${login}/profile.json`;
-        const data = await downloadJson(profilePath);
-        if (data) profile = data;
-        else profile = found;
-    } catch (e) { profile = found; }
+        const res = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
+            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        );
+        exists = res.ok;
+    } catch (e) {}
+
+    if (!exists) { showToast('Профиль не найден. Проверьте ФИО и логин'); return; }
+
+    // Пробуем скачать profile.json
+    let loaded = null;
+    try {
+        loaded = await downloadJson(`${folderPath}/profile.json`);
+    } catch (e) {}
+
+    if (loaded && loaded.fio && loaded.login) {
+        profile = loaded;
+    } else {
+        profile = { fio, login, pck: '—', category: '—', year: getYear() };
+    }
 
     await saveSetting('profile', profile);
     updateProfileUI();
     showToast('Профиль загружен. Скачиваем записи...');
     showScreen('screen-main');
-    setTimeout(() => downloadFromCloud(), 600);
+    setTimeout(() => downloadFromCloud(), 800);
 }
 
 // ═══ ФОРМЫ ═══
@@ -800,7 +812,7 @@ async function deleteRecordById(id) {
 // ═══ СОХРАНЕНИЕ ═══
 async function saveRecord() {
     const type = currentFormType;
-    let record = { type, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, year: getYearFolder(), createdAt: new Date().toISOString(), sent: false };
+    let record = { type, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, year: getYear(), createdAt: new Date().toISOString(), sent: false };
 
     const getVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
     const getCheck = id => { const el = document.getElementById(id); return el ? el.checked : false; };
@@ -962,7 +974,7 @@ async function showOrders() {
     document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     showScreen('screen-orders');
     try {
-        const path = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}/orders.json`;
+        const path = `${getUserFolder(profile.fio, profile.login)}/orders.json`;
         const data = await downloadJson(path);
         if (data && data.items && data.items.length) {
             document.getElementById('orders-content').innerHTML = data.items.map(o => `
@@ -978,7 +990,7 @@ async function showOrders() {
 }
 
 // ═══ ОБЛАКО ═══
-function getYearFolder() {
+function getYear() {
     const now = new Date();
     const y = now.getFullYear();
     const m = now.getMonth() + 1;
@@ -1028,10 +1040,10 @@ async function uploadBlobToYandex(diskPath, blob) {
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
 
-// ═══ СКАЧИВАНИЕ ЧЕРЕЗ ПУБЛИЧНУЮ ССЫЛКУ (обход CORS) ═══
+// ═══ СКАЧИВАНИЕ ЧЕРЕЗ ПУБЛИЧНУЮ ССЫЛКУ ═══
 async function downloadJson(diskPath) {
     try {
-        // 1. Получаем метаданные файла (публичная ссылка)
+        // Проверяем метаданные + публикуем файл если нужно
         let infoRes = await fetch(
             `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
             { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
@@ -1039,13 +1051,13 @@ async function downloadJson(diskPath) {
         if (!infoRes.ok) return null;
         let info = await infoRes.json();
 
-        // 2. Если файл ещё не опубликован — публикуем
         if (!info.public_url) {
-            await fetch(
+            const pubRes = await fetch(
                 `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(diskPath)}`,
                 { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
             );
-            // Повторно получаем public_url
+            if (!pubRes.ok && pubRes.status !== 409) return null;
+
             infoRes = await fetch(
                 `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
                 { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
@@ -1055,7 +1067,6 @@ async function downloadJson(diskPath) {
             if (!info.public_url) return null;
         }
 
-        // 3. Скачиваем через публичный API — здесь нет CORS-блокировки
         const dlRes = await fetch(
             `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(info.public_url)}`
         );
@@ -1076,20 +1087,13 @@ async function sendToCloud() {
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
         if (allRecords.length === 0) { showToast('Нет записей'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
 
-        const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
-        await ensureFolder(getYearFolder());
-        await ensureFolder(`${getYearFolder()}/Входящие`);
-        await ensureFolder(`${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}`);
+        const baseFolder = getUserFolder(profile.fio, profile.login);
+        await ensureFolder(ROOT_FOLDER);
+        await ensureFolder(`${ROOT_FOLDER}/Входящие`);
         await ensureFolder(baseFolder);
         await ensureFolder(`${baseFolder}/photos`);
 
         await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
-
-        // Публикуем папку один раз — для чтения через публичный API
-        await fetch(
-            `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(baseFolder)}`,
-            { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-        ).catch(() => {});
 
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
@@ -1128,7 +1132,7 @@ async function downloadFromCloud() {
     const btn = document.getElementById('download-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
 
-    const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
+    const baseFolder = getUserFolder(profile.fio, profile.login);
     const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
 
     const downloaded = [];
