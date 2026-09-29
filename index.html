@@ -267,7 +267,6 @@ const PCK_LIST = [
     'Ильина К.А.',
     'Куликова К.С.',
     'Материкова А.А.',
-    'Мурашкина С.В.',
     'Трофимова А.М.',
     'Усова М.Н.'
 ];
@@ -1091,26 +1090,53 @@ async function downloadFromCloud() {
     try {
         const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
         const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
-        let total = 0;
+
+        // ШАГ 1: Сначала скачиваем всё из облака — НЕ удаляя локальные данные
+        const downloaded = [];
+        for (const [type, file] of Object.entries(files)) {
+            try {
+                const data = await downloadJson(`${baseFolder}/${file}`);
+                if (data && data.items && data.items.length > 0) {
+                    for (const item of data.items) {
+                        downloaded.push(item);
+                    }
+                }
+            } catch (e) {
+                console.warn('Не удалось скачать ' + file, e);
+            }
+        }
+
+        // ШАГ 2: Если в облаке ничего нет — НЕ удаляем локальные данные
+        if (downloaded.length === 0) {
+            showToast('В облаке нет сохранённых записей');
+            btn.disabled = false;
+            btn.textContent = '📥 Обновить статистику';
+            return;
+        }
+
+        // ШАГ 3: Только теперь — удаляем локальные и загружаем скачанные
         const all = await getAllRecords();
         for (const r of all.filter(r => r.teacher === profile.fio)) {
             await deleteRecordById(r.id);
         }
-        for (const [type, file] of Object.entries(files)) {
-            const data = await downloadJson(`${baseFolder}/${file}`);
-            if (data && data.items) {
-                for (const item of data.items) {
-                    item.teacher = profile.fio;
-                    item.sent = true;
-                    item.photoUploaded = true;
-                    await saveRecordToDB(item);
-                    total++;
-                }
-            }
+
+        for (const item of downloaded) {
+            item.teacher = profile.fio;
+            item.teacherLogin = profile.login;
+            item.pck = profile.pck;
+            item.sent = true;
+            item.photoUploaded = true;
+            await saveRecordToDB(item);
         }
-        showToast(`📥 Загружено: ${total}`);
-    } catch (e) { console.error(e); showToast('Не удалось загрузить'); }
-    btn.disabled = false; btn.textContent = '📥 Обновить статистику';
+
+        showToast(`📥 Загружено: ${downloaded.length}`);
+
+    } catch (e) {
+        console.error(e);
+        showToast('Ошибка: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.textContent = '📥 Обновить статистику';
 }
 
 // ═══ ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ═══
