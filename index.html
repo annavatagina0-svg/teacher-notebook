@@ -267,7 +267,7 @@ const PCK_LIST = [
     'Ильина К.А.',
     'Куликова К.С.',
     'Материкова А.А.',
-    'Мурашкина С.В.', 
+    'Мурашкина С.В.',
     'Трофимова А.М.',
     'Усова М.Н.'
 ];
@@ -314,8 +314,25 @@ async function saveProfile() {
     profile = { fio, login, pck, category };
     await saveSetting('profile', profile);
     updateProfileUI();
-    showToast('Профиль сохранён');
     showScreen('screen-main');
+
+    // Проверяем, есть ли уже такая папка в облаке
+    const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
+    let folderExists = false;
+    try {
+        const res = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
+            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        );
+        folderExists = res.ok;
+    } catch (e) {}
+
+    if (folderExists) {
+        showToast('Найдены данные в облаке. Загружаем...');
+        setTimeout(() => downloadFromCloud(), 600);
+    } else {
+        showToast('Профиль сохранён');
+    }
 }
 
 function updateProfileUI() {
@@ -438,8 +455,11 @@ async function tryLogin() {
 
     await saveSetting('profile', profile);
     updateProfileUI();
-    showToast('Профиль загружен');
+    showToast('Профиль загружен. Скачиваем записи...');
     showScreen('screen-main');
+
+    // Автоматически подтягиваем записи из облака
+    setTimeout(() => downloadFromCloud(), 600);
 }
 
 // ═══ ФОРМЫ ═══
@@ -1087,57 +1107,61 @@ async function sendToCloud() {
 
 async function downloadFromCloud() {
     const btn = document.getElementById('download-btn');
-    btn.disabled = true; btn.textContent = '⏳ Загрузка...';
-    try {
-        const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
-        const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
 
-        // ШАГ 1: Сначала скачиваем всё из облака — НЕ удаляя локальные данные
-        const downloaded = [];
-        for (const [type, file] of Object.entries(files)) {
-            try {
-                const data = await downloadJson(`${baseFolder}/${file}`);
-                if (data && data.items && data.items.length > 0) {
-                    for (const item of data.items) {
-                        downloaded.push(item);
-                    }
-                }
-            } catch (e) {
-                console.warn('Не удалось скачать ' + file, e);
+    const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
+    const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
+
+    const log = [];
+    log.push('🔍 Путь поиска:');
+    log.push(baseFolder);
+    log.push('');
+    log.push('👤 ФИО: "' + profile.fio + '"');
+    log.push('🔑 Логин: "' + profile.login + '"');
+    log.push('📚 ПЦК: "' + profile.pck + '"');
+    log.push('');
+
+    const downloaded = [];
+    for (const [type, file] of Object.entries(files)) {
+        try {
+            const data = await downloadJson(`${baseFolder}/${file}`);
+            if (data && data.items && data.items.length > 0) {
+                log.push('✅ ' + file + ': ' + data.items.length + ' записей');
+                for (const item of data.items) downloaded.push(item);
+            } else {
+                log.push('⚪ ' + file + ': нет данных');
             }
+        } catch (e) {
+            log.push('❌ ' + file + ': ' + e.message);
         }
-
-        // ШАГ 2: Если в облаке ничего нет — НЕ удаляем локальные данные
-        if (downloaded.length === 0) {
-            showToast('В облаке нет сохранённых записей');
-            btn.disabled = false;
-            btn.textContent = '📥 Обновить статистику';
-            return;
-        }
-
-        // ШАГ 3: Только теперь — удаляем локальные и загружаем скачанные
-        const all = await getAllRecords();
-        for (const r of all.filter(r => r.teacher === profile.fio)) {
-            await deleteRecordById(r.id);
-        }
-
-        for (const item of downloaded) {
-            item.teacher = profile.fio;
-            item.teacherLogin = profile.login;
-            item.pck = profile.pck;
-            item.sent = true;
-            item.photoUploaded = true;
-            await saveRecordToDB(item);
-        }
-
-        showToast(`📥 Загружено: ${downloaded.length}`);
-
-    } catch (e) {
-        console.error(e);
-        showToast('Ошибка: ' + e.message);
     }
-    btn.disabled = false;
-    btn.textContent = '📥 Обновить статистику';
+
+    log.push('');
+    log.push('📦 Всего скачано: ' + downloaded.length);
+
+    // Если 0 — показываем диагностику
+    if (downloaded.length === 0) {
+        alert('Не удалось найти записи.\n\n' + log.join('\n'));
+        if (btn) { btn.disabled = false; btn.textContent = '📥 Обновить статистику'; }
+        return;
+    }
+
+    const all = await getAllRecords();
+    for (const r of all.filter(r => r.teacher === profile.fio)) {
+        await deleteRecordById(r.id);
+    }
+
+    for (const item of downloaded) {
+        item.teacher = profile.fio;
+        item.teacherLogin = profile.login;
+        item.pck = profile.pck;
+        item.sent = true;
+        item.photoUploaded = true;
+        await saveRecordToDB(item);
+    }
+
+    showToast(`📥 Загружено: ${downloaded.length}`);
+    if (btn) { btn.disabled = false; btn.textContent = '📥 Обновить статистику'; }
 }
 
 // ═══ ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ═══
