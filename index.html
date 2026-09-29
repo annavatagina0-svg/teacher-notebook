@@ -257,7 +257,6 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
-const YANDEX_FOLDER = 'Приложение_Блокнот';
 
 const PCK_LIST = [
     'Березина М.С.',
@@ -315,24 +314,7 @@ async function saveProfile() {
     await saveSetting('profile', profile);
     updateProfileUI();
     showScreen('screen-main');
-
-    // Проверяем, есть ли уже такая папка в облаке
-    const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
-    let folderExists = false;
-    try {
-        const res = await fetch(
-            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
-            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-        );
-        folderExists = res.ok;
-    } catch (e) {}
-
-    if (folderExists) {
-        showToast('Найдены данные в облаке. Загружаем...');
-        setTimeout(() => downloadFromCloud(), 600);
-    } else {
-        showToast('Профиль сохранён');
-    }
+    showToast('Профиль сохранён');
 }
 
 function updateProfileUI() {
@@ -419,6 +401,9 @@ async function saveEditedProfile() {
         const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
         await ensureFolder(baseFolder);
         await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
+        await fetch(`https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(baseFolder)}`, {
+            method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` }
+        }).catch(() => {});
     } catch (e) { console.error(e); }
 
     updateProfileUI();
@@ -457,8 +442,6 @@ async function tryLogin() {
     updateProfileUI();
     showToast('Профиль загружен. Скачиваем записи...');
     showScreen('screen-main');
-
-    // Автоматически подтягиваем записи из облака
     setTimeout(() => downloadFromCloud(), 600);
 }
 
@@ -1045,15 +1028,45 @@ async function uploadBlobToYandex(diskPath, blob) {
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
 
+// ═══ СКАЧИВАНИЕ ЧЕРЕЗ ПУБЛИЧНУЮ ССЫЛКУ (обход CORS) ═══
 async function downloadJson(diskPath) {
-    const urlRes = await fetch(
-        `https://cloud-api.yandex.net/v1/disk/resources/download?path=${encodeURIComponent(diskPath)}`,
-        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-    );
-    if (!urlRes.ok) return null;
-    const data = await urlRes.json();
-    const fileRes = await fetch(data.href);
-    return await fileRes.json();
+    try {
+        // 1. Получаем метаданные файла (публичная ссылка)
+        let infoRes = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
+            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        );
+        if (!infoRes.ok) return null;
+        let info = await infoRes.json();
+
+        // 2. Если файл ещё не опубликован — публикуем
+        if (!info.public_url) {
+            await fetch(
+                `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(diskPath)}`,
+                { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+            );
+            // Повторно получаем public_url
+            infoRes = await fetch(
+                `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
+                { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+            );
+            if (!infoRes.ok) return null;
+            info = await infoRes.json();
+            if (!info.public_url) return null;
+        }
+
+        // 3. Скачиваем через публичный API — здесь нет CORS-блокировки
+        const dlRes = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(info.public_url)}`
+        );
+        if (!dlRes.ok) return null;
+        const dlData = await dlRes.json();
+        const fileRes = await fetch(dlData.href);
+        return await fileRes.json();
+    } catch (e) {
+        console.error('downloadJson:', e);
+        return null;
+    }
 }
 
 async function sendToCloud() {
@@ -1071,6 +1084,12 @@ async function sendToCloud() {
         await ensureFolder(`${baseFolder}/photos`);
 
         await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
+
+        // Публикуем папку один раз — для чтения через публичный API
+        await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(baseFolder)}`,
+            { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        ).catch(() => {});
 
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
@@ -1112,36 +1131,20 @@ async function downloadFromCloud() {
     const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
     const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
 
-    const log = [];
-    log.push('🔍 Путь поиска:');
-    log.push(baseFolder);
-    log.push('');
-    log.push('👤 ФИО: "' + profile.fio + '"');
-    log.push('🔑 Логин: "' + profile.login + '"');
-    log.push('📚 ПЦК: "' + profile.pck + '"');
-    log.push('');
-
     const downloaded = [];
     for (const [type, file] of Object.entries(files)) {
         try {
             const data = await downloadJson(`${baseFolder}/${file}`);
             if (data && data.items && data.items.length > 0) {
-                log.push('✅ ' + file + ': ' + data.items.length + ' записей');
                 for (const item of data.items) downloaded.push(item);
-            } else {
-                log.push('⚪ ' + file + ': нет данных');
             }
         } catch (e) {
-            log.push('❌ ' + file + ': ' + e.message);
+            console.warn('Не удалось скачать ' + file, e);
         }
     }
 
-    log.push('');
-    log.push('📦 Всего скачано: ' + downloaded.length);
-
-    // Если 0 — показываем диагностику
     if (downloaded.length === 0) {
-        alert('Не удалось найти записи.\n\n' + log.join('\n'));
+        showToast('В облаке нет сохранённых записей');
         if (btn) { btn.disabled = false; btn.textContent = '📥 Обновить статистику'; }
         return;
     }
