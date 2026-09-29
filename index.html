@@ -312,8 +312,82 @@ function updateProfileUI() {
 function showProfileSwitcher() {
     document.getElementById('modal-profile').classList.add('active');
     const list = document.getElementById('profiles-list');
-    list.innerHTML = `<div class="profile-item active"><span>${profile.fio}</span><span>✓</span></div>
-        <div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">Сбросить профиль</div>`;
+    list.innerHTML = `
+        <div class="profile-item active"><span>${profile.fio}</span><span>✓</span></div>
+        <div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>
+        <div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>`;
+}
+
+function openEditProfile() {
+    closeModal();
+    document.getElementById('edit-fio').value = profile.fio;
+    document.getElementById('edit-login').value = profile.login;
+    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => `<option value="${p}" ${p === profile.pck ? 'selected' : ''}>${p}</option>`).join('');
+    document.getElementById('edit-category').value = profile.category;
+    showScreen('screen-edit-profile');
+}
+
+async function saveEditedProfile() {
+    const newFio = document.getElementById('edit-fio').value.trim();
+    const newLogin = document.getElementById('edit-login').value.trim();
+    const newPck = document.getElementById('edit-pck').value;
+    const newCategory = document.getElementById('edit-category').value;
+
+    if (!newFio || !newLogin || !newPck || !newCategory) { showToast('Заполните все поля'); return; }
+    if (!/^[a-zA-Z0-9_.-]+$/.test(newLogin) || newLogin.length < 3) { showToast('Логин: латиница, 3+ символа'); return; }
+
+    const oldFio = profile.fio;
+    const oldLogin = profile.login;
+    const oldPck = profile.pck;
+
+    // Если ФИО, логин или ПЦК изменились — нужно переименовать папку в облаке
+    if (oldFio !== newFio || oldLogin !== newLogin || oldPck !== newPck) {
+        if (!confirm('Папка в облаке будет переименована. Данные сохранятся. Продолжить?')) return;
+        showToast('⏳ Перемещение папки...');
+
+        const oldPath = `${getYearFolder()}/Входящие/ПЦК_${slug(oldPck)}/${slug(oldFio)}_${oldLogin}`;
+        const newPath = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
+
+        try {
+            // Создаём новую ПЦК-папку, если её нет
+            await ensureFolder(`${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}`);
+            // Перемещаем папку
+            const moveRes = await fetch(
+                `https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(oldPath)}&path=${encodeURIComponent(newPath)}&overwrite=true`,
+                { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+            );
+            if (!moveRes.ok && moveRes.status !== 409) {
+                const err = await moveRes.json().catch(() => ({}));
+                console.warn('Не удалось переместить папку:', err);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // Обновляем профиль
+    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory };
+    await saveSetting('profile', profile);
+
+    // Обновляем все локальные записи (teacher = ФИО)
+    const records = await getAllRecords();
+    for (const r of records) {
+        if (r.teacher === oldFio) {
+            r.teacher = newFio;
+            r.teacherLogin = newLogin;
+            r.pck = newPck;
+            await updateRecord(r);
+        }
+    }
+
+    // Отправляем обновлённый profile.json в облако
+    try {
+        const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(newPck)}/${slug(newFio)}_${newLogin}`;
+        await ensureFolder(baseFolder);
+        await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
+    } catch (e) { console.error(e); }
+
+    updateProfileUI();
+    showToast('✅ Профиль обновлён');
+    backToMain();
 }
 function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
 async function resetProfile() {
