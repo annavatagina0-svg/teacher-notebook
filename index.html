@@ -4,248 +4,137 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#4A6CF7">
-<title>Блокнот преподавателя</title>
+<title>Блокнот педагога</title>
 <link rel="manifest" href="manifest.json">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f5f7fa; color: #2c3e50; min-height: 100vh; -webkit-font-smoothing: antialiased;
-}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2c3e50; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 .screen { display: none; padding: 16px; padding-bottom: 40px; min-height: 100vh; max-width: 600px; margin: 0 auto; }
 .screen.active { display: block; }
 .hidden { display: none !important; }
 
-.welcome-box {
-    margin-top: 20vh; text-align: center; padding: 32px 24px;
-    background: white; border-radius: 24px; box-shadow: 0 8px 32px rgba(74, 108, 247, 0.08);
-}
-.logo { font-size: 56px; margin-bottom: 16px; }
+.welcome-box { margin-top: 10vh; text-align: center; padding: 28px 22px; background: white; border-radius: 24px; box-shadow: 0 8px 32px rgba(74,108,247,0.08); }
+.logo { font-size: 52px; margin-bottom: 12px; }
 .welcome-box h1 { font-size: 22px; margin-bottom: 8px; font-weight: 700; }
-.welcome-box p { color: #8892a0; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+.welcome-box p { color: #8892a0; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
 
-.profile-card {
-    display: flex; align-items: center; gap: 12px;
-    background: white; padding: 14px 16px; border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 20px;
-    cursor: pointer; transition: 0.2s;
-}
+.profile-card { display: flex; align-items: center; gap: 12px; background: white; padding: 14px 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; cursor: pointer; transition: 0.2s; }
 .profile-card:active { transform: scale(0.98); }
-.avatar {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: linear-gradient(135deg, #4A6CF7, #6B8AFF);
-    color: white; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 18px; flex-shrink: 0;
-}
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
 .profile-name { font-size: 15px; font-weight: 600; }
 .profile-hint { font-size: 12px; color: #8892a0; margin-top: 2px; }
 
 h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .subtitle { font-size: 14px; color: #8892a0; margin-bottom: 20px; }
 
-.menu-btn {
-    display: flex; align-items: center; gap: 14px;
-    width: 100%; background: white; border: none;
-    padding: 18px 16px; border-radius: 16px; margin-bottom: 10px;
-    cursor: pointer; text-align: left;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s; font-family: inherit;
-}
+.menu-btn { display: flex; align-items: center; gap: 14px; width: 100%; background: white; border: none; padding: 16px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s; font-family: inherit; }
 .menu-btn:active { transform: scale(0.98); background: #f8faff; }
-.menu-icon { font-size: 28px; }
+.menu-icon { font-size: 26px; }
 .menu-text { flex: 1; }
-.menu-title { font-size: 16px; font-weight: 600; color: #2c3e50; }
-.menu-sub { font-size: 12px; color: #8892a0; margin-top: 2px; }
+.menu-title { font-size: 15px; font-weight: 600; color: #2c3e50; }
+.menu-sub { font-size: 12px; color: #8892a0; margin-top: 2px; line-height: 1.3; }
 .menu-arrow { color: #c5cbd3; font-size: 20px; }
 
 .row { display: flex; gap: 10px; margin-bottom: 12px; }
-.btn {
-    flex: 1; padding: 14px; border-radius: 14px;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    border: 2px solid #e6ecff; background: white; color: #4A6CF7;
-    font-family: inherit; transition: 0.2s;
-}
+.btn { flex: 1; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid #e6ecff; background: white; color: #4A6CF7; font-family: inherit; transition: 0.2s; }
 .btn:active { transform: scale(0.98); background: #f8faff; }
-.btn-primary {
-    width: 100%; padding: 16px; border-radius: 14px;
-    background: #4A6CF7; color: white; border: none;
-    font-size: 16px; font-weight: 600; cursor: pointer;
-    font-family: inherit; box-shadow: 0 4px 16px rgba(74, 108, 247, 0.3); transition: 0.2s;
-}
+.btn-primary { width: 100%; padding: 16px; border-radius: 14px; background: #4A6CF7; color: white; border: none; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); transition: 0.2s; }
 .btn-primary:active { transform: scale(0.98); }
 .btn-primary:disabled { background: #c5cbd3; box-shadow: none; cursor: not-allowed; }
 
 .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.back-btn {
-    width: 40px; height: 40px; border-radius: 12px;
-    background: white; border: none; font-size: 20px;
-    color: #4A6CF7; cursor: pointer; flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
+.back-btn { width: 40px; height: 40px; border-radius: 12px; background: white; border: none; font-size: 20px; color: #4A6CF7; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .back-btn:active { transform: scale(0.95); }
 .form-header h2 { font-size: 20px; font-weight: 700; }
 
-.tabs {
-    display: flex; gap: 8px; background: white; padding: 6px;
-    border-radius: 14px; margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-.tab {
-    flex: 1; padding: 12px; border: none; background: transparent;
-    border-radius: 10px; font-size: 20px; cursor: pointer; transition: 0.2s;
-}
-.tab.active { background: #4A6CF7; color: white; }
-
-.card {
-    background: white; border-radius: 16px; padding: 20px;
-    margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
+.card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
 
 .form-group { margin-bottom: 14px; }
 .form-group:last-child { margin-bottom: 0; }
 label { display: block; font-size: 13px; color: #6b7684; margin-bottom: 6px; font-weight: 500; }
-input[type="text"], input[type="number"], input[type="date"], select, textarea {
-    width: 100%; padding: 12px 14px; border: 1.5px solid #e6ecff;
-    border-radius: 12px; font-size: 15px; background: #fafbfe;
-    font-family: inherit; color: #2c3e50; transition: 0.2s;
-}
-input:focus, select:focus, textarea:focus {
-    outline: none; border-color: #4A6CF7; background: white;
-    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.08);
-}
+input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 12px 14px; border: 1.5px solid #e6ecff; border-radius: 12px; font-size: 15px; background: #fafbfe; font-family: inherit; color: #2c3e50; transition: 0.2s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #4A6CF7; background: white; box-shadow: 0 0 0 3px rgba(74,108,247,0.08); }
 textarea { min-height: 60px; resize: vertical; }
 .hint { font-size: 12px; color: #8892a0; margin-top: 4px; }
 
 .toggle-group { display: flex; flex-wrap: wrap; gap: 8px; }
-.toggle {
-    display: flex; align-items: center; gap: 8px;
-    background: #fafbfe; border: 1.5px solid #e6ecff;
-    padding: 12px 16px; border-radius: 12px;
-    font-size: 14px; cursor: pointer; flex: 1;
-    font-weight: 500; transition: 0.2s;
-}
+.toggle { display: flex; align-items: center; gap: 8px; background: #fafbfe; border: 1.5px solid #e6ecff; padding: 12px 16px; border-radius: 12px; font-size: 14px; cursor: pointer; flex: 1; font-weight: 500; transition: 0.2s; }
 .toggle input { width: auto; margin: 0; }
 .toggle:has(input:checked) { background: #eef2ff; border-color: #4A6CF7; color: #4A6CF7; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #fafbfe; border: 1.5px solid #e6ecff;
-    padding: 8px 14px; border-radius: 20px;
-    font-size: 13px; cursor: pointer; transition: 0.2s;
-    font-weight: 500; color: #6b7684;
-}
+.chip { display: inline-flex; align-items: center; gap: 6px; background: #fafbfe; border: 1.5px solid #e6ecff; padding: 8px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: 0.2s; font-weight: 500; color: #6b7684; }
 .chip input { display: none; }
 .chip:has(input:checked) { background: #4A6CF7; color: white; border-color: #4A6CF7; }
 
-.students-block {
-    background: #fafbfe; padding: 16px; border-radius: 12px;
-    margin-bottom: 12px; border: 1.5px solid #e6ecff;
-}
-.students-block-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #4A6CF7;
-}
-.students-block-header button {
-    background: none; border: none; color: #e74c3c;
-    font-size: 20px; cursor: pointer; padding: 0 4px;
-}
-.add-btn {
-    width: 100%; background: white; border: 2px dashed #4A6CF7;
-    color: #4A6CF7; padding: 12px; border-radius: 12px;
-    font-size: 14px; cursor: pointer; font-weight: 600; transition: 0.2s;
-}
+.sub-block { background: #fafbfe; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1.5px solid #e6ecff; }
+.sub-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #4A6CF7; }
+.sub-block-header button { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 0 4px; }
+
+.add-btn { width: 100%; background: white; border: 2px dashed #4A6CF7; color: #4A6CF7; padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: 600; transition: 0.2s; margin-top: 8px; }
 .add-btn:active { background: #f0f4ff; }
 
 .grade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.photo-preview {
-    max-width: 100%; max-height: 200px; margin-top: 12px;
-    border-radius: 12px; display: none;
-}
-input[type="file"] {
-    width: 100%; padding: 10px; font-size: 14px;
-    background: #fafbfe; border: 1.5px dashed #e6ecff;
-    border-radius: 12px; cursor: pointer;
-}
+.photo-preview { max-width: 100%; max-height: 200px; margin-top: 12px; border-radius: 12px; display: none; }
+input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #fafbfe; border: 1.5px dashed #e6ecff; border-radius: 12px; cursor: pointer; }
 
-.save-btn {
-    width: 100%; background: #4A6CF7; color: white; border: none;
-    padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
-    cursor: pointer; margin-top: 16px;
-    box-shadow: 0 4px 16px rgba(74, 108, 247, 0.3); transition: 0.2s;
-}
+.save-btn { width: 100%; background: #4A6CF7; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; box-shadow: 0 4px 16px rgba(74,108,247,0.3); transition: 0.2s; }
 .save-btn:active { transform: scale(0.98); }
 
-.record {
-    background: white; padding: 16px; border-radius: 14px;
-    margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    border-left: 4px solid #4A6CF7;
-}
-.record-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: 8px; margin-bottom: 4px;
-}
+.record { background: white; padding: 16px; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #4A6CF7; }
+.record-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
 .record-header h3 { flex: 1; font-size: 15px; margin-bottom: 0; }
-.record-delete {
-    background: none; border: none; font-size: 18px;
-    cursor: pointer; padding: 4px 8px; border-radius: 8px;
-    opacity: 0.5; transition: 0.2s; flex-shrink: 0;
-}
+.record-delete { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 8px; opacity: 0.5; transition: 0.2s; flex-shrink: 0; }
 .record-delete:active { opacity: 1; background: #fef2f2; }
+.record-lock { font-size: 16px; padding: 4px 8px; opacity: 0.4; }
 .record p { font-size: 13px; color: #6b7684; margin: 3px 0; line-height: 1.4; }
 .record .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
-.record .tag {
-    background: #eef2ff; color: #4A6CF7; padding: 3px 10px;
-    border-radius: 12px; font-size: 11px; font-weight: 500;
-}
+.record .tag { background: #eef2ff; color: #4A6CF7; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.record .tag.prof { background: #fff4e6; color: #d97706; }
 
-.modal {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5); z-index: 1000;
-    align-items: center; justify-content: center; padding: 20px;
-}
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal.active { display: flex; }
-.modal-content {
-    background: white; padding: 24px; border-radius: 20px;
-    width: 100%; max-width: 400px;
-}
+.modal-content { background: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
 .modal-content h3 { font-size: 18px; margin-bottom: 16px; }
-.profile-item {
-    padding: 12px 16px; border-radius: 10px; background: #fafbfe;
-    margin-bottom: 8px; cursor: pointer; font-size: 14px;
-    display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
-}
+.profile-item { padding: 12px 16px; border-radius: 10px; background: #fafbfe; margin-bottom: 8px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
 .profile-item.active { background: #eef2ff; color: #4A6CF7; font-weight: 600; }
 .modal-buttons { display: flex; gap: 8px; margin-top: 16px; }
-.btn-cancel, .btn-ok {
-    flex: 1; padding: 12px; border-radius: 10px;
-    font-size: 14px; font-weight: 600; cursor: pointer; border: none;
-}
+.btn-cancel, .btn-ok { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
 .btn-cancel { background: #f0f3f7; color: #6b7684; }
 .btn-ok { background: #4A6CF7; color: white; }
 
-.toast {
-    position: fixed; bottom: 30px; left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: #2c3e50; color: white; padding: 14px 24px;
-    border-radius: 12px; font-size: 14px; opacity: 0;
-    transition: 0.3s; z-index: 2000; max-width: 90%;
-    text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2c3e50; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 2000; max-width: 90%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- ПРИВЕТСТВИЕ -->
+<!-- ПРИВЕТСТВИЕ / АНКЕТА -->
 <div id="screen-welcome" class="screen active">
     <div class="welcome-box">
         <div class="logo">📓</div>
-        <h1>Блокнот преподавателя</h1>
-        <p>Введите ваше ФИО — оно будет подставляться автоматически</p>
-        <input type="text" id="input-teacher-name" placeholder="Иванов Иван Иванович" style="width:100%;padding:14px;border:1.5px solid #e6ecff;border-radius:12px;font-size:15px;margin-bottom:12px;background:#fafbfe;">
-        <button class="btn-primary" onclick="saveTeacherName()">Начать работу</button>
+        <h1>Блокнот педагога</h1>
+        <p>Заполните профиль — он сохранится на этом устройстве</p>
+        <div class="form-group" style="text-align:left;"><label>ФИО *</label><input type="text" id="input-fio" placeholder="Иванов Иван Иванович"></div>
+        <div class="form-group" style="text-align:left;"><label>Логин *</label><input type="text" id="input-login" placeholder="ivanov (латиница, 3+ символа)"><div class="hint">Придумайте сами. Запомните — понадобится для входа с другого устройства.</div></div>
+        <div class="form-group" style="text-align:left;"><label>Председатель ПЦК *</label><select id="input-pck"></select></div>
+        <div class="form-group" style="text-align:left;"><label>Категория *</label><select id="input-category"><option value="">— выберите —</option><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
+        <button class="btn-primary" onclick="saveProfile()">Начать работу</button>
+    </div>
+</div>
+
+<!-- ВХОД С ДРУГОГО УСТРОЙСТВА -->
+<div id="screen-login" class="screen">
+    <div class="welcome-box">
+        <div class="logo">🔄</div>
+        <h1>Вход с другого устройства</h1>
+        <p>Введите те же ФИО и логин, что на первом устройстве</p>
+        <div class="form-group" style="text-align:left;"><label>ФИО</label><input type="text" id="login-fio"></div>
+        <div class="form-group" style="text-align:left;"><label>Логин</label><input type="text" id="login-login"></div>
+        <button class="btn-primary" onclick="tryLogin()">Войти и загрузить данные</button>
+        <p style="margin-top:16px;font-size:13px;"><a href="#" onclick="showScreen('screen-welcome');return false;" style="color:#4A6CF7;">← Новый профиль</a></p>
     </div>
 </div>
 
@@ -255,18 +144,18 @@ input[type="file"] {
         <div class="avatar" id="avatar">?</div>
         <div>
             <div class="profile-name" id="teacher-display">—</div>
-            <div class="profile-hint">нажмите, чтобы сменить</div>
+            <div class="profile-hint" id="teacher-sub">—</div>
         </div>
     </div>
 
-    <h1>📓 Блокнот</h1>
-    <p class="subtitle">Выберите, что заполнить</p>
+    <h1>📓 Блокнот педагога</h1>
+    <p class="subtitle">Выберите раздел</p>
 
     <button class="menu-btn" onclick="openForm('event')">
         <span class="menu-icon">🏆</span>
         <div class="menu-text">
-            <div class="menu-title">Мероприятие</div>
-            <div class="menu-sub">Конкурсы, олимпиады, фестивали</div>
+            <div class="menu-title">События</div>
+            <div class="menu-sub">Конкурсы, олимпиады, фестивали, Абилимпикс</div>
         </div>
         <span class="menu-arrow">→</span>
     </button>
@@ -275,219 +164,67 @@ input[type="file"] {
         <span class="menu-icon">🎓</span>
         <div class="menu-text">
             <div class="menu-title">Обучение</div>
-            <div class="menu-sub">КПК, переподготовка, стажировки</div>
+            <div class="menu-sub">КПК, стажировки, переподготовка</div>
         </div>
         <span class="menu-arrow">→</span>
     </button>
 
     <button class="menu-btn" onclick="openForm('assessment')">
-        <span class="menu-icon">📝</span>
+        <span class="menu-icon">📊</span>
         <div class="menu-text">
-            <div class="menu-title">Оценки</div>
-            <div class="menu-sub">Контрольные точки, проекты</div>
+            <div class="menu-title">Контроль</div>
+            <div class="menu-sub">Входной, срезовый, итоговый, проекты</div>
+        </div>
+        <span class="menu-arrow">→</span>
+    </button>
+
+    <button class="menu-btn" onclick="openForm('methodical')">
+        <span class="menu-icon">📚</span>
+        <div class="menu-text">
+            <div class="menu-title">Методическая работа</div>
+            <div class="menu-sub">УМК, программы, публикации</div>
+        </div>
+        <span class="menu-arrow">→</span>
+    </button>
+
+    <button class="menu-btn" onclick="openForm('activity')">
+        <span class="menu-icon">🗣</span>
+        <div class="menu-text">
+            <div class="menu-title">Трансляция и активность</div>
+            <div class="menu-sub">Уроки, выступления, выходы, профориентация</div>
         </div>
         <span class="menu-arrow">→</span>
     </button>
 
     <div class="row" style="margin-top:20px;">
-        <button class="btn" onclick="showStats()">📊 Статистика</button>
+        <button class="btn" onclick="showOrders()">📎 Дополнительно</button>
         <button class="btn" onclick="showLocalRecords()">📋 Мои записи</button>
     </div>
 
     <button class="btn-primary" onclick="sendToCloud()" id="send-btn">📤 Отправить данные</button>
+    <button class="btn-primary" onclick="downloadFromCloud()" id="download-btn" style="margin-top:10px;background:white;color:#4A6CF7;border:2px solid #e6ecff;box-shadow:none;">📥 Загрузить с облака</button>
 </div>
 
-<!-- ФОРМА -->
+<!-- УНИВЕРСАЛЬНАЯ ФОРМА -->
 <div id="screen-form" class="screen">
     <div class="form-header">
         <button class="back-btn" onclick="backToMain()">←</button>
         <h2 id="form-title">Заполнение</h2>
     </div>
-
-    <div class="tabs">
-        <button class="tab active" data-type="event" onclick="switchTypeTab('event')">🏆</button>
-        <button class="tab" data-type="training" onclick="switchTypeTab('training')">🎓</button>
-        <button class="tab" data-type="assessment" onclick="switchTypeTab('assessment')">📝</button>
-    </div>
-
-    <!-- МЕРОПРИЯТИЕ -->
-    <div id="block-event" class="type-block">
-        <div class="card">
-            <h3>Основное</h3>
-            <div class="form-group"><label>Название *</label><input type="text" id="event-name" placeholder="Хакатон 2026"></div>
-            <div class="form-group"><label>Тип мероприятия</label>
-                <select id="event-type" onchange="onEventTypeChange()">
-                    <option value="конкурс">Конкурс</option>
-                    <option value="олимпиада">Олимпиада</option>
-                    <option value="конференция">Конференция</option>
-                    <option value="форум">Форум</option>
-                    <option value="семинар">Семинар</option>
-                    <option value="соревнование">Соревнование</option>
-                    <option value="круглый стол">Круглый стол</option>
-                    <option value="фестиваль">Фестиваль</option>
-                    <option value="акция/диктант">Акция / Диктант</option>
-                    <option value="другое">Другое</option>
-                </select>
-            </div>
-            <div class="form-group hidden" id="event-type-custom-group">
-                <label>Уточните тип</label>
-                <input type="text" id="event-type-custom" placeholder="Например: мастер-класс">
-            </div>
-            <div class="form-group"><label>Уровень</label>
-                <select id="event-level">
-                    <option value="образовательная организация">Образовательная организация</option>
-                    <option value="муниципальный">Муниципальный</option>
-                    <option value="областной">Областной</option>
-                    <option value="региональный">Региональный</option>
-                    <option value="межрегиональный">Межрегиональный</option>
-                    <option value="всероссийский">Всероссийский</option>
-                    <option value="международный">Международный</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Вид участия</label>
-                <select id="event-participation">
-                    <option value="очно">Очно</option>
-                    <option value="дистанционно">Дистанционно</option>
-                    <option value="заочно">Заочно</option>
-                    <option value="интернет-конкурс">Интернет-конкурс</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Место проведения</label><input type="text" id="event-place"></div>
-            <div class="form-group"><label>Дата</label><input type="date" id="event-date"></div>
-        </div>
-
-        <div class="card">
-            <h3>Участники</h3>
-            <div class="toggle-group">
-                <label class="toggle"><input type="checkbox" id="event-has-teacher" onchange="toggleTeacherBlock()"> Преподаватель</label>
-                <label class="toggle"><input type="checkbox" id="event-has-students" onchange="toggleStudentsBlock()"> Студенты</label>
-            </div>
-        </div>
-
-        <div id="block-teacher-in-event" class="card hidden">
-            <h3>Моё участие</h3>
-            <div class="form-group"><label>Роль</label>
-                <div class="chips">
-                    <label class="chip"><input type="checkbox" value="жюри" class="event-teacher-role"> Жюри</label>
-                    <label class="chip"><input type="checkbox" value="организатор" class="event-teacher-role"> Организатор</label>
-                    <label class="chip"><input type="checkbox" value="эксперт/судья" class="event-teacher-role"> Эксперт/судья</label>
-                    <label class="chip"><input type="checkbox" value="слушатель" class="event-teacher-role"> Слушатель</label>
-                    <label class="chip"><input type="checkbox" value="спикер/выступающий" class="event-teacher-role"> Спикер/выступающий</label>
-                    <label class="chip"><input type="checkbox" value="участник/конкурсант" class="event-teacher-role"> Участник/конкурсант</label>
-                    <label class="chip"><input type="checkbox" value="рабочая группа" class="event-teacher-role"> Рабочая группа</label>
-                </div>
-            </div>
-            <div class="form-group"><label>Итог (документ)</label>
-                <div class="chips">
-                    <label class="chip"><input type="checkbox" value="сертификат участника" class="event-teacher-result"> Сертификат</label>
-                    <label class="chip"><input type="checkbox" value="благодарность" class="event-teacher-result"> Благодарность</label>
-                    <label class="chip"><input type="checkbox" value="диплом победителя" class="event-teacher-result"> Диплом победителя</label>
-                </div>
-            </div>
-            <div class="form-group"><label>Победитель (если есть)</label>
-                <select id="event-teacher-prize">
-                    <option value="">— нет —</option>
-                    <option value="1 место">1 место</option>
-                    <option value="2 место">2 место</option>
-                    <option value="3 место">3 место</option>
-                    <option value="гран-при">Гран-при</option>
-                    <option value="приз зрительских симпатий">Приз зрительских симпатий</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="block-students-in-event" class="card hidden">
-            <h3>Студенты</h3>
-            <div id="students-container"></div>
-            <button type="button" class="add-btn" onclick="addStudentsBlock()">+ Добавить ещё группу</button>
-        </div>
-
-        <div class="card">
-            <h3>Фото подтверждения</h3>
-            <input type="file" id="event-photo" accept="image/*">
-            <img id="event-photo-preview" class="photo-preview">
-        </div>
-    </div>
-
-    <!-- ОБУЧЕНИЕ -->
-    <div id="block-training" class="type-block hidden">
-        <div class="card">
-            <h3>Обучение</h3>
-            <div class="form-group"><label>Вид обучения</label>
-                <select id="training-type">
-                    <option value="КПК">КПК</option>
-                    <option value="стажировка">Стажировка</option>
-                    <option value="переподготовка">Переподготовка</option>
-                    <option value="высшее образование">Высшее образование</option>
-                    <option value="магистратура">Магистратура</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Название программы *</label><input type="text" id="training-name"></div>
-            <div class="form-group"><label>Объём (часы)</label><input type="number" id="training-hours"></div>
-            <div class="form-group"><label>Место проведения</label><input type="text" id="training-place"></div>
-            <div class="form-group"><label>Дата получения документа</label><input type="date" id="training-date"></div>
-        </div>
-        <div class="card">
-            <h3>Фото документа</h3>
-            <input type="file" id="training-photo" accept="image/*">
-            <img id="training-photo-preview" class="photo-preview">
-        </div>
-    </div>
-
-    <!-- ОЦЕНКИ -->
-    <div id="block-assessment" class="type-block hidden">
-        <div class="card">
-            <h3>Оценочное мероприятие</h3>
-            <div class="form-group"><label>Тип</label>
-                <select id="assessment-type" onchange="onAssessmentTypeChange()">
-                    <option value="входной контроль">Входной контроль</option>
-                    <option value="срезовый к/р">Срезовый к/р</option>
-                    <option value="итоговая оценка">Итоговая оценка</option>
-                    <option value="проектная деятельность">Проектная деятельность</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Группа</label><input type="text" id="assessment-group" placeholder="АЭ-11"></div>
-            <div class="form-group"><label>Предмет/МДК</label><input type="text" id="assessment-subject"></div>
-            <div class="form-group"><label>Всего в группе</label><input type="number" id="assessment-total"></div>
-            <div class="form-group"><label>Отсутствовали</label><input type="number" id="assessment-absent"></div>
-            <div class="form-group"><label>Дата</label><input type="date" id="assessment-date"></div>
-        </div>
-
-        <div id="assessment-grades-block" class="card">
-            <h3>Результаты</h3>
-            <div class="grade-grid">
-                <div class="form-group"><label>"5"</label><input type="number" id="assessment-5"></div>
-                <div class="form-group"><label>"4"</label><input type="number" id="assessment-4"></div>
-                <div class="form-group"><label>"3"</label><input type="number" id="assessment-3"></div>
-                <div class="form-group"><label>"2"</label><input type="number" id="assessment-2"></div>
-            </div>
-        </div>
-
-        <div id="assessment-project-block" class="card hidden">
-            <h3>Проектная деятельность</h3>
-            <div class="form-group"><label>Сколько человек участвуют</label><input type="number" id="assessment-project"></div>
-        </div>
-    </div>
-
+    <div id="form-content"></div>
     <button class="save-btn" onclick="saveRecord()">💾 Сохранить</button>
 </div>
 
 <!-- ЗАПИСИ -->
 <div id="screen-records" class="screen">
-    <div class="form-header">
-        <button class="back-btn" onclick="backToMain()">←</button>
-        <h2>Мои записи</h2>
-    </div>
+    <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>Мои записи</h2></div>
     <div id="records-list"></div>
 </div>
 
-<!-- СТАТИСТИКА -->
-<div id="screen-stats" class="screen">
-    <div class="form-header">
-        <button class="back-btn" onclick="backToMain()">←</button>
-        <h2>Статистика</h2>
-    </div>
-    <div id="stats-content"></div>
+<!-- ДОПОЛНИТЕЛЬНО (приказы) -->
+<div id="screen-orders" class="screen">
+    <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>📎 Дополнительно</h2></div>
+    <div id="orders-content"><p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Нажмите «Загрузить с облака», чтобы получить данные из приказов.</p></div>
 </div>
 
 <!-- МОДАЛ ПРОФИЛЯ -->
@@ -495,11 +232,7 @@ input[type="file"] {
     <div class="modal-content">
         <h3>Профиль</h3>
         <div id="profiles-list"></div>
-        <input type="text" id="new-profile-name" placeholder="Новое ФИО" style="width:100%;padding:12px;border:1.5px solid #e6ecff;border-radius:12px;font-size:15px;background:#fafbfe;margin-top:8px;">
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeModal()">Отмена</button>
-            <button class="btn-ok" onclick="addProfile()">Добавить</button>
-        </div>
+        <div class="modal-buttons"><button class="btn-cancel" onclick="closeModal()">Отмена</button></div>
     </div>
 </div>
 
@@ -509,17 +242,40 @@ input[type="file"] {
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const YANDEX_FOLDER = 'Приложение_Блокнот';
 
-let currentTeacher = '';
-let studentsBlockCounter = 0;
+const PCK_LIST = [
+    'Березина М.С.',
+    'Бочкарев Ю.Т.',
+    'Горошко В.Э.',
+    'Ильина К.А.',
+    'Лакеева Н.В.',
+    'Материкова А.А.',
+    'Скворцова Н.Н.',
+    'Смоленская И.В.',
+    'Трофимова А.М.',
+    'Усова М.Н.'
+];
 
+let profile = null;
+let currentFormType = 'event';
+let studentsGroupCounter = 0;
+let teacherRolesCounter = 0;
+let diplomasCounter = 0;
+let db = null;
+
+// ═══ ИНИЦИАЛИЗАЦИЯ ═══
 window.addEventListener('DOMContentLoaded', async () => {
-    const profiles = await getSetting('profiles') || [];
-    const current = await getSetting('current_profile');
-    if (profiles.length === 0) showScreen('screen-welcome');
-    else {
-        currentTeacher = current || profiles[0];
+    // Заполняем список ПЦК
+    const pckSelect = document.getElementById('input-pck');
+    pckSelect.innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
+
+    // Проверяем, есть ли сохранённый профиль
+    const savedProfile = await getSetting('profile');
+    if (savedProfile) {
+        profile = savedProfile;
         updateProfileUI();
         showScreen('screen-main');
+    } else {
+        showScreen('screen-welcome');
     }
 });
 
@@ -530,128 +286,412 @@ function showScreen(id) {
 }
 function backToMain() { showScreen('screen-main'); }
 
-async function saveTeacherName() {
-    const name = document.getElementById('input-teacher-name').value.trim();
-    if (!name) { showToast('Введите ФИО'); return; }
-    const profiles = await getSetting('profiles') || [];
-    if (!profiles.includes(name)) profiles.push(name);
-    await saveSetting('profiles', profiles);
-    await saveSetting('current_profile', name);
-    currentTeacher = name;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══ ПРОФИЛЬ ═══
+async function saveProfile() {
+    const fio = document.getElementById('input-fio').value.trim();
+    const login = document.getElementById('input-login').value.trim();
+    const pck = document.getElementById('input-pck').value;
+    const category = document.getElementById('input-category').value;
+
+    if (!fio) { showToast('Введите ФИО'); return; }
+    if (!login || login.length < 3 || !/^[a-zA-Z0-9_.-]+$/.test(login)) { showToast('Логин: латиница, 3+ символа'); return; }
+    if (!pck) { showToast('Выберите ПЦК'); return; }
+    if (!category) { showToast('Выберите категорию'); return; }
+
+    profile = { fio, login, pck, category };
+    await saveSetting('profile', profile);
+
+    // Проверяем, есть ли уже такая папка
+    const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
+    try {
+        const res = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
+            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        );
+        if (res.ok) {
+            const conf = confirm('Папка с такими ФИО и логином уже существует.\n\nЕсли это вы с другого устройства — данные будут подгружены при «Загрузить с облака».\n\nПродолжить?');
+            if (!conf) return;
+        }
+    } catch (e) {}
+
     updateProfileUI();
-    showToast('Добро пожаловать!');
+    showToast('Профиль сохранён');
     showScreen('screen-main');
 }
 
 function updateProfileUI() {
-    const initials = currentTeacher.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+    const initials = profile.fio.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
     document.getElementById('avatar').textContent = initials || '?';
-    document.getElementById('teacher-display').textContent = currentTeacher || '—';
+    document.getElementById('teacher-display').textContent = profile.fio;
+    document.getElementById('teacher-sub').textContent = `${profile.category} • ПЦК: ${profile.pck}`;
 }
 
 async function showProfileSwitcher() {
-    const profiles = await getSetting('profiles') || [];
-    const list = document.getElementById('profiles-list');
-    list.innerHTML = profiles.map(p => `
-        <div class="profile-item ${p === currentTeacher ? 'active' : ''}" onclick="switchProfile('${p.replace(/'/g, "\\'")}')">
-            <span>${p}</span>${p === currentTeacher ? '<span>✓</span>' : ''}
-        </div>`).join('');
     document.getElementById('modal-profile').classList.add('active');
 }
-
-async function switchProfile(name) {
-    currentTeacher = name;
-    await saveSetting('current_profile', name);
-    updateProfileUI();
-    closeModal();
-    showToast('Профиль: ' + name);
-}
-
-async function addProfile() {
-    const name = document.getElementById('new-profile-name').value.trim();
-    if (!name) { showToast('Введите ФИО'); return; }
-    const profiles = await getSetting('profiles') || [];
-    if (!profiles.includes(name)) profiles.push(name);
-    await saveSetting('profiles', profiles);
-    await saveSetting('current_profile', name);
-    currentTeacher = name;
-    document.getElementById('new-profile-name').value = '';
-    updateProfileUI();
-    closeModal();
-    showToast('Профиль добавлен');
-}
-
 function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
 
-function openForm(type) { switchTypeTab(type); showScreen('screen-form'); }
+// ═══ ЛОГИН С ДРУГОГО УСТРОЙСТВА ═══
+async function tryLogin() {
+    const fio = document.getElementById('login-fio').value.trim();
+    const login = document.getElementById('login-login').value.trim();
+    if (!fio || !login) { showToast('Введите ФИО и логин'); return; }
 
-function switchTypeTab(type) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.type === type));
-    document.querySelectorAll('.type-block').forEach(b => b.classList.add('hidden'));
-    document.getElementById('block-' + type).classList.remove('hidden');
+    // Пробуем найти профиль среди ПЦК
+    let found = null;
+    for (const pck of PCK_LIST) {
+        const folderPath = `${getYearFolder()}/Входящие/ПЦК_${slug(pck)}/${slug(fio)}_${login}`;
+        try {
+            const res = await fetch(
+                `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folderPath)}`,
+                { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+            );
+            if (res.ok) { found = { fio, login, pck, category: '—' }; break; }
+        } catch (e) {}
+    }
+
+    if (!found) { showToast('Профиль не найден. Проверьте ФИО и логин'); return; }
+
+    // Скачиваем profile.json
+    try {
+        const profilePath = `${getYearFolder()}/Входящие/ПЦК_${slug(found.pck)}/${slug(fio)}_${login}/profile.json`;
+        const data = await downloadJson(profilePath);
+        if (data) { profile = data; }
+        else { profile = found; }
+    } catch (e) { profile = found; }
+
+    await saveSetting('profile', profile);
+    updateProfileUI();
+    showToast('Профиль загружен');
+    showScreen('screen-main');
 }
 
-function onEventTypeChange() {
-    const isCustom = document.getElementById('event-type').value === 'другое';
-    document.getElementById('event-type-custom-group').classList.toggle('hidden', !isCustom);
+// ═══ ПЕРЕКЛЮЧЕНИЕ ФОРМ ═══
+function openForm(type) {
+    currentFormType = type;
+    document.getElementById('form-title').textContent =
+        type === 'event' ? '🏆 Событие' :
+        type === 'training' ? '🎓 Обучение' :
+        type === 'assessment' ? '📊 Контроль' :
+        type === 'methodical' ? '📚 Методическая работа' :
+        '🗣 Трансляция и активность';
+    renderForm(type);
+    showScreen('screen-form');
 }
 
-function toggleTeacherBlock() {
-    document.getElementById('block-teacher-in-event').classList.toggle('hidden',
-        !document.getElementById('event-has-teacher').checked);
+function renderForm(type) {
+    const c = document.getElementById('form-content');
+    if (type === 'event') c.innerHTML = renderEventForm();
+    else if (type === 'training') c.innerHTML = renderTrainingForm();
+    else if (type === 'assessment') c.innerHTML = renderAssessmentForm();
+    else if (type === 'methodical') c.innerHTML = renderMethodicalForm();
+    else if (type === 'activity') c.innerHTML = renderActivityForm();
+    bindPhotoPreview();
+}
+
+function bindPhotoPreview() {
+    document.querySelectorAll('input[type="file"]').forEach(inp => {
+        inp.onchange = function() {
+            const preview = document.getElementById(this.id + '-preview');
+            if (preview && this.files[0]) {
+                const r = new FileReader();
+                r.onload = ev => { preview.src = ev.target.result; preview.style.display = 'block'; };
+                r.readAsDataURL(this.files[0]);
+            }
+        };
+    });
+}
+
+// ═══ HTML ШАБЛОНЫ ФОРМ ═══
+
+function renderEventForm() {
+    return `
+    <div class="card">
+        <h3>Основное</h3>
+        <div class="form-group"><label>Название *</label><input type="text" id="f-name" placeholder="Хакатон 2026"></div>
+        <div class="form-group"><label>Тип</label>
+            <select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
+                <option value="конкурс">Конкурс</option>
+                <option value="олимпиада">Олимпиада</option>
+                <option value="конференция">Конференция</option>
+                <option value="форум">Форум</option>
+                <option value="семинар">Семинар</option>
+                <option value="соревнование">Соревнование</option>
+                <option value="круглый стол">Круглый стол</option>
+                <option value="фестиваль">Фестиваль</option>
+                <option value="Абилимпикс">Абилимпикс</option>
+                <option value="акция/диктант">Акция / Диктант</option>
+                <option value="другое">Другое</option>
+            </select>
+        </div>
+        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>
+        <div class="form-group"><label>Уровень</label>
+            <select id="f-level">
+                <option value="образовательная организация">Образовательная организация</option>
+                <option value="муниципальный">Муниципальный</option>
+                <option value="областной">Областной</option>
+                <option value="региональный">Региональный</option>
+                <option value="межрегиональный">Межрегиональный</option>
+                <option value="всероссийский">Всероссийский</option>
+                <option value="международный">Международный</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Вид участия</label>
+            <select id="f-participation"><option value="очно">Очно</option><option value="дистанционно">Дистанционно</option><option value="заочно">Заочно</option><option value="интернет-конкурс">Интернет-конкурс</option></select>
+        </div>
+        <div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>
+        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
+    </div>
+
+    <div class="card">
+        <h3>Участники</h3>
+        <div class="toggle-group">
+            <label class="toggle"><input type="checkbox" id="f-has-teacher" onchange="document.getElementById('f-teacher-block').classList.toggle('hidden',!this.checked)"> Преподаватель</label>
+            <label class="toggle"><input type="checkbox" id="f-has-students" onchange="toggleStudentsBlock()"> Студенты</label>
+        </div>
+    </div>
+
+    <div id="f-teacher-block" class="card hidden">
+        <h3>Моё участие</h3>
+        <div id="f-roles-container"></div>
+        <button type="button" class="add-btn" onclick="addTeacherRole()">+ Добавить роль</button>
+    </div>
+
+    <div id="f-students-block" class="card hidden">
+        <h3>Студенты</h3>
+        <div id="f-students-container"></div>
+        <button type="button" class="add-btn" onclick="addStudentsGroup()">+ Добавить группу</button>
+    </div>
+
+    <div class="card">
+        <h3>Фото подтверждения</h3>
+        <input type="file" id="f-photo" accept="image/*">
+        <img id="f-photo-preview" class="photo-preview">
+    </div>`;
+}
+
+function renderTrainingForm() {
+    return `
+    <div class="card">
+        <h3>Обучение</h3>
+        <div class="form-group"><label>Вид обучения</label>
+            <select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
+                <option value="КПК">КПК</option>
+                <option value="стажировка">Стажировка</option>
+                <option value="переподготовка">Переподготовка</option>
+                <option value="высшее образование">Высшее образование</option>
+                <option value="магистратура">Магистратура</option>
+                <option value="обучение по Абилимпикс">Обучение по Абилимпикс</option>
+                <option value="другое">Другое</option>
+            </select>
+        </div>
+        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните вид</label><input type="text" id="f-type-custom"></div>
+        <div class="form-group"><label>Название программы *</label><input type="text" id="f-name"></div>
+        <div class="form-group"><label>Объём (часы)</label><input type="number" id="f-hours"></div>
+        <div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>
+        <div class="form-group"><label>Дата получения документа</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
+    </div>
+    <div class="card">
+        <h3>Фото документа</h3>
+        <input type="file" id="f-photo" accept="image/*">
+        <img id="f-photo-preview" class="photo-preview">
+    </div>`;
+}
+
+function renderAssessmentForm() {
+    return `
+    <div class="card">
+        <h3>Контроль</h3>
+        <div class="form-group"><label>Тип</label>
+            <select id="f-type" onchange="onAssessmentTypeChange()">
+                <option value="входной контроль">Входной контроль</option>
+                <option value="срезовый к/р">Срезовый к/р</option>
+                <option value="итоговая оценка">Итоговая оценка</option>
+                <option value="проектная деятельность">Проектная деятельность</option>
+                <option value="другое">Другое</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Группа</label><input type="text" id="f-group" placeholder="АЭ-11"></div>
+        <div class="form-group"><label>Предмет/МДК</label><input type="text" id="f-subject"></div>
+        <div class="form-group"><label>Всего в группе</label><input type="number" id="f-total"></div>
+        <div class="form-group"><label>Отсутствовали</label><input type="number" id="f-absent"></div>
+        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-ovz"> В группе есть студенты с ОВЗ</label></div>
+    </div>
+    <div id="f-grades-block" class="card">
+        <h3>Результаты</h3>
+        <div class="grade-grid">
+            <div class="form-group"><label>"5"</label><input type="number" id="f-c5"></div>
+            <div class="form-group"><label>"4"</label><input type="number" id="f-c4"></div>
+            <div class="form-group"><label>"3"</label><input type="number" id="f-c3"></div>
+            <div class="form-group"><label>"2"</label><input type="number" id="f-c2"></div>
+        </div>
+    </div>
+    <div id="f-project-block" class="card hidden">
+        <h3>Проектная деятельность</h3>
+        <div class="form-group"><label>Сколько человек участвуют</label><input type="number" id="f-project"></div>
+    </div>`;
+}
+
+function renderMethodicalForm() {
+    return `
+    <div class="card">
+        <h3>Методическая работа</h3>
+        <div class="form-group"><label>Тип</label>
+            <select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
+                <option value="УМК">УМК</option>
+                <option value="рабочая программа">Рабочая программа</option>
+                <option value="дидактические материалы">Дидактические материалы</option>
+                <option value="публикация">Публикация (статья, сборник)</option>
+                <option value="электронный курс">Электронный курс</option>
+                <option value="видеолекция">Видеолекция</option>
+                <option value="другое">Другое</option>
+            </select>
+        </div>
+        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>
+        <div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>
+        <div class="form-group"><label>Роль</label>
+            <select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option><option value="разработчик">Разработчик</option></select>
+        </div>
+        <div class="form-group"><label>Статус</label>
+            <select id="f-status"><option value="разработан">Разработан</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select>
+        </div>
+        <div class="form-group"><label>Уровень</label>
+            <select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select>
+        </div>
+        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
+    </div>
+    <div class="card">
+        <h3>Фото (приказ / титульный лист)</h3>
+        <input type="file" id="f-photo" accept="image/*">
+        <img id="f-photo-preview" class="photo-preview">
+    </div>`;
+}
+
+function renderActivityForm() {
+    return `
+    <div class="card">
+        <h3>Трансляция и активность</h3>
+        <div class="form-group"><label>Тип активности</label>
+            <select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
+                <option value="открытый урок">Открытый урок</option>
+                <option value="мастер-класс">Мастер-класс</option>
+                <option value="выступление на педсовете">Выступление на педсовете</option>
+                <option value="выступление на методсовете">Выступление на методсовете</option>
+                <option value="выступление на ПЦК">Выступление на ПЦК</option>
+                <option value="взаимопосещение (свой)">Взаимопосещение — я посетил</option>
+                <option value="взаимопосещение (у меня)">Взаимопосещение — посетили меня</option>
+                <option value="публикация">Публикация</option>
+                <option value="наставничество">Наставничество</option>
+                <option value="органы самоуправления">Работа в органах самоуправления</option>
+                <option value="кино/театр/выставка">Кино / Театр / Выставка / Музей</option>
+                <option value="экскурсия">Экскурсия (в т.ч. на предприятие)</option>
+                <option value="приглашение специалиста">Приглашение специалиста / работодателя</option>
+                <option value="профориентация">Профориентация (школьники)</option>
+                <option value="работа с ОВЗ">Работа с ОВЗ / инвалидами</option>
+                <option value="другое">Другое</option>
+            </select>
+        </div>
+        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>
+        <div class="form-group"><label>Название / тема *</label><input type="text" id="f-name"></div>
+        <div class="form-group"><label>Уровень</label>
+            <select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select>
+        </div>
+        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
+    </div>
+    <div class="card">
+        <h3>Фото подтверждения</h3>
+        <input type="file" id="f-photo" accept="image/*">
+        <img id="f-photo-preview" class="photo-preview">
+    </div>`;
+}
+
+// ═══ ПЕРЕКЛЮЧАТЕЛИ ═══
+function toggleCustom(selectId, groupId) {
+    const sel = document.getElementById(selectId);
+    const grp = document.getElementById(groupId);
+    if (sel && grp) grp.classList.toggle('hidden', sel.value !== 'другое');
 }
 
 function toggleStudentsBlock() {
-    const checked = document.getElementById('event-has-students').checked;
-    document.getElementById('block-students-in-event').classList.toggle('hidden', !checked);
-    if (checked && studentsBlockCounter === 0) addStudentsBlock();
+    const checked = document.getElementById('f-has-students').checked;
+    document.getElementById('f-students-block').classList.toggle('hidden', !checked);
+    if (checked && document.getElementById('f-students-container').children.length === 0) addStudentsGroup();
 }
 
 function onAssessmentTypeChange() {
-    const isProject = document.getElementById('assessment-type').value === 'проектная деятельность';
-    document.getElementById('assessment-grades-block').classList.toggle('hidden', isProject);
-    document.getElementById('assessment-project-block').classList.toggle('hidden', !isProject);
+    const isProject = document.getElementById('f-type').value === 'проектная деятельность';
+    document.getElementById('f-grades-block').classList.toggle('hidden', isProject);
+    document.getElementById('f-project-block').classList.toggle('hidden', !isProject);
 }
 
-function addStudentsBlock() {
-    studentsBlockCounter++;
-    const id = studentsBlockCounter;
+// ═══ ДИНАМИЧЕСКИЕ БЛОКИ ═══
+
+function addTeacherRole() {
+    teacherRolesCounter++;
+    const id = teacherRolesCounter;
     const html = `
-        <div class="students-block" id="students-block-${id}">
-            <div class="students-block-header">
-                <span>Группа ${id}</span>
-                <button type="button" onclick="removeStudentsBlock(${id})">✕</button>
+        <div class="sub-block" id="trole-${id}">
+            <div class="sub-block-header"><span>Роль ${id}</span><button type="button" onclick="document.getElementById('trole-${id}').remove()">✕</button></div>
+            <div class="form-group"><label>Роль</label>
+                <select class="t-role"><option value="участник/конкурсант">Участник/конкурсант</option><option value="жюри">Жюри</option><option value="организатор">Организатор</option><option value="эксперт/судья">Эксперт/судья</option><option value="слушатель">Слушатель</option><option value="спикер/выступающий">Спикер/выступающий</option><option value="рабочая группа">Рабочая группа</option></select>
             </div>
-            <div class="form-group"><label>Группа</label><input type="text" class="s-group" placeholder="АЭ-11"></div>
-            <div class="form-group"><label>Итог участия</label>
-                <select class="s-result">
-                    <option value="сертификат за участие">Сертификат за участие</option>
-                    <option value="благодарность">Благодарность</option>
-                    <option value="диплом за победу">Диплом за победу</option>
-                    <option value="другое">Другое</option>
-                </select>
+            <div class="form-group"><label>Итог</label>
+                <select class="t-result"><option value="">— нет —</option><option value="сертификат участника">Сертификат</option><option value="благодарность">Благодарность</option><option value="диплом победителя">Диплом победителя</option></select>
             </div>
-            <div class="form-group"><label>Количество участников</label><input type="number" class="s-count"></div>
-            <div class="form-group"><label>ФИО участников (по желанию)</label><textarea class="s-names" placeholder="Карантин И., Петров П."></textarea></div>
-            <p class="hint" style="margin-bottom:8px;">Победители (если есть)</p>
-            <div class="form-group"><label>1 место — ФИО</label><input type="text" class="s-prize1"></div>
-            <div class="form-group"><label>2 место — ФИО</label><input type="text" class="s-prize2"></div>
-            <div class="form-group"><label>3 место — ФИО</label><input type="text" class="s-prize3"></div>
-            <div class="form-group"><label>Гран-при — ФИО</label><input type="text" class="s-prizegp"></div>
+            <div class="form-group"><label>Место (если победитель)</label>
+                <select class="t-place"><option value="">— нет —</option><option value="1 место">1 место</option><option value="2 место">2 место</option><option value="3 место">3 место</option><option value="гран-при">Гран-при</option><option value="приз зрительских симпатий">Приз зрительских симпатий</option></select>
+            </div>
         </div>`;
-    document.getElementById('students-container').insertAdjacentHTML('beforeend', html);
+    document.getElementById('f-roles-container').insertAdjacentHTML('beforeend', html);
 }
 
-function removeStudentsBlock(id) {
-    const el = document.getElementById('students-block-' + id);
-    if (el) el.remove();
+function addStudentsGroup() {
+    studentsGroupCounter++;
+    const id = studentsGroupCounter;
+    const html = `
+        <div class="sub-block" id="sgroup-${id}">
+            <div class="sub-block-header"><span>Группа ${id}</span><button type="button" onclick="document.getElementById('sgroup-${id}').remove()">✕</button></div>
+            <div class="form-group"><label>Группа</label><input type="text" class="s-group" placeholder="АЭ-11"></div>
+            <div class="form-group"><label>Количество участников (сертификаты)</label><input type="number" class="s-count"></div>
+            <div class="form-group"><label>ФИО участников (по желанию)</label><textarea class="s-names" placeholder="Карантин И., Петров П."></textarea></div>
+            <p class="hint" style="margin:8px 0 4px;">Победители (если есть)</p>
+            <div class="s-diplomas" id="s-diplomas-${id}"></div>
+            <button type="button" class="add-btn" onclick="addDiploma(${id})">+ Добавить место</button>
+        </div>`;
+    document.getElementById('f-students-container').insertAdjacentHTML('beforeend', html);
 }
 
-let db = null;
+function addDiploma(groupId) {
+    const container = document.getElementById('s-diplomas-' + groupId);
+    const id = 'd' + Date.now() + Math.random().toString(36).slice(2,5);
+    const html = `
+        <div class="sub-block" id="${id}" style="background:white;">
+            <div class="sub-block-header"><span>Место</span><button type="button" onclick="document.getElementById('${id}').remove()">✕</button></div>
+            <div class="form-group"><label>Место</label>
+                <select class="s-place"><option value="1 место">1 место</option><option value="2 место">2 место</option><option value="3 место">3 место</option><option value="гран-при">Гран-при</option></select>
+            </div>
+            <div class="form-group"><label>ФИО победителя</label><input type="text" class="s-winner"></div>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+// ═══ БАЗА ДАННЫХ ═══
 function openDB() {
     return new Promise((resolve, reject) => {
         if (db) return resolve(db);
-        const req = indexedDB.open('TeacherNotebook', 1);
+        const req = indexedDB.open('TeacherNotebook', 2);
         req.onupgradeneeded = (e) => {
             const d = e.target.result;
             if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings');
@@ -659,133 +699,114 @@ function openDB() {
                 d.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
             }
         };
-        req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        req.onsuccess = e => { db = e.target.result; resolve(db); };
         req.onerror = () => reject(req.error);
     });
 }
-
 async function saveSetting(k, v) {
     const d = await openDB();
-    return new Promise(r => {
-        const tx = d.transaction('settings', 'readwrite');
-        tx.objectStore('settings').put(v, k);
-        tx.oncomplete = r;
-    });
+    return new Promise(r => { const tx = d.transaction('settings','readwrite'); tx.objectStore('settings').put(v,k); tx.oncomplete = r; });
 }
 async function getSetting(k) {
     const d = await openDB();
-    return new Promise(r => {
-        const tx = d.transaction('settings', 'readonly');
-        const req = tx.objectStore('settings').get(k);
-        req.onsuccess = () => r(req.result);
-    });
+    return new Promise(r => { const tx = d.transaction('settings','readonly'); const req = tx.objectStore('settings').get(k); req.onsuccess = () => r(req.result); });
 }
 async function saveRecordToDB(rec) {
     const d = await openDB();
-    return new Promise(r => {
-        const tx = d.transaction('records', 'readwrite');
-        tx.objectStore('records').add(rec);
-        tx.oncomplete = r;
-    });
+    return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').add(rec); tx.oncomplete = r; });
 }
 async function getAllRecords() {
     const d = await openDB();
-    return new Promise(r => {
-        const tx = d.transaction('records', 'readonly');
-        const req = tx.objectStore('records').getAll();
-        req.onsuccess = () => r(req.result);
-    });
+    return new Promise(r => { const tx = d.transaction('records','readonly'); const req = tx.objectStore('records').getAll(); req.onsuccess = () => r(req.result); });
 }
 async function updateRecord(rec) {
     const d = await openDB();
-    return new Promise(r => {
-        const tx = d.transaction('records', 'readwrite');
-        tx.objectStore('records').put(rec);
-        tx.oncomplete = r;
-    });
+    return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').put(rec); tx.oncomplete = r; });
 }
 async function deleteRecordById(id) {
     const d = await openDB();
-    return new Promise(r => {
-        const tx = d.transaction('records', 'readwrite');
-        tx.objectStore('records').delete(id);
-        tx.oncomplete = r;
-    });
+    return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; });
 }
 
+// ═══ СОХРАНЕНИЕ ЗАПИСИ ═══
 async function saveRecord() {
-    const activeTab = document.querySelector('.tab.active').dataset.type;
-    let record = {
-        type: activeTab,
-        teacher: currentTeacher,
-        createdAt: new Date().toISOString(),
-        sent: false
-    };
+    const type = currentFormType;
+    let record = { type, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, year: getYearFolder(), createdAt: new Date().toISOString(), sent: false };
 
-    if (activeTab === 'event') {
-        record.name = document.getElementById('event-name').value.trim();
-        if (!record.name) { showToast('Введите название'); return; }
-        record.eventType = document.getElementById('event-type').value;
-        if (record.eventType === 'другое') {
-            record.eventTypeCustom = document.getElementById('event-type-custom').value;
-        }
-        record.level = document.getElementById('event-level').value;
-        record.participation = document.getElementById('event-participation').value;
-        record.place = document.getElementById('event-place').value;
-        record.date = document.getElementById('event-date').value;
-        record.hasTeacher = document.getElementById('event-has-teacher').checked;
-        record.hasStudents = document.getElementById('event-has-students').checked;
+    const getVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const getCheck = id => { const el = document.getElementById(id); return el ? el.checked : false; };
 
+    record.name = getVal('f-name').trim();
+    if (!record.name) { showToast('Введите название'); return; }
+
+    record.date = getVal('f-date');
+    record.prof = getCheck('f-prof');
+
+    if (type === 'event') {
+        record.eventType = getVal('f-type');
+        if (record.eventType === 'другое') record.eventTypeCustom = getVal('f-type-custom');
+        record.level = getVal('f-level');
+        record.participation = getVal('f-participation');
+        record.place = getVal('f-place');
+        record.hasTeacher = getCheck('f-has-teacher');
+        record.hasStudents = getCheck('f-has-students');
         if (record.hasTeacher) {
-            record.teacherRoles = [...document.querySelectorAll('.event-teacher-role:checked')].map(c => c.value);
-            record.teacherResults = [...document.querySelectorAll('.event-teacher-result:checked')].map(c => c.value);
-            record.teacherPrize = document.getElementById('event-teacher-prize').value;
-        }
-        if (record.hasStudents) {
-            record.studentsBlocks = [...document.querySelectorAll('.students-block')].map(b => ({
-                group: b.querySelector('.s-group').value,
-                result: b.querySelector('.s-result').value,
-                count: b.querySelector('.s-count').value,
-                names: b.querySelector('.s-names').value,
-                prize1: b.querySelector('.s-prize1').value,
-                prize2: b.querySelector('.s-prize2').value,
-                prize3: b.querySelector('.s-prize3').value,
-                prizeGp: b.querySelector('.s-prizegp').value,
+            record.teacherRoles = [...document.querySelectorAll('#f-roles-container .sub-block')].map(b => ({
+                role: b.querySelector('.t-role').value,
+                result: b.querySelector('.t-result').value,
+                place: b.querySelector('.t-place').value
             }));
         }
-        record.photo = await getPhoto('event-photo');
-
-    } else if (activeTab === 'training') {
-        record.name = document.getElementById('training-name').value.trim();
-        if (!record.name) { showToast('Введите название'); return; }
-        record.trainingType = document.getElementById('training-type').value;
-        record.hours = document.getElementById('training-hours').value;
-        record.place = document.getElementById('training-place').value;
-        record.date = document.getElementById('training-date').value;
-        record.photo = await getPhoto('training-photo');
-
-    } else if (activeTab === 'assessment') {
-        record.assessmentType = document.getElementById('assessment-type').value;
-        record.group = document.getElementById('assessment-group').value;
-        record.subject = document.getElementById('assessment-subject').value;
-        record.total = parseInt(document.getElementById('assessment-total').value) || 0;
-        record.absent = parseInt(document.getElementById('assessment-absent').value) || 0;
-        record.date = document.getElementById('assessment-date').value;
-
+        if (record.hasStudents) {
+            record.studentsGroups = [...document.querySelectorAll('#f-students-container .sub-block')].map(g => ({
+                group: g.querySelector('.s-group').value,
+                count: g.querySelector('.s-count').value,
+                names: g.querySelector('.s-names').value,
+                diplomas: [...g.querySelectorAll('.s-diplomas .sub-block')].map(d => ({
+                    place: d.querySelector('.s-place').value,
+                    winner: d.querySelector('.s-winner').value
+                }))
+            }));
+        }
+        record.photo = await getPhoto('f-photo');
+    } else if (type === 'training') {
+        record.trainingType = getVal('f-type');
+        if (record.trainingType === 'другое') record.trainingTypeCustom = getVal('f-type-custom');
+        record.hours = getVal('f-hours');
+        record.place = getVal('f-place');
+        record.photo = await getPhoto('f-photo');
+    } else if (type === 'assessment') {
+        record.assessmentType = getVal('f-type');
+        record.group = getVal('f-group');
+        record.subject = getVal('f-subject');
+        record.total = parseInt(getVal('f-total')) || 0;
+        record.absent = parseInt(getVal('f-absent')) || 0;
+        record.ovz = getCheck('f-ovz');
         if (record.assessmentType === 'проектная деятельность') {
-            record.project = document.getElementById('assessment-project').value;
+            record.project = getVal('f-project');
         } else {
-            record.count5 = parseInt(document.getElementById('assessment-5').value) || 0;
-            record.count4 = parseInt(document.getElementById('assessment-4').value) || 0;
-            record.count3 = parseInt(document.getElementById('assessment-3').value) || 0;
-            record.count2 = parseInt(document.getElementById('assessment-2').value) || 0;
+            record.count5 = parseInt(getVal('f-c5')) || 0;
+            record.count4 = parseInt(getVal('f-c4')) || 0;
+            record.count3 = parseInt(getVal('f-c3')) || 0;
+            record.count2 = parseInt(getVal('f-c2')) || 0;
             record.taken = record.count5 + record.count4 + record.count3 + record.count2;
         }
+    } else if (type === 'methodical') {
+        record.methodicalType = getVal('f-type');
+        if (record.methodicalType === 'другое') record.methodicalTypeCustom = getVal('f-type-custom');
+        record.role = getVal('f-role');
+        record.status = getVal('f-status');
+        record.level = getVal('f-level');
+        record.photo = await getPhoto('f-photo');
+    } else if (type === 'activity') {
+        record.activityType = getVal('f-type');
+        if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
+        record.level = getVal('f-level');
+        record.photo = await getPhoto('f-photo');
     }
 
     await saveRecordToDB(record);
     showToast('✅ Сохранено');
-    clearForm();
     backToMain();
 }
 
@@ -796,9 +817,9 @@ async function getPhoto(inputId) {
 }
 
 function compressImage(file, maxWidth = 800, quality = 0.7) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
@@ -814,57 +835,47 @@ function compressImage(file, maxWidth = 800, quality = 0.7) {
     });
 }
 
-function clearForm() {
-    document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea')
-        .forEach(el => el.value = '');
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    document.querySelectorAll('input[type="file"]').forEach(f => f.value = '');
-    document.querySelectorAll('.photo-preview').forEach(p => { p.src = ''; p.style.display = 'none'; });
-    document.getElementById('students-container').innerHTML = '';
-    studentsBlockCounter = 0;
-    document.getElementById('block-teacher-in-event').classList.add('hidden');
-    document.getElementById('block-students-in-event').classList.add('hidden');
-    document.getElementById('event-type-custom-group').classList.add('hidden');
-}
-
+// ═══ ЗАПИСИ ═══
 async function showLocalRecords() {
-    const records = (await getAllRecords()).filter(r => r.teacher === currentTeacher);
+    const records = (await getAllRecords()).filter(r => r.teacher === profile.fio);
     const c = document.getElementById('records-list');
     if (!records.length) {
         c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей</p>';
     } else {
         c.innerHTML = records.reverse().map(r => {
-            let body = '';
-            let title = '';
+            const canDelete = (Date.now() - new Date(r.createdAt).getTime()) < 48*60*60*1000;
+            const delBtn = canDelete
+                ? `<button class="record-delete" onclick="deleteRecord(${r.id})" title="Удалить">🗑</button>`
+                : `<span class="record-lock" title="Удаление недоступно (прошло 48 часов)">🔒</span>`;
+            let title = '', body = '';
+            const icon = { event: '🏆', training: '🎓', assessment: '📊', methodical: '📚', activity: '🗣' }[r.type] || '📄';
             if (r.type === 'event') {
-                const typeText = r.eventType === 'другое' && r.eventTypeCustom ? r.eventTypeCustom : r.eventType;
-                title = `🏆 ${r.name}`;
-                body = `
-                    <p>${[r.date, r.level, r.participation].filter(Boolean).join(' • ')}</p>
-                    <div class="tags"><span class="tag">${typeText}</span></div>
-                    ${r.studentsBlocks ? r.studentsBlocks.map(b => `<p>👥 ${b.group}: ${b.count || '?'} чел.</p>`).join('') : ''}
-                    ${r.teacherRoles && r.teacherRoles.length ? `<div class="tags">${r.teacherRoles.map(x => `<span class="tag">${x}</span>`).join('')}</div>` : ''}
-                `;
+                title = `${icon} ${r.name}`;
+                const t = r.eventType === 'другое' && r.eventTypeCustom ? r.eventTypeCustom : r.eventType;
+                body = `<p>${[r.date, r.level, r.participation].filter(Boolean).join(' • ')}</p>
+                    <div class="tags"><span class="tag">${t}</span>${r.prof ? '<span class="tag prof">Профессионалитет</span>' : ''}</div>
+                    ${r.studentsGroups ? r.studentsGroups.map(g => `<p>👥 ${g.group}: ${g.count || '?'} чел.${g.diplomas && g.diplomas.length ? ' • 🏅 ' + g.diplomas.map(d => d.place + (d.winner ? ' — ' + d.winner : '')).join(', ') : ''}</p>`).join('') : ''}
+                    ${r.teacherRoles && r.teacherRoles.length ? `<div class="tags">${r.teacherRoles.map(x => `<span class="tag">${x.role}${x.result ? ' / ' + x.result : ''}${x.place ? ' / ' + x.place : ''}</span>`).join('')}</div>` : ''}`;
             } else if (r.type === 'training') {
-                title = `🎓 ${r.name}`;
-                body = `<p>${[r.trainingType, r.hours && r.hours + ' ч.', r.date].filter(Boolean).join(' • ')}</p>`;
+                title = `${icon} ${r.name}`;
+                const t = r.trainingType === 'другое' && r.trainingTypeCustom ? r.trainingTypeCustom : r.trainingType;
+                body = `<p>${[t, r.hours && r.hours + ' ч.', r.date].filter(Boolean).join(' • ')}</p>${r.prof ? '<div class="tags"><span class="tag prof">Профессионалитет</span></div>' : ''}`;
             } else if (r.type === 'assessment') {
-                title = `📝 ${r.subject || 'Без предмета'} ${r.group ? '(' + r.group + ')' : ''}`;
+                title = `${icon} ${r.subject || 'Без предмета'} ${r.group ? '(' + r.group + ')' : ''}`;
                 let extra = '';
-                if (r.assessmentType === 'проектная деятельность') {
-                    extra = `<p>В проекте: ${r.project || 0} чел.</p>`;
-                } else if (r.taken) {
-                    extra = `<p>Сдавало: ${r.taken} (5: ${r.count5}, 4: ${r.count4}, 3: ${r.count3}, 2: ${r.count2})</p>`;
-                }
-                body = `<p>${[r.assessmentType, r.date].filter(Boolean).join(' • ')}</p>${extra}`;
+                if (r.assessmentType === 'проектная деятельность') extra = `<p>В проекте: ${r.project || 0} чел.</p>`;
+                else if (r.taken) extra = `<p>Сдавало: ${r.taken} (5: ${r.count5}, 4: ${r.count4}, 3: ${r.count3}, 2: ${r.count2})</p>`;
+                body = `<p>${[r.assessmentType, r.date].filter(Boolean).join(' • ')}</p>${extra}${r.ovz ? '<div class="tags"><span class="tag">♿ ОВЗ</span></div>' : ''}`;
+            } else if (r.type === 'methodical') {
+                title = `${icon} ${r.name}`;
+                const t = r.methodicalType === 'другое' && r.methodicalTypeCustom ? r.methodicalTypeCustom : r.methodicalType;
+                body = `<p>${[t, r.role, r.status, r.date].filter(Boolean).join(' • ')}</p>${r.prof ? '<div class="tags"><span class="tag prof">Профессионалитет</span></div>' : ''}`;
+            } else if (r.type === 'activity') {
+                title = `${icon} ${r.name}`;
+                const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
+                body = `<p>${[t, r.level, r.date].filter(Boolean).join(' • ')}</p>${r.prof ? '<div class="tags"><span class="tag prof">Профессионалитет</span></div>' : ''}`;
             }
-            return `<div class="record">
-                <div class="record-header">
-                    <h3>${title}</h3>
-                    <button class="record-delete" onclick="deleteRecord(${r.id})" title="Удалить">🗑</button>
-                </div>
-                ${body}
-            </div>`;
+            return `<div class="record"><div class="record-header"><h3>${title}</h3>${delBtn}</div>${body}</div>`;
         }).join('');
     }
     showScreen('screen-records');
@@ -877,48 +888,47 @@ async function deleteRecord(id) {
     showLocalRecords();
 }
 
-async function showStats() {
-    const records = (await getAllRecords()).filter(r => r.teacher === currentTeacher);
-    const events = records.filter(r => r.type === 'event').length;
-    const trainings = records.filter(r => r.type === 'training').length;
-    const assessments = records.filter(r => r.type === 'assessment').length;
-    const unsent = records.filter(r => !r.sent).length;
-
-    document.getElementById('stats-content').innerHTML = `
-        <div class="card">
-            <h3>📊 Общая статистика</h3>
-            <p style="margin:8px 0;font-size:15px;">🏆 Мероприятий: <b>${events}</b></p>
-            <p style="margin:8px 0;font-size:15px;">🎓 Обучений: <b>${trainings}</b></p>
-            <p style="margin:8px 0;font-size:15px;">📝 Оценок: <b>${assessments}</b></p>
-            <p style="margin:8px 0;font-size:15px;">📤 Не отправлено: <b>${unsent}</b></p>
-        </div>
-        <p style="text-align:center;color:#8892a0;font-size:13px;padding:20px 0;line-height:1.5;">
-            Для детальной статистики нужна<br>отправка данных на обработку.
-        </p>`;
-    showScreen('screen-stats');
+// ═══ ДОПОЛНИТЕЛЬНО (приказы) ═══
+async function showOrders() {
+    document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
+    showScreen('screen-orders');
+    try {
+        const path = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}/orders.json`;
+        const data = await downloadJson(path);
+        if (data && data.items && data.items.length) {
+            document.getElementById('orders-content').innerHTML = data.items.map(o => `
+                <div class="record"><h3>📎 ${o.title || 'Приказ'}</h3>
+                <p>${[o.number, o.date, o.type].filter(Boolean).join(' • ')}</p>
+                ${o.note ? `<p>${o.note}</p>` : ''}</div>`).join('');
+        } else {
+            document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Данных из приказов пока нет.</p>';
+        }
+    } catch (e) {
+        document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Не удалось загрузить.</p>';
+    }
 }
 
-function slugify(str) {
-    return String(str || '')
-        .trim()
-        .replace(/[^a-zA-Zа-яА-Я0-9\s\-_]/g, '')
-        .replace(/\s+/g, '_')
-        .replace(/_+/g, '_')
-        .slice(0, 60) || 'без_названия';
+// ═══ РАБОТА С ОБЛАКОМ ═══
+function getYearFolder() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const start = m >= 9 ? y : y - 1;
+    return `${start}-${start + 1}`;
+}
+
+function slug(str) {
+    return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия';
 }
 
 function buildPhotoName(record) {
-    const typeMap = { event: 'event', training: 'training', assessment: 'assessment' };
-    const type = typeMap[record.type] || 'file';
     const date = record.date || new Date().toISOString().slice(0, 10);
-    const name = record.name || 'без_названия';
-    return `${type}_${date}_${slugify(name)}.jpg`;
+    return `${record.type}_${date}_${slug(record.name)}.jpg`;
 }
 
 async function ensureFolder(diskPath) {
-    const encoded = encodeURIComponent(diskPath);
     const res = await fetch(
-        `https://cloud-api.yandex.net/v1/disk/resources?path=${encoded}`,
+        `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}`,
         { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
     );
     if (res.status !== 201 && res.status !== 409) {
@@ -927,27 +937,57 @@ async function ensureFolder(diskPath) {
     }
 }
 
+async function uploadToYandex(diskPath, content) {
+    const urlRes = await fetch(
+        `https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`,
+        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+    );
+    if (!urlRes.ok) { const e = await urlRes.json().catch(()=>({})); throw new Error(e.message || 'URL error ' + urlRes.status); }
+    const data = await urlRes.json();
+    const put = await fetch(data.href, { method: 'PUT', body: content });
+    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
+}
+
+async function uploadBlobToYandex(diskPath, blob) {
+    const urlRes = await fetch(
+        `https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`,
+        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+    );
+    if (!urlRes.ok) throw new Error('URL error');
+    const data = await urlRes.json();
+    const put = await fetch(data.href, { method: 'PUT', body: blob });
+    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
+}
+
+async function downloadJson(diskPath) {
+    const urlRes = await fetch(
+        `https://cloud-api.yandex.net/v1/disk/resources/download?path=${encodeURIComponent(diskPath)}`,
+        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+    );
+    if (!urlRes.ok) return null;
+    const data = await urlRes.json();
+    const fileRes = await fetch(data.href);
+    return await fileRes.json();
+}
+
 async function sendToCloud() {
     const btn = document.getElementById('send-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Отправка...';
-
+    btn.disabled = true; btn.textContent = '⏳ Отправка...';
     try {
-        const allRecords = (await getAllRecords()).filter(r => r.teacher === currentTeacher);
-        if (allRecords.length === 0) {
-            showToast('Нет записей');
-            btn.disabled = false;
-            btn.textContent = '📤 Отправить данные';
-            return;
-        }
+        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+        if (allRecords.length === 0) { showToast('Нет записей'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
 
-        const baseFolder = `${YANDEX_FOLDER}/Входящие/${currentTeacher}`;
-        await ensureFolder(YANDEX_FOLDER);
-        await ensureFolder(`${YANDEX_FOLDER}/Входящие`);
+        const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
+        await ensureFolder(getYearFolder());
+        await ensureFolder(`${getYearFolder()}/Входящие`);
+        await ensureFolder(`${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}`);
         await ensureFolder(baseFolder);
         await ensureFolder(`${baseFolder}/photos`);
 
-        // Загружаем фото (только новые)
+        // Профиль
+        await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
+
+        // Фото
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
@@ -958,104 +998,60 @@ async function sendToCloud() {
                     record.photoUploaded = true;
                     record.photo = null;
                     await updateRecord(record);
-                } catch (e) {
-                    console.error('Ошибка фото:', e);
-                }
+                } catch (e) { console.error('Фото:', e); }
             }
         }
 
-        // Готовим JSON по типам
         const now = new Date().toISOString();
-        const cleanForJson = (rec) => {
-            const copy = { ...rec };
-            delete copy.photo;
-            delete copy._photoBackup;
-            return copy;
-        };
+        const clean = r => { const c = {...r}; delete c.photo; delete c._photoBackup; return c; };
+        const types = ['event', 'training', 'assessment', 'methodical', 'activity'];
+        const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
 
-        const events = allRecords.filter(r => r.type === 'event').map(cleanForJson);
-        const trainings = allRecords.filter(r => r.type === 'training').map(cleanForJson);
-        const assessments = allRecords.filter(r => r.type === 'assessment').map(cleanForJson);
-
-        if (events.length > 0) {
-            await uploadToYandex(`${baseFolder}/events.json`,
-                JSON.stringify({ teacher: currentTeacher, updated: now, count: events.length, items: events }, null, 2));
-        }
-        if (trainings.length > 0) {
-            await uploadToYandex(`${baseFolder}/trainings.json`,
-                JSON.stringify({ teacher: currentTeacher, updated: now, count: trainings.length, items: trainings }, null, 2));
-        }
-        if (assessments.length > 0) {
-            await uploadToYandex(`${baseFolder}/assessments.json`,
-                JSON.stringify({ teacher: currentTeacher, updated: now, count: assessments.length, items: assessments }, null, 2));
+        for (const t of types) {
+            const items = allRecords.filter(r => r.type === t).map(clean);
+            if (items.length > 0) {
+                await uploadToYandex(`${baseFolder}/${files[t]}`,
+                    JSON.stringify({ teacher: profile.fio, login: profile.login, pck: profile.pck, updated: now, count: items.length, items }, null, 2));
+            }
         }
 
-        // Помечаем как отправленные
-        for (const r of allRecords) {
-            if (!r.sent) { r.sent = true; await updateRecord(r); }
-        }
-
-        showToast(`✅ Отправлено: ${events.length + trainings.length + assessments.length}`);
-
-    } catch (e) {
-        console.error(e);
-        alert('Ошибка: ' + e.message);
-    }
-
-    btn.disabled = false;
-    btn.textContent = '📤 Отправить данные';
+        for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
+        showToast(`✅ Отправлено: ${allRecords.length}`);
+    } catch (e) { console.error(e); alert('Ошибка: ' + e.message); }
+    btn.disabled = false; btn.textContent = '📤 Отправить данные';
 }
 
-async function uploadToYandex(diskPath, content) {
-    const encoded = encodeURIComponent(diskPath);
-    const urlRes = await fetch(
-        `https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encoded}&overwrite=true`,
-        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-    );
-    if (!urlRes.ok) {
-        const err = await urlRes.json().catch(() => ({}));
-        throw new Error(err.message || 'URL error ' + urlRes.status);
-    }
-    const data = await urlRes.json();
-    const put = await fetch(data.href, { method: 'PUT', body: content });
-    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
-}
-
-async function uploadBlobToYandex(diskPath, blob) {
-    const encoded = encodeURIComponent(diskPath);
-    const urlRes = await fetch(
-        `https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encoded}&overwrite=true`,
-        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-    );
-    if (!urlRes.ok) throw new Error('URL error');
-    const data = await urlRes.json();
-    const put = await fetch(data.href, { method: 'PUT', body: blob });
-    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
-}
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-document.addEventListener('change', (e) => {
-    if (e.target.type === 'file' && e.target.id.includes('photo')) {
-        const preview = document.getElementById(e.target.id + '-preview');
-        if (preview && e.target.files[0]) {
-            const r = new FileReader();
-            r.onload = (ev) => { preview.src = ev.target.result; preview.style.display = 'block'; };
-            r.readAsDataURL(e.target.files[0]);
+async function downloadFromCloud() {
+    const btn = document.getElementById('download-btn');
+    btn.disabled = true; btn.textContent = '⏳ Загрузка...';
+    try {
+        const baseFolder = `${getYearFolder()}/Входящие/ПЦК_${slug(profile.pck)}/${slug(profile.fio)}_${profile.login}`;
+        const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
+        let total = 0;
+        // Очищаем старые записи этого пользователя
+        const all = await getAllRecords();
+        for (const r of all.filter(r => r.teacher === profile.fio)) {
+            await deleteRecordById(r.id);
         }
-    }
-});
+        for (const [type, file] of Object.entries(files)) {
+            const data = await downloadJson(`${baseFolder}/${file}`);
+            if (data && data.items) {
+                for (const item of data.items) {
+                    item.teacher = profile.fio;
+                    item.sent = true;
+                    item.photoUploaded = true;
+                    await saveRecordToDB(item);
+                    total++;
+                }
+            }
+        }
+        showToast(`📥 Загружено: ${total}`);
+    } catch (e) { console.error(e); showToast('Не удалось загрузить'); }
+    btn.disabled = false; btn.textContent = '📥 Загрузить с облака';
+}
 </script>
 <script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-}
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
 </body>
 </html>
