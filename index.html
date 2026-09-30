@@ -1022,41 +1022,39 @@ async function uploadBlobToYandex(diskPath, blob) {
 // Скачивание через Cloudflare Worker
 async function downloadJson(diskPath) {
     try {
-        let infoRes = await fetch(
-            'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
-            { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
-        );
-        if (!infoRes.ok) { console.warn('meta failed:', infoRes.status); return null; }
-        let info = await infoRes.json();
-
-        if (!info.public_url) {
-            await fetch(
-                'https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
-                { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
-            );
-            await new Promise(r => setTimeout(r, 2000));
-            infoRes = await fetch(
-                'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
+        // 1. Прямая ссылка на файл через OAuth (без публикации)
+        const dlRes = await Promise.race([
+            fetch(
+                'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(diskPath),
                 { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
-            );
-            info = await infoRes.json();
-        }
-        if (!info.public_url) { console.warn('no public_url'); return null; }
+            ),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))
+        ]);
 
-        const dlRes = await fetch(
-            'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url)
-        );
-        if (!dlRes.ok) { console.warn('public dl failed:', dlRes.status); return null; }
+        if (!dlRes.ok) {
+            console.warn('meta failed:', dlRes.status);
+            return null;
+        }
+
         const dlData = await dlRes.json();
         const fileUrl = dlData.href;
+        if (!fileUrl) {
+            console.warn('no href');
+            return null;
+        }
 
-        // Через Cloudflare Worker
+        // 2. Скачиваем через прокси (обход CORS)
         const proxyUrl = PROXY_URL + encodeURIComponent(fileUrl);
-        const fileRes = await fetch(proxyUrl);
+        const fileRes = await Promise.race([
+            fetch(proxyUrl),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000))
+        ]);
+
         if (!fileRes.ok) {
             console.warn('proxy failed:', fileRes.status);
             return null;
         }
+
         const text = await fileRes.text();
         try {
             return JSON.parse(text);
@@ -1065,7 +1063,7 @@ async function downloadJson(diskPath) {
             return null;
         }
     } catch (e) {
-        console.error('downloadJson error:', e);
+        console.warn('downloadJson error:', e.message);
         return null;
     }
 }
