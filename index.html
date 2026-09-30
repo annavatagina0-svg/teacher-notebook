@@ -64,7 +64,9 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .record.unsent { border-left-color: #c5cbd3; opacity: 0.85; }
 .record-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
 .record-header h3 { flex: 1; font-size: 15px; margin-bottom: 0; }
-.record-delete { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px 8px; opacity: 0.5; flex-shrink: 0; }
+.record-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.record-edit, .record-delete { background: none; border: none; font-size: 17px; cursor: pointer; padding: 4px 6px; opacity: 0.5; }
+.record-edit:active, .record-delete:active { opacity: 1; }
 .record-lock { font-size: 16px; padding: 4px 8px; opacity: 0.4; }
 .record p { font-size: 13px; color: #6b7684; margin: 3px 0; line-height: 1.4; }
 .record .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
@@ -92,25 +94,12 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <div class="welcome-box">
         <div class="logo">📓</div>
         <h1>Блокнот педагога</h1>
-        <p>Заполните профиль — он сохранится на этом устройстве</p>
+        <p>Заполните профиль. Если данные уже есть в облаке — они подтянутся автоматически.</p>
         <div class="form-group" style="text-align:left;"><label>ФИО *</label><input type="text" id="input-fio" placeholder="Иванов Иван Иванович"></div>
-        <div class="form-group" style="text-align:left;"><label>Логин *</label><input type="text" id="input-login" placeholder="ivanov (латиница, 3+ символа)"><div class="hint">Придумайте сами. Запомните — понадобится для входа с другого устройства.</div></div>
+        <div class="form-group" style="text-align:left;"><label>Логин *</label><input type="text" id="input-login" placeholder="ivanov (латиница, 3+ символа)"><div class="hint">Придумайте сами. Запомните — понадобится для входа с любого устройства.</div></div>
         <div class="form-group" style="text-align:left;"><label>Председатель ПЦК *</label><select id="input-pck"></select></div>
         <div class="form-group" style="text-align:left;"><label>Категория *</label><select id="input-category"><option value="">— выберите —</option><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
         <button class="btn-primary" onclick="saveProfile()">Начать работу</button>
-        <p style="margin-top:16px;font-size:13px;"><a href="#" onclick="showScreen('screen-login');return false;" style="color:#4A6CF7;">Вход с другого устройства →</a></p>
-    </div>
-</div>
-
-<div id="screen-login" class="screen">
-    <div class="welcome-box">
-        <div class="logo">🔄</div>
-        <h1>Вход с другого устройства</h1>
-        <p>Введите те же ФИО и логин, что на первом устройстве</p>
-        <div class="form-group" style="text-align:left;"><label>ФИО</label><input type="text" id="login-fio"></div>
-        <div class="form-group" style="text-align:left;"><label>Логин</label><input type="text" id="login-login"></div>
-        <button class="btn-primary" onclick="tryLogin()">Войти и загрузить данные</button>
-        <p style="margin-top:16px;font-size:13px;"><a href="#" onclick="showScreen('screen-welcome');return false;" style="color:#4A6CF7;">← Новый профиль</a></p>
     </div>
 </div>
 
@@ -136,7 +125,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     </button>
     <button class="menu-btn" onclick="openForm('assessment')">
         <span class="menu-icon">📊</span>
-        <div class="menu-text"><div class="menu-title">Контроль</div><div class="menu-sub">Входной, срезовый, итоговый, проекты</div></div>
+        <div class="menu-text"><div class="menu-title">Контроль</div><div class="menu-sub">Входной, срезовая, итоговый, проекты</div></div>
         <span class="menu-arrow">→</span>
     </button>
     <button class="menu-btn" onclick="openForm('methodical')">
@@ -159,7 +148,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 </div>
 
 <div id="screen-form" class="screen">
-    <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2 id="form-title">Заполнение</h2></div>
+    <div class="form-header"><button class="back-btn" onclick="cancelForm()">←</button><h2 id="form-title">Заполнение</h2></div>
     <div id="form-content"></div>
     <button class="save-btn" onclick="saveRecord()">💾 Сохранить</button>
 </div>
@@ -210,13 +199,15 @@ let profile = null;
 let currentFormType = 'event';
 let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
+let editingRecordId = null;
 let db = null;
 
-// ═══ ПУТИ (плоская структура) ═══
 function getDataFile(fio, login) { return `${ROOT_FOLDER}/Входящие/${slug(fio)}_${login}_${getYear()}.json`; }
 function getPhotosFolder(fio, login) { return `${ROOT_FOLDER}/Входящие/photos/${slug(fio)}_${login}`; }
 function getStatsFolder(fio, login) { return `${ROOT_FOLDER}/Исходящие/${slug(fio)}_${login}`; }
+function getLogFile(fio, login) { return `${ROOT_FOLDER}/_log/${slug(fio)}_${login}_${getYear()}.json`; }
 
+// ═══ СТАРТ ═══
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
     pckSelect.innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
@@ -226,19 +217,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         profile = savedProfile;
         updateProfileUI();
         showScreen('screen-main');
-        setTimeout(() => { loadFromIncoming(true); }, 800);
+        setTimeout(() => { mergeWithCloud().catch(() => {}); }, 800);
     } else {
         showScreen('screen-welcome');
     }
-
-    window.addEventListener('online', async () => {
-        if (!profile) return;
-        const unsent = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.sent);
-        if (unsent.length > 0) {
-            showToast('🌐 Интернет появился — отправляем...');
-            await sendToCloudSilent();
-        }
-    });
 });
 
 function showScreen(id) {
@@ -247,6 +229,7 @@ function showScreen(id) {
     window.scrollTo(0, 0);
 }
 function backToMain() { showScreen('screen-main'); }
+function cancelForm() { editingRecordId = null; backToMain(); }
 
 // ═══ ПРОФИЛЬ ═══
 async function saveProfile() {
@@ -259,26 +242,49 @@ async function saveProfile() {
     if (!pck) { showToast('Выберите ПЦК'); return; }
     if (!category) { showToast('Выберите категорию'); return; }
 
+    showToast('⏳ Проверяем данные в облаке...');
+
+    // Ищем файл в облаке
+    let cloudData = null;
+    try { cloudData = await downloadJson(getDataFile(fio, login)); } catch (e) {}
+
+    if (cloudData && cloudData.profile) {
+        const isThisYou = confirm(
+            'Найдены данные в облаке:\n\n' +
+            'ФИО: ' + (cloudData.profile.fio || '—') + '\n' +
+            'ПЦК: ' + (cloudData.profile.pck || '—') + '\n' +
+            'Категория: ' + (cloudData.profile.category || '—') + '\n\n' +
+            'Это вы? Нажмите ОК для входа.\nОтмена — выберите другой логин.'
+        );
+        if (!isThisYou) {
+            showToast('Выберите другой логин');
+            return;
+        }
+        // Входим под облачным профилем
+        profile = cloudData.profile;
+        await saveSetting('profile', profile);
+        updateProfileUI();
+        showScreen('screen-main');
+        const merged = await mergeWithCloud();
+        logActivity('login_existing', { added: merged.added });
+        showToast('С возвращением! Записей: ' + merged.added);
+        return;
+    }
+
+    // Новый профиль
     profile = { fio, login, pck, category, year: getYear(), createdAt: new Date().toISOString() };
     await saveSetting('profile', profile);
     updateProfileUI();
     showScreen('screen-main');
-    showToast('Профиль сохранён');
-
-    try {
-        await ensureFolder(ROOT_FOLDER);
-        await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(`${ROOT_FOLDER}/Входящие/photos`);
-        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
-        await sendToCloudSilent();
-    } catch (e) { console.warn(e); }
+    showToast('Профиль создан');
+    logActivity('register');
 }
 
 function updateProfileUI() {
     const initials = profile.fio.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
     document.getElementById('avatar').textContent = initials || '?';
     document.getElementById('teacher-display').textContent = profile.fio;
-    document.getElementById('teacher-sub').textContent = `${profile.category} • ПЦК: ${profile.pck}`;
+    document.getElementById('teacher-sub').textContent = profile.category + ' • ПЦК: ' + profile.pck;
 }
 
 function showProfileSwitcher() {
@@ -290,7 +296,7 @@ function showProfileSwitcher() {
 }
 function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
 async function resetProfile() {
-    if (!confirm('Сбросить профиль?')) return;
+    if (!confirm('Сбросить профиль? Данные в облаке останутся, локальные — сохранятся.')) return;
     await saveSetting('profile', null);
     profile = null; closeModal(); location.reload();
 }
@@ -314,12 +320,8 @@ async function saveEditedProfile() {
     if (oldFio !== newFio || oldLogin !== newLogin) {
         if (!confirm('Файлы в облаке будут переименованы. Продолжить?')) return;
         try {
-            // Перемещаем data-файл
-            await fetch(`https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(getDataFile(oldFio, oldLogin))}&path=${encodeURIComponent(getDataFile(newFio, newLogin))}&overwrite=true`,
-                { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
-            // Перемещаем папку с фото
-            await fetch(`https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(getPhotosFolder(oldFio, oldLogin))}&path=${encodeURIComponent(getPhotosFolder(newFio, newLogin))}&overwrite=true`,
-                { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+            await fetch('https://cloud-api.yandex.net/v1/disk/resources/move?from=' + encodeURIComponent(getDataFile(oldFio, oldLogin)) + '&path=' + encodeURIComponent(getDataFile(newFio, newLogin)) + '&overwrite=true',
+                { method: 'POST', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
         } catch (e) {}
     }
     profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory, year: getYear(), createdAt: profile.createdAt };
@@ -331,49 +333,21 @@ async function saveEditedProfile() {
     updateProfileUI();
     showToast('✅ Профиль обновлён');
     backToMain();
-    setTimeout(() => sendToCloudSilent(), 500);
+    logActivity('profile_edit');
 }
 
-// ═══ ВХОД С ДРУГОГО УСТРОЙСТВА ═══
-async function tryLogin() {
-    const fio = document.getElementById('login-fio').value.trim();
-    const login = document.getElementById('login-login').value.trim();
-    if (!fio || !login) { showToast('Введите ФИО и логин'); return; }
-
-    showToast('⏳ Проверяем...');
-    const data = await downloadJson(getDataFile(fio, login));
-
-    if (!data || !data.profile) {
-        showToast('Профиль не найден. Проверьте ФИО и логин');
-        return;
-    }
-
-    profile = data.profile;
-    await saveSetting('profile', profile);
-    updateProfileUI();
-    showScreen('screen-main');
-
-    const added = await importRecordsFromData(data);
-    showToast(`Загружено записей: ${added}`);
-}
-
-// ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
-async function loadFromIncoming(silent) {
-    if (!profile) return 0;
+// ═══ MERGE ═══
+async function mergeWithCloud() {
+    if (!profile) return { added: 0, updated: 0 };
     const data = await downloadJson(getDataFile(profile.fio, profile.login));
-    if (!data || !data.profile) {
-        if (!silent) showToast('В облаке пока нет данных');
-        return 0;
-    }
-    profile = { ...profile, ...data.profile };
-    await saveSetting('profile', profile);
-    updateProfileUI();
-    const added = await importRecordsFromData(data);
-    if (!silent && added > 0) showToast(`Из облака загружено: ${added}`);
-    return added;
-}
+    if (!data) return { added: 0, updated: 0 };
 
-async function importRecordsFromData(data) {
+    if (data.profile) {
+        profile = { ...profile, pck: data.profile.pck || profile.pck, category: data.profile.category || profile.category };
+        await saveSetting('profile', profile);
+        updateProfileUI();
+    }
+
     const allTypes = ['events', 'trainings', 'assessments', 'methodical', 'activity'];
     const cloudRecords = [];
     for (const key of allTypes) {
@@ -381,37 +355,87 @@ async function importRecordsFromData(data) {
             for (const item of data[key]) cloudRecords.push(item);
         }
     }
-    if (cloudRecords.length === 0) return 0;
+    if (cloudRecords.length === 0) return { added: 0, updated: 0 };
 
     const localRecords = await getAllRecords();
-    const localUids = new Set();
-    const localCreatedAt = new Set();
+    const localByUid = new Map();
+    const localByCreated = new Map();
     for (const r of localRecords) {
-        if (r.uid) localUids.add(r.uid);
-        if (r.createdAt) localCreatedAt.add(r.createdAt);
+        if (r.uid) localByUid.set(r.uid, r);
+        if (r.createdAt) localByCreated.set(r.createdAt, r);
     }
 
-    let added = 0;
+    let added = 0, updated = 0;
     for (const cloud of cloudRecords) {
-        if (cloud.uid && localUids.has(cloud.uid)) continue;
-        if (cloud.createdAt && localCreatedAt.has(cloud.createdAt)) continue;
-        cloud.teacher = profile.fio;
-        cloud.teacherLogin = profile.login;
-        cloud.pck = profile.pck;
-        cloud.sent = true;
-        cloud.photoUploaded = true;
-        cloud.fromCloud = true;
-        if (!cloud.uid) cloud.uid = 'c' + Date.now() + Math.random().toString(36).slice(2,8);
-        await saveRecordToDB(cloud);
-        localUids.add(cloud.uid);
-        localCreatedAt.add(cloud.createdAt);
-        added++;
+        let local = null;
+        if (cloud.uid && localByUid.has(cloud.uid)) local = localByUid.get(cloud.uid);
+        else if (cloud.createdAt && localByCreated.has(cloud.createdAt)) local = localByCreated.get(cloud.createdAt);
+
+        if (!local) {
+            cloud.teacher = profile.fio;
+            cloud.teacherLogin = profile.login;
+            cloud.pck = profile.pck;
+            cloud.sent = true;
+            cloud.photoUploaded = true;
+            cloud.fromCloud = true;
+            if (!cloud.uid) cloud.uid = 'c' + Date.now() + Math.random().toString(36).slice(2,8);
+            await saveRecordToDB(cloud);
+            added++;
+        } else {
+            const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
+            const localTime = new Date(local.updatedAt || local.createdAt).getTime();
+            if (cloudTime > localTime) {
+                const keepId = local.id;
+                const merged = { ...cloud, id: keepId, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true };
+                if (!merged.uid) merged.uid = local.uid;
+                await updateRecord(merged);
+                updated++;
+            }
+        }
     }
-    return added;
+    return { added, updated };
 }
 
-// ═══ ФОРМЫ (без изменений) ═══
+// ═══ ЛОГ АКТИВНОСТИ ═══
+function getDeviceInfo() {
+    const ua = navigator.userAgent;
+    let type = 'Компьютер';
+    if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) type = 'Смартфон';
+    let os = 'Неизвестно';
+    if (/Windows/i.test(ua)) os = 'Windows';
+    else if (/Mac/i.test(ua)) os = 'macOS';
+    else if (/Android/i.test(ua)) os = 'Android';
+    else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+    else if (/Linux/i.test(ua)) os = 'Linux';
+    let browser = 'Другой';
+    if (/YaBrowser/i.test(ua)) browser = 'Яндекс';
+    else if (/Chrome/i.test(ua)) browser = 'Chrome';
+    else if (/Firefox/i.test(ua)) browser = 'Firefox';
+    else if (/Safari/i.test(ua)) browser = 'Safari';
+    return type + ' • ' + os + ' • ' + browser;
+}
+
+async function logActivity(action, extra) {
+    if (!profile) return;
+    try {
+        const logPath = getLogFile(profile.fio, profile.login);
+        let log = await downloadJson(logPath).catch(() => null);
+        if (!log || !log.events) log = { events: [] };
+        log.events.push(Object.assign({
+            time: new Date().toISOString(),
+            action: action,
+            device: getDeviceInfo()
+        }, extra || {}));
+        if (log.events.length > 200) log.events = log.events.slice(-200);
+        await ensureFolder(ROOT_FOLDER);
+        await ensureFolder(ROOT_FOLDER + '/_log');
+        await uploadToYandex(logPath, JSON.stringify(log, null, 2));
+    } catch (e) { console.warn('logActivity:', e); }
+}
+
+// ═══ ФОРМЫ ═══
 function openForm(type) {
+    editingRecordId = null;
     currentFormType = type;
     document.getElementById('form-title').textContent =
         type === 'event' ? '🏆 Событие' :
@@ -421,6 +445,7 @@ function openForm(type) {
     renderForm(type);
     showScreen('screen-form');
 }
+
 function renderForm(type) {
     const c = document.getElementById('form-content');
     if (type === 'event') c.innerHTML = renderEventForm();
@@ -443,111 +468,112 @@ function bindPhotoPreview() {
     });
 }
 function renderEventForm() {
-    return `<div class="card"><h3>Основное</h3>
-        <div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>
-        <div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
-            <option value="конкурс">Конкурс</option><option value="олимпиада">Олимпиада</option><option value="конференция">Конференция</option>
-            <option value="форум">Форум</option><option value="семинар">Семинар</option><option value="соревнование">Соревнование</option>
-            <option value="круглый стол">Круглый стол</option><option value="фестиваль">Фестиваль</option>
-            <option value="Абилимпикс">Абилимпикс</option><option value="акция/диктант">Акция / Диктант</option><option value="другое">Другое</option>
-        </select></div>
-        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>
-        <div class="form-group"><label>Уровень</label><select id="f-level">
-            <option value="образовательная организация">Образовательная организация</option><option value="муниципальный">Муниципальный</option>
-            <option value="областной">Областной</option><option value="региональный">Региональный</option>
-            <option value="межрегиональный">Межрегиональный</option><option value="всероссийский">Всероссийский</option><option value="международный">Международный</option>
-        </select></div>
-        <div class="form-group"><label>Вид участия</label><select id="f-participation">
-            <option value="очно">Очно</option><option value="дистанционно">Дистанционно</option><option value="заочно">Заочно</option><option value="интернет-конкурс">Интернет-конкурс</option>
-        </select></div>
-        <div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>
-        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
-    </div>
-    <div class="card"><h3>Участники</h3>
-        <div class="toggle-group">
-            <label class="toggle"><input type="checkbox" id="f-has-teacher" onchange="document.getElementById('f-teacher-block').classList.toggle('hidden',!this.checked)"> Преподаватель</label>
-            <label class="toggle"><input type="checkbox" id="f-has-students" onchange="toggleStudentsBlock()"> Студенты</label>
-        </div>
-    </div>
-    <div id="f-teacher-block" class="card hidden"><h3>Моё участие</h3><div id="f-roles-container"></div><button type="button" class="add-btn" onclick="addTeacherRole()">+ Добавить роль</button></div>
-    <div id="f-students-block" class="card hidden"><h3>Студенты</h3><div id="f-students-container"></div><button type="button" class="add-btn" onclick="addStudentsGroup()">+ Добавить группу</button></div>
-    <div class="card"><h3>Фото подтверждения</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>`;
+    return '<div class="card"><h3>Основное</h3>' +
+        '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')">' +
+            '<option value="конкурс">Конкурс</option><option value="олимпиада">Олимпиада</option><option value="конференция">Конференция</option>' +
+            '<option value="форум">Форум</option><option value="семинар">Семинар</option><option value="соревнование">Соревнование</option>' +
+            '<option value="круглый стол">Круглый стол</option><option value="фестиваль">Фестиваль</option>' +
+            '<option value="Абилимпикс">Абилимпикс</option><option value="акция/диктант">Акция / Диктант</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
+        '<div class="form-group"><label>Уровень</label><select id="f-level">' +
+            '<option value="образовательная организация">Образовательная организация</option><option value="муниципальный">Муниципальный</option>' +
+            '<option value="областной">Областной</option><option value="региональный">Региональный</option>' +
+            '<option value="межрегиональный">Межрегиональный</option><option value="всероссийский">Всероссийский</option><option value="международный">Международный</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Вид участия</label><select id="f-participation">' +
+            '<option value="очно">Очно</option><option value="дистанционно">Дистанционно</option><option value="заочно">Заочно</option><option value="интернет-конкурс">Интернет-конкурс</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>' +
+        '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
+    '</div>' +
+    '<div class="card"><h3>Участники</h3>' +
+        '<div class="toggle-group">' +
+            '<label class="toggle"><input type="checkbox" id="f-has-teacher" onchange="document.getElementById(\'f-teacher-block\').classList.toggle(\'hidden\',!this.checked)"> Преподаватель</label>' +
+            '<label class="toggle"><input type="checkbox" id="f-has-students" onchange="toggleStudentsBlock()"> Студенты</label>' +
+        '</div>' +
+    '</div>' +
+    '<div id="f-teacher-block" class="card hidden"><h3>Моё участие</h3><div id="f-roles-container"></div><button type="button" class="add-btn" onclick="addTeacherRole()">+ Добавить роль</button></div>' +
+    '<div id="f-students-block" class="card hidden"><h3>Студенты</h3><div id="f-students-container"></div><button type="button" class="add-btn" onclick="addStudentsGroup()">+ Добавить группу</button></div>' +
+    '<div class="card"><h3>Фото подтверждения</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
 }
 function renderTrainingForm() {
-    return `<div class="card"><h3>Обучение</h3>
-        <div class="form-group"><label>Вид обучения</label><select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
-            <option value="КПК">КПК</option><option value="стажировка">Стажировка</option><option value="переподготовка">Переподготовка</option>
-            <option value="высшее образование">Высшее образование</option><option value="магистратура">Магистратура</option>
-            <option value="обучение по Абилимпикс">Обучение по Абилимпикс</option><option value="другое">Другое</option>
-        </select></div>
-        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните вид</label><input type="text" id="f-type-custom"></div>
-        <div class="form-group"><label>Название программы *</label><input type="text" id="f-name"></div>
-        <div class="form-group"><label>Объём (часы)</label><input type="number" id="f-hours"></div>
-        <div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>
-        <div class="form-group"><label>Дата получения документа</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
-    </div>
-    <div class="card"><h3>Фото документа</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>`;
+    return '<div class="card"><h3>Обучение</h3>' +
+        '<div class="form-group"><label>Вид обучения</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')">' +
+            '<option value="КПК">КПК</option><option value="стажировка">Стажировка</option><option value="переподготовка">Переподготовка</option>' +
+            '<option value="высшее образование">Высшее образование</option><option value="магистратура">Магистратура</option>' +
+            '<option value="обучение по Абилимпикс">Обучение по Абилимпикс</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните вид</label><input type="text" id="f-type-custom"></div>' +
+        '<div class="form-group"><label>Название программы *</label><input type="text" id="f-name"></div>' +
+        '<div class="form-group"><label>Объём (часы)</label><input type="number" id="f-hours"></div>' +
+        '<div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>' +
+        '<div class="form-group"><label>Дата получения документа</label><input type="date" id="f-date"></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
+    '</div>' +
+    '<div class="card"><h3>Фото документа</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
 }
 function renderAssessmentForm() {
-    return `<div class="card"><h3>Контроль</h3>
-        <div class="form-group"><label>Тип</label><select id="f-type" onchange="onAssessmentTypeChange()">
-            <option value="входной контроль">Входной контроль</option><option value="срезовый к/р">Срезовый к/р</option>
-            <option value="итоговая оценка">Итоговая оценка</option><option value="проектная деятельность">Проектная деятельность</option><option value="другое">Другое</option>
-        </select></div>
-        <div class="form-group"><label>Группа</label><input type="text" id="f-group" placeholder="АЭ-11"></div>
-        <div class="form-group"><label>Предмет/МДК</label><input type="text" id="f-subject"></div>
-        <div class="form-group"><label>Всего в группе</label><input type="number" id="f-total"></div>
-        <div class="form-group"><label>Отсутствовали</label><input type="number" id="f-absent"></div>
-        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-ovz"> В группе есть студенты с ОВЗ</label></div>
-    </div>
-    <div id="f-grades-block" class="card"><h3>Результаты</h3><div class="grade-grid">
-        <div class="form-group"><label>"5"</label><input type="number" id="f-c5"></div>
-        <div class="form-group"><label>"4"</label><input type="number" id="f-c4"></div>
-        <div class="form-group"><label>"3"</label><input type="number" id="f-c3"></div>
-        <div class="form-group"><label>"2"</label><input type="number" id="f-c2"></div>
-    </div></div>
-    <div id="f-project-block" class="card hidden"><h3>Проектная деятельность</h3><div class="form-group"><label>Сколько человек участвуют</label><input type="number" id="f-project"></div></div>`;
+    return '<div class="card"><h3>Контроль</h3>' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="onAssessmentTypeChange()">' +
+            '<option value="входной контроль">Входной контроль</option><option value="срезовая к/р">Срезовая к/р</option>' +
+            '<option value="итоговая оценка">Итоговая оценка</option><option value="проектная деятельность">Проектная деятельность</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Группа</label><input type="text" id="f-group" placeholder="АЭ-11"></div>' +
+        '<div class="form-group"><label>Предмет/МДК</label><input type="text" id="f-subject"></div>' +
+        '<div class="form-group"><label>Всего в группе</label><input type="number" id="f-total"></div>' +
+        '<div class="form-group"><label>Отсутствовали</label><input type="number" id="f-absent"></div>' +
+        '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-ovz"> В группе есть студенты с ОВЗ</label></div>' +
+    '</div>' +
+    '<div id="f-grades-block" class="card"><h3>Результаты</h3><div class="grade-grid">' +
+        '<div class="form-group"><label>"5"</label><input type="number" id="f-c5"></div>' +
+        '<div class="form-group"><label>"4"</label><input type="number" id="f-c4"></div>' +
+        '<div class="form-group"><label>"3"</label><input type="number" id="f-c3"></div>' +
+        '<div class="form-group"><label>"2"</label><input type="number" id="f-c2"></div>' +
+    '</div></div>' +
+    '<div id="f-project-block" class="card hidden"><h3>Проектная деятельность</h3><div class="form-group"><label>Сколько человек участвуют</label><input type="number" id="f-project"></div></div>';
 }
 function renderMethodicalForm() {
-    return `<div class="card"><h3>Методическая работа</h3>
-        <div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
-            <option value="УМК">УМК</option><option value="рабочая программа">Рабочая программа</option>
-            <option value="дидактические материалы">Дидактические материалы</option><option value="публикация">Публикация</option>
-            <option value="электронный курс">Электронный курс</option><option value="видеолекция">Видеолекция</option><option value="другое">Другое</option>
-        </select></div>
-        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>
-        <div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>
-        <div class="form-group"><label>Роль</label><select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option><option value="разработчик">Разработчик</option></select></div>
-        <div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>
-        <div class="form-group"><label>Уровень</label><select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select></div>
-        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
-    </div>
-    <div class="card"><h3>Фото (приказ / титульный лист)</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>`;
+    return '<div class="card"><h3>Методическая работа</h3>' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')">' +
+            '<option value="УМК">УМК</option><option value="рабочая программа">Рабочая программа</option>' +
+            '<option value="дидактические материалы">Дидактические материалы</option><option value="публикация">Публикация</option>' +
+            '<option value="электронный курс">Электронный курс</option><option value="видеолекция">Видеолекция</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
+        '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
+        '<div class="form-group"><label>Роль</label><select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option><option value="разработчик">Разработчик</option></select></div>' +
+        '<div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>' +
+        '<div class="form-group"><label>Уровень</label><select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select></div>' +
+        '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
+    '</div>' +
+    '<div class="card"><h3>Фото (приказ / титульный лист)</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
 }
 function renderActivityForm() {
-    return `<div class="card"><h3>Трансляция и активность</h3>
-        <div class="form-group"><label>Тип активности</label><select id="f-type" onchange="toggleCustom('f-type','f-type-custom-group')">
-            <option value="открытый урок">Открытый урок</option><option value="мастер-класс">Мастер-класс</option>
-            <option value="выступление на педсовете">Выступление на педсовете</option><option value="выступление на методсовете">Выступление на методсовете</option>
-            <option value="выступление на ПЦК">Выступление на ПЦК</option><option value="взаимопосещение (свой)">Взаимопосещение — я посетил</option>
-            <option value="взаимопосещение (у меня)">Взаимопосещение — посетили меня</option><option value="публикация">Публикация</option>
-            <option value="наставничество">Наставничество</option><option value="органы самоуправления">Работа в органах самоуправления</option>
-            <option value="кино/театр/выставка">Кино / Театр / Выставка / Музей</option><option value="экскурсия">Экскурсия</option>
-            <option value="приглашение специалиста">Приглашение специалиста</option><option value="профориентация">Профориентация</option>
-            <option value="работа с ОВЗ">Работа с ОВЗ</option><option value="другое">Другое</option>
-        </select></div>
-        <div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>
-        <div class="form-group"><label>Название / тема *</label><input type="text" id="f-name"></div>
-        <div class="form-group"><label>Уровень</label><select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select></div>
-        <div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>
-    </div>
-    <div class="card"><h3>Фото подтверждения</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>`;
+    return '<div class="card"><h3>Трансляция и активность</h3>' +
+        '<div class="form-group"><label>Тип активности</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')">' +
+            '<option value="открытый урок">Открытый урок</option><option value="мастер-класс">Мастер-класс</option>' +
+            '<option value="выступление на педсовете">Выступление на педсовете</option><option value="выступление на методсовете">Выступление на методсовете</option>' +
+            '<option value="выступление на ПЦК">Выступление на ПЦК</option><option value="взаимопосещение (свой)">Взаимопосещение — я посетил</option>' +
+            '<option value="взаимопосещение (у меня)">Взаимопосещение — посетили меня</option><option value="публикация">Публикация</option>' +
+            '<option value="наставничество">Наставничество</option><option value="органы самоуправления">Работа в органах самоуправления</option>' +
+            '<option value="кино/театр/выставка">Кино / Театр / Выставка / Музей</option><option value="экскурсия">Экскурсия</option>' +
+            '<option value="приглашение специалиста">Приглашение специалиста</option><option value="профориентация">Профориентация</option>' +
+            '<option value="работа с ОВЗ">Работа с ОВЗ</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
+        '<div class="form-group"><label>Название / тема *</label><input type="text" id="f-name"></div>' +
+        '<div class="form-group"><label>Уровень</label><select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select></div>' +
+        '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
+    '</div>' +
+    '<div class="card"><h3>Фото подтверждения</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
 }
+
 function toggleCustom(selectId, groupId) {
     const sel = document.getElementById(selectId);
     const grp = document.getElementById(groupId);
@@ -563,46 +589,76 @@ function onAssessmentTypeChange() {
     document.getElementById('f-grades-block').classList.toggle('hidden', isProject);
     document.getElementById('f-project-block').classList.toggle('hidden', !isProject);
 }
-function addTeacherRole() {
+function addTeacherRole(data) {
     teacherRolesCounter++;
     const id = teacherRolesCounter;
-    document.getElementById('f-roles-container').insertAdjacentHTML('beforeend', `
-        <div class="sub-block" id="trole-${id}">
-            <div class="sub-block-header"><span>Роль ${id}</span><button type="button" onclick="document.getElementById('trole-${id}').remove()">✕</button></div>
-            <div class="form-group"><label>Роль</label><select class="t-role">
-                <option value="участник/конкурсант">Участник/конкурсант</option><option value="жюри">Жюри</option><option value="организатор">Организатор</option>
-                <option value="эксперт/судья">Эксперт/судья</option><option value="слушатель">Слушатель</option><option value="спикер/выступающий">Спикер/выступающий</option><option value="рабочая группа">Рабочая группа</option>
-            </select></div>
-            <div class="form-group"><label>Итог</label><select class="t-result"><option value="">— нет —</option><option value="сертификат участника">Сертификат</option><option value="благодарность">Благодарность</option><option value="диплом победителя">Диплом победителя</option></select></div>
-            <div class="form-group"><label>Место</label><select class="t-place"><option value="">— нет —</option><option value="1 место">1 место</option><option value="2 место">2 место</option><option value="3 место">3 место</option><option value="гран-при">Гран-при</option><option value="приз зрительских симпатий">Приз зрительских симпатий</option></select></div>
-        </div>`);
+    const role = (data && data.role) || '';
+    const result = (data && data.result) || '';
+    const place = (data && data.place) || '';
+    const html = '<div class="sub-block" id="trole-' + id + '">' +
+        '<div class="sub-block-header"><span>Роль</span><button type="button" onclick="document.getElementById(\'trole-' + id + '\').remove()">✕</button></div>' +
+        '<div class="form-group"><label>Роль</label><select class="t-role">' +
+            '<option value="участник/конкурсант"' + (role === 'участник/конкурсант' ? ' selected' : '') + '>Участник/конкурсант</option>' +
+            '<option value="жюри"' + (role === 'жюри' ? ' selected' : '') + '>Жюри</option>' +
+            '<option value="организатор"' + (role === 'организатор' ? ' selected' : '') + '>Организатор</option>' +
+            '<option value="эксперт/судья"' + (role === 'эксперт/судья' ? ' selected' : '') + '>Эксперт/судья</option>' +
+            '<option value="слушатель"' + (role === 'слушатель' ? ' selected' : '') + '>Слушатель</option>' +
+            '<option value="спикер/выступающий"' + (role === 'спикер/выступающий' ? ' selected' : '') + '>Спикер/выступающий</option>' +
+            '<option value="рабочая группа"' + (role === 'рабочая группа' ? ' selected' : '') + '>Рабочая группа</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Итог</label><select class="t-result">' +
+            '<option value="">— нет —</option>' +
+            '<option value="сертификат участника"' + (result === 'сертификат участника' ? ' selected' : '') + '>Сертификат</option>' +
+            '<option value="благодарность"' + (result === 'благодарность' ? ' selected' : '') + '>Благодарность</option>' +
+            '<option value="диплом победителя"' + (result === 'диплом победителя' ? ' selected' : '') + '>Диплом победителя</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Место</label><select class="t-place">' +
+            '<option value="">— нет —</option>' +
+            '<option value="1 место"' + (place === '1 место' ? ' selected' : '') + '>1 место</option>' +
+            '<option value="2 место"' + (place === '2 место' ? ' selected' : '') + '>2 место</option>' +
+            '<option value="3 место"' + (place === '3 место' ? ' selected' : '') + '>3 место</option>' +
+            '<option value="гран-при"' + (place === 'гран-при' ? ' selected' : '') + '>Гран-при</option>' +
+            '<option value="приз зрительских симпатий"' + (place === 'приз зрительских симпатий' ? ' selected' : '') + '>Приз зрительских симпатий</option>' +
+        '</select></div>' +
+    '</div>';
+    document.getElementById('f-roles-container').insertAdjacentHTML('beforeend', html);
 }
-function addStudentsGroup() {
+function addStudentsGroup(data) {
     studentsGroupCounter++;
     const id = studentsGroupCounter;
-    document.getElementById('f-students-container').insertAdjacentHTML('beforeend', `
-        <div class="sub-block" id="sgroup-${id}">
-            <div class="sub-block-header"><span>Группа ${id}</span><button type="button" onclick="document.getElementById('sgroup-${id}').remove()">✕</button></div>
-            <div class="form-group"><label>Группа</label><input type="text" class="s-group"></div>
-            <div class="form-group"><label>Количество участников</label><input type="number" class="s-count"></div>
-            <div class="form-group"><label>ФИО участников</label><textarea class="s-names"></textarea></div>
-            <p class="hint">Победители (если есть)</p>
-            <div class="s-diplomas" id="s-diplomas-${id}"></div>
-            <button type="button" class="add-btn" onclick="addDiploma(${id})">+ Добавить место</button>
-        </div>`);
+    const g = data || {};
+    const html = '<div class="sub-block" id="sgroup-' + id + '">' +
+        '<div class="sub-block-header"><span>Группа</span><button type="button" onclick="document.getElementById(\'sgroup-' + id + '\').remove()">✕</button></div>' +
+        '<div class="form-group"><label>Группа</label><input type="text" class="s-group" value="' + (g.group || '') + '"></div>' +
+        '<div class="form-group"><label>Количество участников</label><input type="number" class="s-count" value="' + (g.count || '') + '"></div>' +
+        '<div class="form-group"><label>ФИО участников</label><textarea class="s-names">' + (g.names || '') + '</textarea></div>' +
+        '<p class="hint">Победители (если есть)</p>' +
+        '<div class="s-diplomas" id="s-diplomas-' + id + '"></div>' +
+        '<button type="button" class="add-btn" onclick="addDiploma(' + id + ')">+ Добавить место</button>' +
+    '</div>';
+    document.getElementById('f-students-container').insertAdjacentHTML('beforeend', html);
+    if (g.diplomas && g.diplomas.length) {
+        for (const d of g.diplomas) addDiploma(id, d);
+    }
 }
-function addDiploma(groupId) {
+function addDiploma(groupId, data) {
     const container = document.getElementById('s-diplomas-' + groupId);
     const id = 'd' + Date.now() + Math.random().toString(36).slice(2,5);
-    container.insertAdjacentHTML('beforeend', `
-        <div class="sub-block" id="${id}" style="background:white;">
-            <div class="sub-block-header"><span>Место</span><button type="button" onclick="document.getElementById('${id}').remove()">✕</button></div>
-            <div class="form-group"><label>Место</label><select class="s-place"><option value="1 место">1 место</option><option value="2 место">2 место</option><option value="3 место">3 место</option><option value="гран-при">Гран-при</option></select></div>
-            <div class="form-group"><label>ФИО победителя</label><input type="text" class="s-winner"></div>
-        </div>`);
+    const d = data || {};
+    const html = '<div class="sub-block" id="' + id + '" style="background:white;">' +
+        '<div class="sub-block-header"><span>Место</span><button type="button" onclick="document.getElementById(\'' + id + '\').remove()">✕</button></div>' +
+        '<div class="form-group"><label>Место</label><select class="s-place">' +
+            '<option value="1 место"' + (d.place === '1 место' ? ' selected' : '') + '>1 место</option>' +
+            '<option value="2 место"' + (d.place === '2 место' ? ' selected' : '') + '>2 место</option>' +
+            '<option value="3 место"' + (d.place === '3 место' ? ' selected' : '') + '>3 место</option>' +
+            '<option value="гран-при"' + (d.place === 'гран-при' ? ' selected' : '') + '>Гран-при</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>ФИО победителя</label><input type="text" class="s-winner" value="' + (d.winner || '') + '"></div>' +
+    '</div>';
+    container.insertAdjacentHTML('beforeend', html);
 }
 
-// ═══ БАЗА ДАННЫХ ═══
+// ═══ БАЗА ═══
 function openDB() {
     return new Promise((resolve, reject) => {
         if (db) return resolve(db);
@@ -623,16 +679,40 @@ async function getAllRecords() { const d = await openDB(); return new Promise(r 
 async function updateRecord(rec) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').put(rec); tx.oncomplete = r; }); }
 async function deleteRecordById(id) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; }); }
 
-// ═══ СОХРАНЕНИЕ ЗАПИСИ ═══
+// ═══ СОХРАНЕНИЕ ═══
 async function saveRecord() {
     const type = currentFormType;
-    let record = { type, uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8), teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, year: getYear(), createdAt: new Date().toISOString(), sent: false, fromCloud: false };
+    const now = new Date().toISOString();
+    let record;
+
+    if (editingRecordId) {
+        const all = await getAllRecords();
+        record = all.find(r => r.id === editingRecordId) || {};
+        record.updatedAt = now;
+    } else {
+        record = {
+            uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8),
+            createdAt: now,
+            updatedAt: now,
+            sent: false,
+            fromCloud: false
+        };
+    }
+
+    record.type = type;
+    record.teacher = profile.fio;
+    record.teacherLogin = profile.login;
+    record.pck = profile.pck;
+    record.year = getYear();
+
     const getVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
     const getCheck = id => { const el = document.getElementById(id); return el ? el.checked : false; };
+
     record.name = getVal('f-name').trim();
     if (!record.name) { showToast('Введите название'); return; }
     record.date = getVal('f-date');
     record.prof = getCheck('f-prof');
+
     if (type === 'event') {
         record.eventType = getVal('f-type');
         if (record.eventType === 'другое') record.eventTypeCustom = getVal('f-type-custom');
@@ -643,11 +723,13 @@ async function saveRecord() {
             group: g.querySelector('.s-group').value, count: g.querySelector('.s-count').value, names: g.querySelector('.s-names').value,
             diplomas: [...g.querySelectorAll('.s-diplomas .sub-block')].map(d => ({ place: d.querySelector('.s-place').value, winner: d.querySelector('.s-winner').value }))
         }));
-        record.photo = await getPhoto('f-photo');
+        const newPhoto = await getPhoto('f-photo');
+        if (newPhoto) record.photo = newPhoto;
     } else if (type === 'training') {
         record.trainingType = getVal('f-type');
         if (record.trainingType === 'другое') record.trainingTypeCustom = getVal('f-type-custom');
-        record.hours = getVal('f-hours'); record.place = getVal('f-place'); record.photo = await getPhoto('f-photo');
+        record.hours = getVal('f-hours'); record.place = getVal('f-place');
+        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
     } else if (type === 'assessment') {
         record.assessmentType = getVal('f-type'); record.group = getVal('f-group'); record.subject = getVal('f-subject');
         record.total = parseInt(getVal('f-total')) || 0; record.absent = parseInt(getVal('f-absent')) || 0; record.ovz = getCheck('f-ovz');
@@ -660,22 +742,28 @@ async function saveRecord() {
     } else if (type === 'methodical') {
         record.methodicalType = getVal('f-type');
         if (record.methodicalType === 'другое') record.methodicalTypeCustom = getVal('f-type-custom');
-        record.role = getVal('f-role'); record.status = getVal('f-status'); record.level = getVal('f-level'); record.photo = await getPhoto('f-photo');
+        record.role = getVal('f-role'); record.status = getVal('f-status'); record.level = getVal('f-level');
+        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
     } else if (type === 'activity') {
         record.activityType = getVal('f-type');
         if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
-        record.level = getVal('f-level'); record.photo = await getPhoto('f-photo');
+        record.level = getVal('f-level');
+        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
     }
-    await saveRecordToDB(record);
+
+    if (editingRecordId) {
+        record.sent = false;
+        await updateRecord(record);
+        logActivity('edit', { uid: record.uid });
+        showToast('✅ Изменения сохранены');
+    } else {
+        await saveRecordToDB(record);
+        logActivity('create', { type: type, name: record.name });
+        showToast('✅ Сохранено');
+    }
+    editingRecordId = null;
     clearForm();
     backToMain();
-
-    if (navigator.onLine) {
-        showToast('💾 Сохранено. Отправляем...');
-        setTimeout(() => sendToCloudSilent(), 300);
-    } else {
-        showToast('💾 Сохранено локально (нет интернета)');
-    }
 }
 
 function clearForm() {
@@ -712,53 +800,122 @@ function compressImage(file, maxWidth = 800, quality = 0.7) {
     });
 }
 
+// ═══ РЕДАКТИРОВАНИЕ ═══
+async function editRecord(id) {
+    const all = await getAllRecords();
+    const rec = all.find(r => r.id === id);
+    if (!rec) return;
+    if (rec.fromCloud) { showToast('Запись из облака — редактирование недоступно'); return; }
+    const age = Date.now() - new Date(rec.createdAt).getTime();
+    if (age > 48 * 60 * 60 * 1000) { showToast('Прошло 48 часов — редактирование недоступно'); return; }
+
+    editingRecordId = id;
+    currentFormType = rec.type;
+    document.getElementById('form-title').textContent = '✏️ Редактирование';
+    renderForm(rec.type);
+
+    setTimeout(() => {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v == null ? '' : v; };
+        const setC = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+        set('f-name', rec.name);
+        set('f-date', rec.date);
+        setC('f-prof', rec.prof);
+
+        if (rec.type === 'event') {
+            set('f-type', rec.eventType);
+            if (rec.eventType === 'другое') { set('f-type-custom', rec.eventTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
+            set('f-level', rec.level); set('f-participation', rec.participation); set('f-place', rec.place);
+            setC('f-has-teacher', rec.hasTeacher); setC('f-has-students', rec.hasStudents);
+            if (rec.hasTeacher) {
+                document.getElementById('f-teacher-block').classList.remove('hidden');
+                (rec.teacherRoles || []).forEach(r => addTeacherRole(r));
+            }
+            if (rec.hasStudents) {
+                document.getElementById('f-students-block').classList.remove('hidden');
+                (rec.studentsGroups || []).forEach(g => addStudentsGroup(g));
+            }
+        } else if (rec.type === 'training') {
+            set('f-type', rec.trainingType);
+            if (rec.trainingType === 'другое') { set('f-type-custom', rec.trainingTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
+            set('f-hours', rec.hours); set('f-place', rec.place);
+        } else if (rec.type === 'assessment') {
+            set('f-type', rec.assessmentType);
+            set('f-group', rec.group); set('f-subject', rec.subject); set('f-total', rec.total); set('f-absent', rec.absent);
+            setC('f-ovz', rec.ovz);
+            if (rec.assessmentType === 'проектная деятельность') {
+                document.getElementById('f-grades-block').classList.add('hidden');
+                document.getElementById('f-project-block').classList.remove('hidden');
+                set('f-project', rec.project);
+            } else {
+                set('f-c5', rec.count5); set('f-c4', rec.count4); set('f-c3', rec.count3); set('f-c2', rec.count2);
+            }
+        } else if (rec.type === 'methodical') {
+            set('f-type', rec.methodicalType);
+            if (rec.methodicalType === 'другое') { set('f-type-custom', rec.methodicalTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
+            set('f-role', rec.role); set('f-status', rec.status); set('f-level', rec.level);
+        } else if (rec.type === 'activity') {
+            set('f-type', rec.activityType);
+            if (rec.activityType === 'другое') { set('f-type-custom', rec.activityTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
+            set('f-level', rec.level);
+        }
+    }, 50);
+
+    showScreen('screen-form');
+}
+
 // ═══ ЗАПИСИ ═══
 async function showLocalRecords() {
     showToast('⏳ Обновляем...');
-    try { await loadFromIncoming(true); } catch (e) {}
+    try { await mergeWithCloud(); } catch (e) {}
+
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio);
     const c = document.getElementById('records-list');
     if (!records.length) {
         c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей</p>';
     } else {
         c.innerHTML = records.reverse().map(r => {
-            const canDelete = !r.fromCloud && (Date.now() - new Date(r.createdAt).getTime()) < 48*60*60*1000;
-            const delBtn = r.fromCloud ? `<span class="record-lock" title="Из облака">☁️</span>` : (canDelete ? `<button class="record-delete" onclick="deleteRecord(${r.id})">🗑</button>` : `<span class="record-lock">🔒</span>`);
+            const age = Date.now() - new Date(r.createdAt).getTime();
+            const canEdit = !r.fromCloud && age < 48*60*60*1000;
+            const canDelete = !r.fromCloud && age < 48*60*60*1000;
+            const editBtn = canEdit ? '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>' : '';
+            const delBtn = r.fromCloud ? '<span class="record-lock" title="Из облака">☁️</span>' : (canDelete ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить">🗑</button>' : '<span class="record-lock">🔒</span>');
             let title = '', body = '';
             const icon = { event: '🏆', training: '🎓', assessment: '📊', methodical: '📚', activity: '🗣' }[r.type] || '📄';
             if (r.type === 'event') {
-                title = `${icon} ${r.name}`;
+                title = icon + ' ' + r.name;
                 const t = r.eventType === 'другое' && r.eventTypeCustom ? r.eventTypeCustom : r.eventType;
-                body = `<p>${[r.date, r.level, r.participation].filter(Boolean).join(' • ')}</p><div class="tags"><span class="tag">${t}</span>${r.prof ? '<span class="tag prof">Профессионалитет</span>' : ''}${r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')}</div>${r.studentsGroups ? r.studentsGroups.map(g => `<p>👥 ${g.group}: ${g.count || '?'} чел.</p>`).join('') : ''}`;
+                body = '<p>' + [r.date, r.level, r.participation].filter(Boolean).join(' • ') + '</p><div class="tags"><span class="tag">' + t + '</span>' + (r.prof ? '<span class="tag prof">Профессионалитет</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')) + '</div>' + (r.studentsGroups ? r.studentsGroups.map(g => '<p>👥 ' + g.group + ': ' + (g.count || '?') + ' чел.</p>').join('') : '');
             } else if (r.type === 'training') {
-                title = `${icon} ${r.name}`; const t = r.trainingType === 'другое' && r.trainingTypeCustom ? r.trainingTypeCustom : r.trainingType;
-                body = `<p>${[t, r.hours && r.hours + ' ч.', r.date].filter(Boolean).join(' • ')}</p><div class="tags">${r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')}</div>`;
+                title = icon + ' ' + r.name; const t = r.trainingType === 'другое' && r.trainingTypeCustom ? r.trainingTypeCustom : r.trainingType;
+                body = '<p>' + [t, r.hours && r.hours + ' ч.', r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'assessment') {
-                title = `${icon} ${r.subject || '—'} ${r.group ? '(' + r.group + ')' : ''}`;
-                let extra = r.assessmentType === 'проектная деятельность' ? `<p>В проекте: ${r.project || 0} чел.</p>` : (r.taken ? `<p>Сдавало: ${r.taken}</p>` : '');
-                body = `<p>${[r.assessmentType, r.date].filter(Boolean).join(' • ')}</p>${extra}<div class="tags">${r.ovz ? '<span class="tag">♿ ОВЗ</span>' : ''}${r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')}</div>`;
+                title = icon + ' ' + (r.subject || '—') + (r.group ? ' (' + r.group + ')' : '');
+                let extra = r.assessmentType === 'проектная деятельность' ? '<p>В проекте: ' + (r.project || 0) + ' чел.</p>' : (r.taken ? '<p>Сдавало: ' + r.taken + '</p>' : '');
+                body = '<p>' + [r.assessmentType, r.date].filter(Boolean).join(' • ') + '</p>' + extra + '<div class="tags">' + (r.ovz ? '<span class="tag">♿ ОВЗ</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'methodical') {
-                title = `${icon} ${r.name}`; const t = r.methodicalType === 'другое' && r.methodicalTypeCustom ? r.methodicalTypeCustom : r.methodicalType;
-                body = `<p>${[t, r.role, r.status, r.date].filter(Boolean).join(' • ')}</p><div class="tags">${r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')}</div>`;
+                title = icon + ' ' + r.name; const t = r.methodicalType === 'другое' && r.methodicalTypeCustom ? r.methodicalTypeCustom : r.methodicalType;
+                body = '<p>' + [t, r.role, r.status, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'activity') {
-                title = `${icon} ${r.name}`; const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
-                body = `<p>${[t, r.level, r.date].filter(Boolean).join(' • ')}</p><div class="tags">${r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')}</div>`;
+                title = icon + ' ' + r.name; const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
+                body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ Из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ Не отправлено</span>' : '')) + '</div>';
             }
             let cls = 'record';
             if (r.fromCloud) cls += ' cloud';
             else if (!r.sent) cls += ' unsent';
-            return `<div class="${cls}"><div class="record-header"><h3>${title}</h3>${delBtn}</div>${body}</div>`;
+            return '<div class="' + cls + '"><div class="record-header"><h3>' + title + '</h3><div class="record-actions">' + editBtn + delBtn + '</div></div>' + body + '</div>';
         }).join('');
     }
     showScreen('screen-records');
 }
 
 async function deleteRecord(id) {
-    if (!confirm('Удалить запись?')) return;
+    if (!confirm('Удалить эту запись?')) return;
+    const all = await getAllRecords();
+    const rec = all.find(r => r.id === id);
     await deleteRecordById(id);
+    logActivity('delete', { type: rec && rec.type, name: rec && rec.name });
     showToast('🗑 Удалено');
     showLocalRecords();
-    setTimeout(() => sendToCloudSilent(), 500);
 }
 
 // ═══ СТАТИСТИКА ═══
@@ -769,19 +926,19 @@ async function showStatistics() {
     document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     const folder = getStatsFolder(profile.fio, profile.login);
     try {
-        const stats = await downloadJson(`${folder}/statistics.json`);
+        const stats = await downloadJson(folder + '/statistics.json');
         if (!stats) {
-            document.getElementById('stats-content').innerHTML = `<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке. Статистика появится здесь после завершения расчёта.</p></div>`;
+            document.getElementById('stats-content').innerHTML = '<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке. Статистика появится здесь после завершения расчёта.</p></div>';
             if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
             return;
         }
         let html = '<div class="card"><h3>📊 Моя статистика</h3>';
-        if (stats.updated) html += `<p style="font-size:12px;color:#8892a0;">Обновлено: ${new Date(stats.updated).toLocaleString('ru-RU')}</p>`;
-        if (stats.total) html += `<p style="font-size:15px;margin:8px 0;">Баллов: <b>${stats.total}</b></p>`;
+        if (stats.updated) html += '<p style="font-size:12px;color:#8892a0;">Обновлено: ' + new Date(stats.updated).toLocaleString('ru-RU') + '</p>';
+        if (stats.total) html += '<p style="font-size:15px;margin:8px 0;">Баллов: <b>' + stats.total + '</b></p>';
         if (stats.items && stats.items.length) {
             html += '<div style="margin-top:12px;">';
             stats.items.forEach(item => {
-                html += `<div style="padding:8px 0;border-bottom:1px solid #eef1f5;"><div style="font-size:14px;font-weight:600;">${item.name || ''}</div><div style="font-size:13px;color:#6b7684;">${item.description || ''} <b>${item.score || 0}</b></div></div>`;
+                html += '<div style="padding:8px 0;border-bottom:1px solid #eef1f5;"><div style="font-size:14px;font-weight:600;">' + (item.name || '') + '</div><div style="font-size:13px;color:#6b7684;">' + (item.description || '') + ' <b>' + (item.score || 0) + '</b></div></div>';
             });
             html += '</div>';
         }
@@ -799,9 +956,9 @@ async function showOrders() {
     document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     try {
         const folder = getStatsFolder(profile.fio, profile.login);
-        const data = await downloadJson(`${folder}/orders.json`);
+        const data = await downloadJson(folder + '/orders.json');
         if (data && data.items && data.items.length) {
-            document.getElementById('orders-content').innerHTML = data.items.map(o => `<div class="record"><h3>📎 ${o.title || 'Приказ'}</h3><p>${[o.number, o.date, o.type].filter(Boolean).join(' • ')}</p>${o.note ? `<p>${o.note}</p>` : ''}</div>`).join('');
+            document.getElementById('orders-content').innerHTML = data.items.map(o => '<div class="record"><h3>📎 ' + (o.title || 'Приказ') + '</h3><p>' + [o.number, o.date, o.type].filter(Boolean).join(' • ') + '</p>' + (o.note ? '<p>' + o.note + '</p>' : '') + '</div>').join('');
         } else {
             document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Данных из приказов пока нет.</p>';
         }
@@ -811,65 +968,51 @@ async function showOrders() {
 }
 
 // ═══ ОБЛАКО ═══
-function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return `${start}-${start + 1}`; }
+function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
 function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
-function buildPhotoName(record) { const date = record.date || new Date().toISOString().slice(0, 10); return `${record.type}_${date}_${slug(record.name)}.jpg`; }
+function buildPhotoName(record) { const date = record.date || new Date().toISOString().slice(0, 10); return record.type + '_' + date + '_' + slug(record.name) + '.jpg'; }
 
 async function ensureFolder(diskPath) {
-    const res = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}`,
-        { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+    const res = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath),
+        { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
     if (res.status !== 201 && res.status !== 409) {
         const err = await res.json().catch(() => ({}));
         throw new Error('Папка: ' + (err.message || res.status));
     }
 }
-
 async function uploadToYandex(diskPath, content) {
-    const urlRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`,
-        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+    const urlRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources/upload?path=' + encodeURIComponent(diskPath) + '&overwrite=true',
+        { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
     if (!urlRes.ok) { const e = await urlRes.json().catch(()=>({})); throw new Error(e.message || 'URL ' + urlRes.status); }
     const data = await urlRes.json();
     const put = await fetch(data.href, { method: 'PUT', body: content });
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
-
 async function uploadBlobToYandex(diskPath, blob) {
-    const urlRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`,
-        { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+    const urlRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources/upload?path=' + encodeURIComponent(diskPath) + '&overwrite=true',
+        { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
     if (!urlRes.ok) throw new Error('URL error');
     const data = await urlRes.json();
     const put = await fetch(data.href, { method: 'PUT', body: blob });
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
-
-// Скачивание через публичную ссылку НА ФАЙЛ
 async function downloadJson(diskPath) {
     try {
-        let infoRes = await fetch(
-            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
-            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-        );
+        let infoRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
+            { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
         if (!infoRes.ok) return null;
         let info = await infoRes.json();
-
         if (!info.public_url) {
-            await fetch(
-                `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(diskPath)}`,
-                { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-            );
+            await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
+                { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
             await new Promise(r => setTimeout(r, 1500));
-            infoRes = await fetch(
-                `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
-                { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-            );
+            infoRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
+                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
             if (!infoRes.ok) return null;
             info = await infoRes.json();
             if (!info.public_url) return null;
         }
-
-        const dlRes = await fetch(
-            `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(info.public_url)}`
-        );
+        const dlRes = await fetch('https://cloud-api.yandex.net/v1/disk/api/public/resources/download?public_key=' + encodeURIComponent(info.public_url));
         if (!dlRes.ok) return null;
         const dlData = await dlRes.json();
         const fileRes = await fetch(dlData.href);
@@ -879,7 +1022,7 @@ async function downloadJson(diskPath) {
 
 async function buildDataFile() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
-    const clean = r => { const c = {...r}; delete c.photo; delete c._photoBackup; return c; };
+    const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c._photoBackup; return c; };
     return {
         profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, year: getYear() },
         events: records.filter(r => r.type === 'event').map(clean),
@@ -891,54 +1034,19 @@ async function buildDataFile() {
     };
 }
 
-async function sendToCloudSilent() {
-    try {
-        if (!profile) return;
-        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-
-        await ensureFolder(ROOT_FOLDER);
-        await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(`${ROOT_FOLDER}/Входящие/photos`);
-        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
-
-        // Фото
-        for (const record of allRecords) {
-            if (record.photo && !record.photoUploaded) {
-                try {
-                    const filename = buildPhotoName(record);
-                    const blob = await (await fetch(record.photo)).blob();
-                    await uploadBlobToYandex(`${getPhotosFolder(profile.fio, profile.login)}/${filename}`, blob);
-                    record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
-                    await updateRecord(record);
-                } catch (e) {}
-            }
-        }
-
-        // Один файл — все данные
-        const data = await buildDataFile();
-        const dataFile = getDataFile(profile.fio, profile.login);
-        await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
-
-        await fetch(
-            `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(dataFile)}`,
-            { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-        ).catch(() => {});
-
-        for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        showToast('☁️ Отправлено в облако');
-    } catch (e) { console.warn('Silent upload error:', e); }
-}
-
 async function sendToCloud() {
     const btn = document.getElementById('send-btn');
     btn.disabled = true; btn.textContent = '⏳ Отправка...';
     try {
+        // Сначала merge
+        const merged = await mergeWithCloud();
+
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        if (allRecords.length === 0 && !profile) { showToast('Нет данных'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
+        if (allRecords.length === 0) { showToast('Нет данных'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
 
         await ensureFolder(ROOT_FOLDER);
-        await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(`${ROOT_FOLDER}/Входящие/photos`);
+        await ensureFolder(ROOT_FOLDER + '/Входящие');
+        await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
         await ensureFolder(getPhotosFolder(profile.fio, profile.login));
 
         for (const record of allRecords) {
@@ -946,7 +1054,7 @@ async function sendToCloud() {
                 try {
                     const filename = buildPhotoName(record);
                     const blob = await (await fetch(record.photo)).blob();
-                    await uploadBlobToYandex(`${getPhotosFolder(profile.fio, profile.login)}/${filename}`, blob);
+                    await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
                     record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
                     await updateRecord(record);
                 } catch (e) {}
@@ -957,13 +1065,12 @@ async function sendToCloud() {
         const dataFile = getDataFile(profile.fio, profile.login);
         await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
 
-        await fetch(
-            `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(dataFile)}`,
-            { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
-        ).catch(() => {});
+        await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(dataFile),
+            { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }).catch(() => {});
 
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        showToast(`✅ Отправлено: ${allRecords.length} записей`);
+        logActivity('submit', { count: allRecords.length, merged_added: merged.added, merged_updated: merged.updated });
+        showToast('✅ Отправлено: ' + allRecords.length + (merged.added ? ' (+' + merged.added + ' из облака)' : ''));
     } catch (e) { console.error(e); alert('Ошибка: ' + e.message); }
     btn.disabled = false; btn.textContent = '📤 Отправить данные';
 }
