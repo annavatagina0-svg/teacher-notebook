@@ -1032,7 +1032,66 @@ async function downloadJson(diskPath) {
             return null;
         }
         let info = await infoRes.json();
-        console.log('meta:', info);
+
+        // 2. Публикуем файл, если нужно
+        if (!info.public_url) {
+            await fetch(
+                'https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
+                { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
+            );
+            await new Promise(r => setTimeout(r, 2000));
+            infoRes = await fetch(
+                'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
+                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
+            );
+            info = await infoRes.json();
+        }
+
+        if (!info.public_url) {
+            console.warn('no public_url');
+            return null;
+        }
+
+        // 3. Получаем href через публичный API
+        const dlRes = await fetch(
+            'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url)
+        );
+        if (!dlRes.ok) {
+            console.warn('public dl failed:', dlRes.status);
+            return null;
+        }
+        const dlData = await dlRes.json();
+        const fileUrl = dlData.href;
+
+        // 4. Скачиваем файл через CORS-прокси (у downloader.disk.yandex.ru нет CORS)
+        const proxies = [
+            'https://corsproxy.io/?url=',
+            'https://api.allorigins.win/raw?url=',
+            'https://api.codetabs.com/v1/proxy?quest='
+        ];
+
+        for (const proxy of proxies) {
+            try {
+                const proxyUrl = proxy + encodeURIComponent(fileUrl);
+                const fileRes = await fetch(proxyUrl);
+                if (fileRes.ok) {
+                    const text = await fileRes.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.warn('not JSON from proxy');
+                    }
+                }
+            } catch (e) {
+                console.warn('proxy failed:', proxy, e);
+            }
+        }
+        return null;
+    } catch (e) {
+        console.error('downloadJson error:', e);
+        return null;
+    }
+}
 
         // 2. Публикуем файл, если нужно
         if (!info.public_url) {
