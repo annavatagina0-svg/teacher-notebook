@@ -261,7 +261,15 @@ async function saveProfile() {
 
     showToast('⏳ Проверяем облако...');
 
-    const cloudData = await downloadJson(getDataFile(fio, login));
+    let cloudData = null;
+    try {
+        cloudData = await Promise.race([
+            downloadJson(getDataFile(fio, login)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
+        ]);
+    } catch (e) {
+        console.warn('Проверка облака не удалась:', e.message);
+    }
 
     if (cloudData && cloudData.profile) {
         const total = (cloudData.events||[]).length + (cloudData.trainings||[]).length +
@@ -934,9 +942,6 @@ async function sendToCloud() {
         const dataFile = getDataFile(profile.fio, profile.login);
         await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
 
-        await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(dataFile),
-            { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }).catch(() => {});
-
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
         showToast('✅ Отправлено: ' + allRecords.length + ' (из облака подтянуто: ' + merged.added + ')');
         showLocalRecords();
@@ -1084,18 +1089,16 @@ async function buildDataFile() {
 
 async function forceUpdate() {
     if (!confirm('Обновить приложение?')) return;
-       showToast('⏳ Проверяем облако...');
-
-    let cloudData = null;
+    showToast('⏳ Обновляем...');
     try {
-        cloudData = await Promise.race([
-            downloadJson(getDataFile(fio, login)),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
-        ]);
-    } catch (e) {
-        console.warn('Проверка облака не удалась:', e.message);
-        // Не блокируем — идём создавать новый профиль
-    }
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) { await r.unregister(); }
+        }
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            for (const k of keys) { await caches.delete(k); }
+        }
         showToast('✅ Готово. Перезагрузка...');
         setTimeout(() => { window.location.reload(true); }, 800);
     } catch (e) { alert('Ошибка: ' + e.message); }
