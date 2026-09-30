@@ -35,7 +35,6 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .btn-primary { width: 100%; padding: 16px; border-radius: 14px; background: #4A6CF7; color: white; border: none; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); }
 .btn-primary:active { transform: scale(0.98); }
 .btn-primary:disabled { background: #c5cbd3; box-shadow: none; cursor: not-allowed; }
-.btn-cloud { width: 100%; padding: 14px; border-radius: 14px; background: white; color: #27ae60; border: 2px solid #d5f0e0; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
 .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .back-btn { width: 40px; height: 40px; border-radius: 12px; background: white; border: none; font-size: 20px; color: #4A6CF7; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .form-header h2 { font-size: 20px; font-weight: 700; }
@@ -73,7 +72,10 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .record .tag.prof { background: #fff4e6; color: #d97706; }
 .record .tag.cloud { background: #e8f8ee; color: #27ae60; }
 .record .tag.unsent { background: #f0f3f7; color: #8892a0; }
-.section-title { font-size: 13px; color: #8892a0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 18px 0 8px; }
+.cloud-btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+.cloud-btn.load { background: #e8f8ee; color: #27ae60; border: 2px solid #d5f0e0; }
+.cloud-btn.send { background: #eef2ff; color: #4A6CF7; border: 2px solid #e6ecff; }
+.cloud-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal.active { display: flex; }
 .modal-content { background: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
@@ -154,8 +156,8 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 
 <div id="screen-records" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>Мои записи</h2></div>
-    <button class="btn-cloud" onclick="loadFromCloud()" id="load-cloud-btn">☁️ Загрузить из облака</button>
-    <button class="btn-cloud" onclick="sendToCloud()" id="send-cloud-btn" style="color:#4A6CF7;border-color:#e6ecff;">📤 Отправить в облако</button>
+    <button class="cloud-btn load" onclick="loadFromCloud()" id="load-cloud-btn">☁️ Загрузить из облака</button>
+    <button class="cloud-btn send" onclick="sendToCloud()" id="send-cloud-btn">📤 Отправить в облако</button>
     <div id="records-list"></div>
 </div>
 
@@ -193,7 +195,17 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
-const PCK_LIST = ['Березина М.С.','Бочкарев Ю.Т.','Ватагина А.Н.','Горошко В.Э.','Ильина К.А.','Куликова К.С.','Материкова А.А.','Мурашкина С.В.','Трофимова А.М.','Усова М.Н.'];
+const PCK_LIST = [
+    'Березина М.С.',
+    'Бочкарев Ю.Т.',
+    'Горошко В.Э.',
+    'Ильина К.А.',
+    'Куликова К.С.',
+    'Материкова А.А.',
+    'Мурашкина С.В.',
+    'Трофимова А.М.',
+    'Усова М.Н.'
+];
 
 let profile = null;
 let currentFormType = 'event';
@@ -250,26 +262,26 @@ async function saveProfile() {
     const cloudData = await downloadJson(getDataFile(fio, login));
 
     if (cloudData && cloudData.profile) {
+        const total = (cloudData.events||[]).length + (cloudData.trainings||[]).length +
+            (cloudData.assessments||[]).length + (cloudData.methodical||[]).length +
+            (cloudData.activity||[]).length;
         const isThisYou = confirm(
             'В облаке найдены данные:\n\n' +
             'ФИО: ' + (cloudData.profile.fio || '—') + '\n' +
             'ПЦК: ' + (cloudData.profile.pck || '—') + '\n' +
             'Категория: ' + (cloudData.profile.category || '—') + '\n' +
-            'Записей: ' + (
-                (cloudData.events||[]).length + (cloudData.trainings||[]).length +
-                (cloudData.assessments||[]).length + (cloudData.methodical||[]).length +
-                (cloudData.activity||[]).length
-            ) + '\n\n' +
+            'Записей: ' + total + '\n\n' +
             'Это вы? Нажмите ОК — войдёте и подтянете записи.\n' +
-            'Отмена — создадите НОВЫЙ профиль (другой логин).'
+            'Отмена — создадите НОВЫЙ профиль (смените логин).'
         );
         if (!isThisYou) { showToast('Смените логин или ФИО'); return; }
+
         profile = cloudData.profile;
         await saveSetting('profile', profile);
         updateProfileUI();
         showScreen('screen-main');
         const merged = await mergeWithCloud();
-        showToast('Записей из облака: ' + (merged.added + merged.updated));
+        showToast('Записей из облака: +' + merged.added + ', обновлено: ' + merged.updated);
         return;
     }
 
@@ -370,7 +382,6 @@ async function mergeWithCloud() {
             await saveRecordToDB(cloud);
             added++;
         } else {
-            if (local.deleted) continue;
             const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
             const localTime = new Date(local.updatedAt || local.createdAt).getTime();
             if (cloudTime > localTime) {
@@ -718,7 +729,7 @@ async function saveRecord() {
     editingRecordId = null;
     clearForm();
     backToMain();
-    showToast('✅ Сохранено локально. Нажмите «Отправить в облако» для загрузки.');
+    showToast('✅ Сохранено. Не забудьте «Отправить в облако».');
 }
 
 function clearForm() {
@@ -815,7 +826,7 @@ async function showLocalRecords() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
     const c = document.getElementById('records-list');
     if (!records.length) {
-        c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей.<br><br>Нажмите «☁️ Загрузить из облака» сверху,<br>если данные есть на другом устройстве.</p>';
+        c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей.<br><br>Нажмите «☁️ Загрузить из облака» — если данные есть на другом устройстве.</p>';
     } else {
         c.innerHTML = records.reverse().map(r => {
             const age = Date.now() - new Date(r.createdAt).getTime();
@@ -853,9 +864,6 @@ async function showLocalRecords() {
 
 async function deleteRecord(id) {
     if (!confirm('Удалить эту запись?')) return;
-    const all = await getAllRecords();
-    const rec = all.find(r => r.id === id);
-    if (!rec) return;
     await deleteRecordById(id);
     showToast('🗑 Удалено');
     showLocalRecords();
@@ -866,11 +874,11 @@ async function loadFromCloud() {
     const btn = document.getElementById('load-cloud-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
     try {
-        const file = getDataFile(profile.fio, profile.login);
-        const data = await downloadJson(file);
+        const filePath = getDataFile(profile.fio, profile.login);
+        const data = await downloadJson(filePath);
 
         if (!data) {
-            alert('Не удалось скачать файл из облака.\n\nПуть: ' + file + '\n\nОткрой консоль (F12) — там будет точная ошибка.');
+            alert('Не удалось скачать файл из облака.\n\nПуть: ' + filePath + '\n\nПроверьте консоль (F12) — там будет ошибка.');
             if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
             return;
         }
@@ -879,7 +887,7 @@ async function loadFromCloud() {
         const res = await mergeWithCloud();
 
         if (res.added === 0 && res.updated === 0) {
-            alert('Файл скачался, но новых записей нет.\n\nВ облаке: ' + total + ' записей\nЛокально уже есть все эти записи (совпадают по uid/createdAt).');
+            alert('Файл скачался, но новых записей нет.\n\nВ облаке: ' + total + ' записей.\nЛокально уже все есть (совпадают по uid/createdAt).');
         } else {
             showToast('Из облака: +' + res.added + ' новых, ' + res.updated + ' обновлено');
         }
@@ -888,6 +896,55 @@ async function loadFromCloud() {
         alert('Ошибка: ' + e.message);
     }
     if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
+}
+
+// ═══ ОТПРАВКА В ОБЛАКО ═══
+async function sendToCloud() {
+    const btn = document.getElementById('send-cloud-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
+    try {
+        // Сначала двусторонний merge
+        const merged = await mergeWithCloud();
+
+        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+        if (allRecords.length === 0) {
+            showToast('Нет данных для отправки');
+            if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
+            return;
+        }
+
+        await ensureFolder(ROOT_FOLDER);
+        await ensureFolder(ROOT_FOLDER + '/Входящие');
+        await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
+        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
+
+        for (const record of allRecords) {
+            if (record.photo && !record.photoUploaded) {
+                try {
+                    const filename = buildPhotoName(record);
+                    const blob = await (await fetch(record.photo)).blob();
+                    await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
+                    record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
+                    await updateRecord(record);
+                } catch (e) { console.error('photo upload error', e); }
+            }
+        }
+
+        const data = await buildDataFile();
+        const dataFile = getDataFile(profile.fio, profile.login);
+        await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
+
+        await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(dataFile),
+            { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }).catch(() => {});
+
+        for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
+        showToast('✅ Отправлено: ' + allRecords.length + ' (из облака подтянуто: ' + merged.added + ')');
+        showLocalRecords();
+    } catch (e) {
+        console.error(e);
+        alert('Ошибка: ' + e.message);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
 }
 
 // ═══ СТАТИСТИКА ═══
@@ -962,41 +1019,64 @@ async function uploadBlobToYandex(diskPath, blob) {
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
 
-// ВАЖНО: правильный путь к публичному API Яндекс.Диска
+// Скачивание через публичный API (без CORS проблем)
 async function downloadJson(diskPath) {
     try {
-        const urlRes = await fetch(
-            'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(diskPath),
+        // 1. Метаданные + public_url
+        let infoRes = await fetch(
+            'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
             { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
         );
-        if (!urlRes.ok) {
-            console.error('❌ download meta:', urlRes.status, await urlRes.text());
+        if (!infoRes.ok) {
+            console.warn('meta failed:', infoRes.status);
             return null;
         }
-        const data = await urlRes.json();
-        const fileRes = await fetch(data.href);
+        let info = await infoRes.json();
+        console.log('meta:', info);
+
+        // 2. Публикуем файл, если нужно
+        if (!info.public_url) {
+            const pubRes = await fetch(
+                'https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
+                { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
+            );
+            console.log('publish status:', pubRes.status);
+            await new Promise(r => setTimeout(r, 2000));
+
+            infoRes = await fetch(
+                'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
+                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
+            );
+            info = await infoRes.json();
+            console.log('after publish:', info);
+        }
+
+        if (!info.public_url) {
+            console.warn('no public_url');
+            return null;
+        }
+
+        // 3. Получаем download href через публичный API
+        const dlRes = await fetch(
+            'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url)
+        );
+        if (!dlRes.ok) {
+            console.warn('public dl failed:', dlRes.status);
+            return null;
+        }
+        const dlData = await dlRes.json();
+
+        // 4. Скачиваем файл
+        const fileRes = await fetch(dlData.href);
         if (!fileRes.ok) {
-            console.error('❌ download file:', fileRes.status);
+            console.warn('file fetch failed:', fileRes.status);
             return null;
         }
         return await fileRes.json();
     } catch (e) {
-        console.error('❌ downloadJson:', e);
+        console.error('downloadJson error:', e);
         return null;
     }
-}
-
-        // 3. Скачиваем — ПРАВИЛЬНЫЙ URL: /v1/disk/public/resources/download
-        const dlRes = await fetch('https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url));
-        if (!dlRes.ok) {
-            console.error('public download error:', dlRes.status, await dlRes.text());
-            return null;
-        }
-        const dlData = await dlRes.json();
-        const fileRes = await fetch(dlData.href);
-        if (!fileRes.ok) return null;
-        return await fileRes.json();
-    } catch (e) { console.error('downloadJson:', e); return null; }
 }
 
 async function buildDataFile() {
@@ -1011,50 +1091,6 @@ async function buildDataFile() {
         activity: records.filter(r => r.type === 'activity').map(clean),
         updated: new Date().toISOString()
     };
-}
-
-async function sendToCloud() {
-    const btn = document.getElementById('send-cloud-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
-    try {
-        const merged = await mergeWithCloud();
-
-        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        if (allRecords.length === 0) {
-            showToast('Нет данных для отправки');
-            if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
-            return;
-        }
-
-        await ensureFolder(ROOT_FOLDER);
-        await ensureFolder(ROOT_FOLDER + '/Входящие');
-        await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
-        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
-
-        for (const record of allRecords) {
-            if (record.photo && !record.photoUploaded) {
-                try {
-                    const filename = buildPhotoName(record);
-                    const blob = await (await fetch(record.photo)).blob();
-                    await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
-                    record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
-                    await updateRecord(record);
-                } catch (e) {}
-            }
-        }
-
-        const data = await buildDataFile();
-        const dataFile = getDataFile(profile.fio, profile.login);
-        await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
-
-        await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(dataFile),
-            { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }).catch(() => {});
-
-        for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        showToast('✅ Отправлено: ' + allRecords.length + ' (из облака подтянуто: ' + merged.added + ')');
-        showLocalRecords();
-    } catch (e) { alert('Ошибка: ' + e.message); }
-    if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
 }
 
 async function forceUpdate() {
