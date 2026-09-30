@@ -1084,16 +1084,18 @@ async function buildDataFile() {
 
 async function forceUpdate() {
     if (!confirm('Обновить приложение?')) return;
-    showToast('⏳ Обновляем...');
+       showToast('⏳ Проверяем облако...');
+
+    let cloudData = null;
     try {
-        if ('serviceWorker' in navigator) {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const r of regs) { await r.unregister(); }
-        }
-        if ('caches' in window) {
-            const keys = await caches.keys();
-            for (const k of keys) { await caches.delete(k); }
-        }
+        cloudData = await Promise.race([
+            downloadJson(getDataFile(fio, login)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
+        ]);
+    } catch (e) {
+        console.warn('Проверка облака не удалась:', e.message);
+        // Не блокируем — идём создавать новый профиль
+    }
         showToast('✅ Готово. Перезагрузка...');
         setTimeout(() => { window.location.reload(true); }, 800);
     } catch (e) { alert('Ошибка: ' + e.message); }
