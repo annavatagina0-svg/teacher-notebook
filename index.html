@@ -184,7 +184,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>✏️ Редактировать профиль</h2></div>
     <div class="card">
         <div class="form-group"><label>ФИО</label><input type="text" id="edit-fio"></div>
-        <div class="form-group"><label>Логин</label><input type="text" id="edit-login"><div class="hint">При изменении логина папка в облаке переименуется</div></div>
+        <div class="form-group"><label>Логин</label><input type="text" id="edit-login"><div class="hint">При изменении логина файл в облаке переименуется</div></div>
         <div class="form-group"><label>Председатель ПЦК</label><select id="edit-pck"></select></div>
         <div class="form-group"><label>Категория</label><select id="edit-category"><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
     </div>
@@ -212,10 +212,10 @@ let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
 let db = null;
 
-// ═══ ПУТИ ═══
-function getUserFolder(fio, login) { return `${ROOT_FOLDER}/Входящие/${slug(fio)}_${login}`; }
+// ═══ ПУТИ (плоская структура) ═══
+function getDataFile(fio, login) { return `${ROOT_FOLDER}/Входящие/${slug(fio)}_${login}_${getYear()}.json`; }
+function getPhotosFolder(fio, login) { return `${ROOT_FOLDER}/Входящие/photos/${slug(fio)}_${login}`; }
 function getStatsFolder(fio, login) { return `${ROOT_FOLDER}/Исходящие/${slug(fio)}_${login}`; }
-function getDataFile(fio, login) { return `${getUserFolder(fio, login)}/${getYear()}.json`; }
 
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
@@ -265,11 +265,11 @@ async function saveProfile() {
     showScreen('screen-main');
     showToast('Профиль сохранён');
 
-    // Сохраняем и отправляем одним файлом
     try {
+        await ensureFolder(ROOT_FOLDER);
         await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(getUserFolder(profile.fio, profile.login));
-        await ensureFolder(`${getUserFolder(profile.fio, profile.login)}/photos`);
+        await ensureFolder(`${ROOT_FOLDER}/Входящие/photos`);
+        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
         await sendToCloudSilent();
     } catch (e) { console.warn(e); }
 }
@@ -312,9 +312,13 @@ async function saveEditedProfile() {
     const oldFio = profile.fio;
     const oldLogin = profile.login;
     if (oldFio !== newFio || oldLogin !== newLogin) {
-        if (!confirm('Папка в облаке будет переименована. Продолжить?')) return;
+        if (!confirm('Файлы в облаке будут переименованы. Продолжить?')) return;
         try {
-            await fetch(`https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(getUserFolder(oldFio, oldLogin))}&path=${encodeURIComponent(getUserFolder(newFio, newLogin))}&overwrite=true`,
+            // Перемещаем data-файл
+            await fetch(`https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(getDataFile(oldFio, oldLogin))}&path=${encodeURIComponent(getDataFile(newFio, newLogin))}&overwrite=true`,
+                { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+            // Перемещаем папку с фото
+            await fetch(`https://cloud-api.yandex.net/v1/disk/resources/move?from=${encodeURIComponent(getPhotosFolder(oldFio, oldLogin))}&path=${encodeURIComponent(getPhotosFolder(newFio, newLogin))}&overwrite=true`,
                 { method: 'POST', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
         } catch (e) {}
     }
@@ -336,11 +340,8 @@ async function tryLogin() {
     const login = document.getElementById('login-login').value.trim();
     if (!fio || !login) { showToast('Введите ФИО и логин'); return; }
 
-    const dataFile = getDataFile(fio, login);
     showToast('⏳ Проверяем...');
-
-    // Пробуем скачать единый файл данных
-    const data = await downloadJson(dataFile);
+    const data = await downloadJson(getDataFile(fio, login));
 
     if (!data || !data.profile) {
         showToast('Профиль не найден. Проверьте ФИО и логин');
@@ -352,7 +353,6 @@ async function tryLogin() {
     updateProfileUI();
     showScreen('screen-main');
 
-    // Загружаем записи из файла
     const added = await importRecordsFromData(data);
     showToast(`Загружено записей: ${added}`);
 }
@@ -360,18 +360,14 @@ async function tryLogin() {
 // ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
 async function loadFromIncoming(silent) {
     if (!profile) return 0;
-    const dataFile = getDataFile(profile.fio, profile.login);
-    const data = await downloadJson(dataFile);
+    const data = await downloadJson(getDataFile(profile.fio, profile.login));
     if (!data || !data.profile) {
         if (!silent) showToast('В облаке пока нет данных');
         return 0;
     }
-
-    // Обновляем профиль (мог измениться на другом устройстве)
     profile = { ...profile, ...data.profile };
     await saveSetting('profile', profile);
     updateProfileUI();
-
     const added = await importRecordsFromData(data);
     if (!silent && added > 0) showToast(`Из облака загружено: ${added}`);
     return added;
@@ -414,7 +410,7 @@ async function importRecordsFromData(data) {
     return added;
 }
 
-// ═══ ФОРМЫ ═══
+// ═══ ФОРМЫ (без изменений) ═══
 function openForm(type) {
     currentFormType = type;
     document.getElementById('form-title').textContent =
@@ -497,7 +493,7 @@ function renderTrainingForm() {
 function renderAssessmentForm() {
     return `<div class="card"><h3>Контроль</h3>
         <div class="form-group"><label>Тип</label><select id="f-type" onchange="onAssessmentTypeChange()">
-            <option value="входной контроль">Входной контроль</option><option value="срезовый к/р">Срезовая к/р</option>
+            <option value="входной контроль">Входной контроль</option><option value="срезовый к/р">Срезовый к/р</option>
             <option value="итоговая оценка">Итоговая оценка</option><option value="проектная деятельность">Проектная деятельность</option><option value="другое">Другое</option>
         </select></div>
         <div class="form-group"><label>Группа</label><input type="text" id="f-group" placeholder="АЭ-11"></div>
@@ -775,7 +771,7 @@ async function showStatistics() {
     try {
         const stats = await downloadJson(`${folder}/statistics.json`);
         if (!stats) {
-            document.getElementById('stats-content').innerHTML = `<div class="card"><h3>📊 Статистика пока не готова</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке.<br><br>Нажмите <b>«📤 Отправить данные»</b> — тогда ваши записи попадут в обработку.</p></div>`;
+            document.getElementById('stats-content').innerHTML = `<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке. Статистика появится здесь после завершения расчёта.</p></div>`;
             if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
             return;
         }
@@ -849,7 +845,6 @@ async function uploadBlobToYandex(diskPath, blob) {
 // Скачивание через публичную ссылку НА ФАЙЛ
 async function downloadJson(diskPath) {
     try {
-        // 1. Метаданные файла (public_url именно файла)
         let infoRes = await fetch(
             `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
             { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
@@ -857,7 +852,6 @@ async function downloadJson(diskPath) {
         if (!infoRes.ok) return null;
         let info = await infoRes.json();
 
-        // 2. Публикуем файл, если ещё не опубликован
         if (!info.public_url) {
             await fetch(
                 `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(diskPath)}`,
@@ -873,7 +867,6 @@ async function downloadJson(diskPath) {
             if (!info.public_url) return null;
         }
 
-        // 3. Скачиваем через публичный API (без path, т.к. публикуем сам файл)
         const dlRes = await fetch(
             `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(info.public_url)}`
         );
@@ -884,7 +877,6 @@ async function downloadJson(diskPath) {
     } catch (e) { console.error('downloadJson:', e); return null; }
 }
 
-// Собрать единый файл из всех локальных записей
 async function buildDataFile() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
     const clean = r => { const c = {...r}; delete c.photo; delete c._photoBackup; return c; };
@@ -903,20 +895,19 @@ async function sendToCloudSilent() {
     try {
         if (!profile) return;
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        const baseFolder = getUserFolder(profile.fio, profile.login);
 
         await ensureFolder(ROOT_FOLDER);
         await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(baseFolder);
-        await ensureFolder(`${baseFolder}/photos`);
+        await ensureFolder(`${ROOT_FOLDER}/Входящие/photos`);
+        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
 
-        // Загружаем фото (не опубликованные)
+        // Фото
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
                     const filename = buildPhotoName(record);
                     const blob = await (await fetch(record.photo)).blob();
-                    await uploadBlobToYandex(`${baseFolder}/photos/${filename}`, blob);
+                    await uploadBlobToYandex(`${getPhotosFolder(profile.fio, profile.login)}/${filename}`, blob);
                     record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
                     await updateRecord(record);
                 } catch (e) {}
@@ -928,13 +919,11 @@ async function sendToCloudSilent() {
         const dataFile = getDataFile(profile.fio, profile.login);
         await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
 
-        // Публикуем файл (для чтения через CORS-обход)
         await fetch(
             `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(dataFile)}`,
             { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
         ).catch(() => {});
 
-        // Помечаем всё как отправленное
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
         showToast('☁️ Отправлено в облако');
     } catch (e) { console.warn('Silent upload error:', e); }
@@ -947,18 +936,17 @@ async function sendToCloud() {
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
         if (allRecords.length === 0 && !profile) { showToast('Нет данных'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
 
-        const baseFolder = getUserFolder(profile.fio, profile.login);
         await ensureFolder(ROOT_FOLDER);
         await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(baseFolder);
-        await ensureFolder(`${baseFolder}/photos`);
+        await ensureFolder(`${ROOT_FOLDER}/Входящие/photos`);
+        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
 
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
                     const filename = buildPhotoName(record);
                     const blob = await (await fetch(record.photo)).blob();
-                    await uploadBlobToYandex(`${baseFolder}/photos/${filename}`, blob);
+                    await uploadBlobToYandex(`${getPhotosFolder(profile.fio, profile.login)}/${filename}`, blob);
                     record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
                     await updateRecord(record);
                 } catch (e) {}
@@ -969,7 +957,6 @@ async function sendToCloud() {
         const dataFile = getDataFile(profile.fio, profile.login);
         await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
 
-        // Публикуем файл
         await fetch(
             `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(dataFile)}`,
             { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
