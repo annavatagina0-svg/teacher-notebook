@@ -866,15 +866,26 @@ async function loadFromCloud() {
     const btn = document.getElementById('load-cloud-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
     try {
+        const file = getDataFile(profile.fio, profile.login);
+        const data = await downloadJson(file);
+
+        if (!data) {
+            alert('Не удалось скачать файл из облака.\n\nПуть: ' + file + '\n\nОткрой консоль (F12) — там будет точная ошибка.');
+            if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
+            return;
+        }
+
+        const total = (data.events||[]).length + (data.trainings||[]).length + (data.assessments||[]).length + (data.methodical||[]).length + (data.activity||[]).length;
         const res = await mergeWithCloud();
+
         if (res.added === 0 && res.updated === 0) {
-            showToast('Из облака нечего загружать (или всё уже есть локально)');
+            alert('Файл скачался, но новых записей нет.\n\nВ облаке: ' + total + ' записей\nЛокально уже есть все эти записи (совпадают по uid/createdAt).');
         } else {
             showToast('Из облака: +' + res.added + ' новых, ' + res.updated + ' обновлено');
         }
         showLocalRecords();
     } catch (e) {
-        alert('Ошибка загрузки: ' + e.message);
+        alert('Ошибка: ' + e.message);
     }
     if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
 }
@@ -954,23 +965,26 @@ async function uploadBlobToYandex(diskPath, blob) {
 // ВАЖНО: правильный путь к публичному API Яндекс.Диска
 async function downloadJson(diskPath) {
     try {
-        // 1. Метаданные файла + public_url
-        let infoRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
-            { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-        if (!infoRes.ok) return null;
-        let info = await infoRes.json();
-
-        // 2. Публикуем файл, если нужно
-        if (!info.public_url) {
-            await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
-                { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-            await new Promise(r => setTimeout(r, 1500));
-            infoRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
-                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-            if (!infoRes.ok) return null;
-            info = await infoRes.json();
-            if (!info.public_url) return null;
+        const urlRes = await fetch(
+            'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(diskPath),
+            { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
+        );
+        if (!urlRes.ok) {
+            console.error('❌ download meta:', urlRes.status, await urlRes.text());
+            return null;
         }
+        const data = await urlRes.json();
+        const fileRes = await fetch(data.href);
+        if (!fileRes.ok) {
+            console.error('❌ download file:', fileRes.status);
+            return null;
+        }
+        return await fileRes.json();
+    } catch (e) {
+        console.error('❌ downloadJson:', e);
+        return null;
+    }
+}
 
         // 3. Скачиваем — ПРАВИЛЬНЫЙ URL: /v1/disk/public/resources/download
         const dlRes = await fetch('https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url));
