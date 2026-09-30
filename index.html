@@ -193,7 +193,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
-const PCK_LIST = ['Березина М.С.','Бочкарев Ю.Т.','Горошко В.Э.','Ильина К.А.','Куликова К.С.','Материкова А.А.','Мурашкина С.В.','Трофимова А.М.','Усова М.Н.'];
+const PCK_LIST = ['Березина М.С.','Бочкарев Ю.Т.','Ватагина А.Н.','Горошко В.Э.','Ильина К.А.','Куликова К.С.','Материкова А.А.','Мурашкина С.В.','Трофимова А.М.','Усова М.Н.'];
 
 let profile = null;
 let currentFormType = 'event';
@@ -202,15 +202,23 @@ let teacherRolesCounter = 0;
 let editingRecordId = null;
 let db = null;
 
-function getDataFile(fio, login) { return `${ROOT_FOLDER}/Входящие/${slug(fio)}_${login}_${getYear()}.json`; }
-function getPhotosFolder(fio, login) { return `${ROOT_FOLDER}/Входящие/photos/${slug(fio)}_${login}`; }
-function getStatsFolder(fio, login) { return `${ROOT_FOLDER}/Исходящие/${slug(fio)}_${login}`; }
-function getLogFile(fio, login) { return `${ROOT_FOLDER}/_log/${slug(fio)}_${login}_${getYear()}.json`; }
+function getDataFile(fio, login) { return ROOT_FOLDER + '/Входящие/' + slug(fio) + '_' + login + '_' + getYear() + '.json'; }
+function getPhotosFolder(fio, login) { return ROOT_FOLDER + '/Входящие/photos/' + slug(fio) + '_' + login; }
+function getStatsFolder(fio, login) { return ROOT_FOLDER + '/Исходящие/' + slug(fio) + '_' + login; }
+function getLogFile(fio, login) { return ROOT_FOLDER + '/_log/' + slug(fio) + '_' + login + '_' + getYear() + '.json'; }
 
-// ═══ СТАРТ ═══
+// Уникальный ключ записи: uid если есть, иначе по createdAt
+function recordKey(r) {
+    if (r.uid) return r.uid;
+    if (r.createdAt) return 'c:' + r.createdAt;
+    return null;
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
-    pckSelect.innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
+    pckSelect.innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => '<option value="' + p + '">' + p + '</option>').join('');
+
+    await purgeOldTombstones();
 
     const savedProfile = await getSetting('profile');
     if (savedProfile) {
@@ -244,7 +252,6 @@ async function saveProfile() {
 
     showToast('⏳ Проверяем данные в облаке...');
 
-    // Ищем файл в облаке
     let cloudData = null;
     try { cloudData = await downloadJson(getDataFile(fio, login)); } catch (e) {}
 
@@ -256,11 +263,7 @@ async function saveProfile() {
             'Категория: ' + (cloudData.profile.category || '—') + '\n\n' +
             'Это вы? Нажмите ОК для входа.\nОтмена — выберите другой логин.'
         );
-        if (!isThisYou) {
-            showToast('Выберите другой логин');
-            return;
-        }
-        // Входим под облачным профилем
+        if (!isThisYou) { showToast('Выберите другой логин'); return; }
         profile = cloudData.profile;
         await saveSetting('profile', profile);
         updateProfileUI();
@@ -271,7 +274,6 @@ async function saveProfile() {
         return;
     }
 
-    // Новый профиль
     profile = { fio, login, pck, category, year: getYear(), createdAt: new Date().toISOString() };
     await saveSetting('profile', profile);
     updateProfileUI();
@@ -289,10 +291,10 @@ function updateProfileUI() {
 
 function showProfileSwitcher() {
     document.getElementById('modal-profile').classList.add('active');
-    document.getElementById('profiles-list').innerHTML = `
-        <div class="profile-item active"><span>${profile.fio}</span><span>✓</span></div>
-        <div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>
-        <div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>`;
+    document.getElementById('profiles-list').innerHTML = '' +
+        '<div class="profile-item active"><span>' + profile.fio + '</span><span>✓</span></div>' +
+        '<div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>' +
+        '<div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>';
 }
 function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
 async function resetProfile() {
@@ -304,7 +306,7 @@ function openEditProfile() {
     closeModal();
     document.getElementById('edit-fio').value = profile.fio;
     document.getElementById('edit-login').value = profile.login;
-    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => `<option value="${p}" ${p === profile.pck ? 'selected' : ''}>${p}</option>`).join('');
+    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => '<option value="' + p + '"' + (p === profile.pck ? ' selected' : '') + '>' + p + '</option>').join('');
     document.getElementById('edit-category').value = profile.category;
     showScreen('screen-edit-profile');
 }
@@ -336,64 +338,120 @@ async function saveEditedProfile() {
     logActivity('profile_edit');
 }
 
-// ═══ MERGE ═══
+// ═══ MERGE (двусторонний, с tombstone) ═══
 async function mergeWithCloud() {
-    if (!profile) return { added: 0, updated: 0 };
+    if (!profile) return { added: 0, updated: 0, deleted: 0 };
+
     const data = await downloadJson(getDataFile(profile.fio, profile.login));
-    if (!data) return { added: 0, updated: 0 };
+    if (!data) return { added: 0, updated: 0, deleted: 0 };
 
     if (data.profile) {
-        profile = { ...profile, pck: data.profile.pck || profile.pck, category: data.profile.category || profile.category };
+        profile = Object.assign({}, profile, { pck: data.profile.pck || profile.pck, category: data.profile.category || profile.category });
         await saveSetting('profile', profile);
         updateProfileUI();
     }
 
-    const allTypes = ['events', 'trainings', 'assessments', 'methodical', 'activity'];
     const cloudRecords = [];
-    for (const key of allTypes) {
-        if (data[key] && Array.isArray(data[key])) {
-            for (const item of data[key]) cloudRecords.push(item);
-        }
+    for (const key of ['events','trainings','assessments','methodical','activity']) {
+        if (data[key] && Array.isArray(data[key])) cloudRecords.push.apply(cloudRecords, data[key]);
     }
-    if (cloudRecords.length === 0) return { added: 0, updated: 0 };
 
-    const localRecords = await getAllRecords();
-    const localByUid = new Map();
-    const localByCreated = new Map();
+    const localRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+    const localByKey = new Map();
     for (const r of localRecords) {
-        if (r.uid) localByUid.set(r.uid, r);
-        if (r.createdAt) localByCreated.set(r.createdAt, r);
+        const k = recordKey(r);
+        if (k) localByKey.set(k, r);
     }
 
-    let added = 0, updated = 0;
-    for (const cloud of cloudRecords) {
-        let local = null;
-        if (cloud.uid && localByUid.has(cloud.uid)) local = localByUid.get(cloud.uid);
-        else if (cloud.createdAt && localByCreated.has(cloud.createdAt)) local = localByCreated.get(cloud.createdAt);
+    const cloudByKey = new Map();
+    for (const c of cloudRecords) {
+        const k = recordKey(c);
+        if (k) cloudByKey.set(k, c);
+    }
+
+    let added = 0, updated = 0, deleted = 0;
+
+    // Облачные → локальные
+    for (const entry of cloudByKey) {
+        const key = entry[0];
+        const cloud = entry[1];
+        const local = localByKey.get(key);
 
         if (!local) {
+            // Проверяем, есть ли локальный tombstone (запись была удалена)
+            if (cloud.deleted) {
+                // Добавляем tombstone локально
+                cloud.teacher = profile.fio;
+                cloud.teacherLogin = profile.login;
+                cloud.pck = profile.pck;
+                cloud.fromCloud = true;
+                if (!cloud.uid) cloud.uid = key;
+                await saveRecordToDB(cloud);
+                localByKey.set(key, cloud);
+                continue;
+            }
+            // Новая запись из облака
             cloud.teacher = profile.fio;
             cloud.teacherLogin = profile.login;
             cloud.pck = profile.pck;
             cloud.sent = true;
             cloud.photoUploaded = true;
             cloud.fromCloud = true;
-            if (!cloud.uid) cloud.uid = 'c' + Date.now() + Math.random().toString(36).slice(2,8);
+            if (!cloud.uid) cloud.uid = key;
             await saveRecordToDB(cloud);
+            localByKey.set(key, cloud);
             added++;
         } else {
+            // Есть в обоих
+            if (cloud.deleted && !local.deleted) {
+                // В облаке удалено, локально — нет. Проверяем, что удаление новее
+                const cloudDelTime = new Date(cloud.deletedAt || cloud.updatedAt || cloud.createdAt).getTime();
+                const localTime = new Date(local.updatedAt || local.createdAt).getTime();
+                if (cloudDelTime >= localTime) {
+                    local.deleted = true;
+                    local.deletedAt = cloud.deletedAt || cloud.updatedAt;
+                    await updateRecord(local);
+                    deleted++;
+                }
+                continue;
+            }
+            if (local.deleted) continue; // Локальный tombstone — не восстанавливаем
+
             const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
             const localTime = new Date(local.updatedAt || local.createdAt).getTime();
             if (cloudTime > localTime) {
                 const keepId = local.id;
-                const merged = { ...cloud, id: keepId, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true };
-                if (!merged.uid) merged.uid = local.uid;
+                const merged = Object.assign({}, cloud, {
+                    id: keepId,
+                    teacher: profile.fio,
+                    teacherLogin: profile.login,
+                    pck: profile.pck,
+                    sent: true,
+                    photoUploaded: true
+                });
+                if (!merged.uid) merged.uid = local.uid || key;
                 await updateRecord(merged);
                 updated++;
             }
         }
     }
-    return { added, updated };
+
+    return { added: added, updated: updated, deleted: deleted };
+}
+
+// ═══ ФИЗИЧЕСКАЯ ОЧИСТКА СТАРЫХ TOMBSTONE ═══
+async function purgeOldTombstones() {
+    try {
+        const all = await getAllRecords();
+        for (const r of all) {
+            if (r.deleted && r.deletedAt) {
+                const age = Date.now() - new Date(r.deletedAt).getTime();
+                if (age > 48 * 60 * 60 * 1000) {
+                    await deleteRecordById(r.id);
+                }
+            }
+        }
+    } catch (e) {}
 }
 
 // ═══ ЛОГ АКТИВНОСТИ ═══
@@ -414,7 +472,6 @@ function getDeviceInfo() {
     else if (/Safari/i.test(ua)) browser = 'Safari';
     return type + ' • ' + os + ' • ' + browser;
 }
-
 async function logActivity(action, extra) {
     if (!profile) return;
     try {
@@ -445,7 +502,6 @@ function openForm(type) {
     renderForm(type);
     showScreen('screen-form');
 }
-
 function renderForm(type) {
     const c = document.getElementById('form-content');
     if (type === 'event') c.innerHTML = renderEventForm();
@@ -573,7 +629,6 @@ function renderActivityForm() {
     '</div>' +
     '<div class="card"><h3>Фото подтверждения</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
 }
-
 function toggleCustom(selectId, groupId) {
     const sel = document.getElementById(selectId);
     const grp = document.getElementById(groupId);
@@ -753,6 +808,7 @@ async function saveRecord() {
 
     if (editingRecordId) {
         record.sent = false;
+        record.fromCloud = false;
         await updateRecord(record);
         logActivity('edit', { uid: record.uid });
         showToast('✅ Изменения сохранены');
@@ -865,10 +921,10 @@ async function editRecord(id) {
 
 // ═══ ЗАПИСИ ═══
 async function showLocalRecords() {
-    showToast('⏳ Обновляем...');
+    showToast('⏳ Синхронизация...');
     try { await mergeWithCloud(); } catch (e) {}
 
-    const records = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+    const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
     const c = document.getElementById('records-list');
     if (!records.length) {
         c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей</p>';
@@ -912,8 +968,12 @@ async function deleteRecord(id) {
     if (!confirm('Удалить эту запись?')) return;
     const all = await getAllRecords();
     const rec = all.find(r => r.id === id);
-    await deleteRecordById(id);
-    logActivity('delete', { type: rec && rec.type, name: rec && rec.name });
+    if (!rec) return;
+    rec.deleted = true;
+    rec.deletedAt = new Date().toISOString();
+    rec.sent = false;
+    await updateRecord(rec);
+    logActivity('delete', { type: rec.type, name: rec.name });
     showToast('🗑 Удалено');
     showLocalRecords();
 }
@@ -1021,6 +1081,7 @@ async function downloadJson(diskPath) {
 }
 
 async function buildDataFile() {
+    // ВСЕ локальные записи (включая tombstone), но без фото
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
     const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c._photoBackup; return c; };
     return {
@@ -1038,18 +1099,25 @@ async function sendToCloud() {
     const btn = document.getElementById('send-btn');
     btn.disabled = true; btn.textContent = '⏳ Отправка...';
     try {
-        // Сначала merge
+        // ШАГ 1: двусторонний merge — подтягиваем всё из облака
         const merged = await mergeWithCloud();
 
+        // ШАГ 2: собираем все локальные записи (включая tombstone)
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        if (allRecords.length === 0) { showToast('Нет данных'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
+        const activeRecords = allRecords.filter(r => !r.deleted);
+        if (activeRecords.length === 0 && allRecords.filter(r => r.deleted).length === 0) {
+            showToast('Нет данных');
+            btn.disabled = false; btn.textContent = '📤 Отправить данные';
+            return;
+        }
 
         await ensureFolder(ROOT_FOLDER);
         await ensureFolder(ROOT_FOLDER + '/Входящие');
         await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
         await ensureFolder(getPhotosFolder(profile.fio, profile.login));
 
-        for (const record of allRecords) {
+        // Фото (только активных записей)
+        for (const record of activeRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
                     const filename = buildPhotoName(record);
@@ -1061,6 +1129,7 @@ async function sendToCloud() {
             }
         }
 
+        // JSON со всеми (включая tombstone)
         const data = await buildDataFile();
         const dataFile = getDataFile(profile.fio, profile.login);
         await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
@@ -1068,9 +1137,10 @@ async function sendToCloud() {
         await fetch('https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(dataFile),
             { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }).catch(() => {});
 
+        // Помечаем всё как отправленное
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        logActivity('submit', { count: allRecords.length, merged_added: merged.added, merged_updated: merged.updated });
-        showToast('✅ Отправлено: ' + allRecords.length + (merged.added ? ' (+' + merged.added + ' из облака)' : ''));
+        logActivity('submit', { count: activeRecords.length, merged_added: merged.added, merged_updated: merged.updated });
+        showToast('✅ Отправлено: ' + activeRecords.length + (merged.added ? ' (загружено из облака: ' + merged.added + ')' : ''));
     } catch (e) { console.error(e); alert('Ошибка: ' + e.message); }
     btn.disabled = false; btn.textContent = '📤 Отправить данные';
 }
