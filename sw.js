@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-notebook-v20';
+const CACHE_NAME = 'teacher-notebook-v21';
 const FILES_TO_CACHE = [
     './',
     './index.html',
@@ -22,7 +22,13 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+    // Пропускаем API-запросы и CORS-прокси — они не должны кэшироваться
     if (e.request.url.includes('cloud-api.yandex.net')) return;
+    if (e.request.url.includes('downloader.disk.yandex.ru')) return;
+    if (e.request.url.includes('corsproxy.io')) return;
+    if (e.request.url.includes('allorigins.win')) return;
+    if (e.request.url.includes('codetabs.com')) return;
+
     e.respondWith(
         caches.match(e.request).then(response => response || fetch(e.request))
     );
