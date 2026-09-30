@@ -195,6 +195,8 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
+const PROXY_URL = 'https://notebook-proxy.annavatagina0.workers.dev/?url=';
+
 const PCK_LIST = [
     'Березина М.С.',
     'Бочкарев Ю.Т.',
@@ -903,9 +905,7 @@ async function sendToCloud() {
     const btn = document.getElementById('send-cloud-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
     try {
-        // Сначала двусторонний merge
         const merged = await mergeWithCloud();
-
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
         if (allRecords.length === 0) {
             showToast('Нет данных для отправки');
@@ -1019,21 +1019,16 @@ async function uploadBlobToYandex(diskPath, blob) {
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
 
-// Скачивание через публичный API (без CORS проблем)
+// Скачивание через Cloudflare Worker
 async function downloadJson(diskPath) {
     try {
-        // 1. Метаданные + public_url
         let infoRes = await fetch(
             'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
             { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
         );
-        if (!infoRes.ok) {
-            console.warn('meta failed:', infoRes.status);
-            return null;
-        }
+        if (!infoRes.ok) { console.warn('meta failed:', infoRes.status); return null; }
         let info = await infoRes.json();
 
-        // 2. Публикуем файл, если нужно
         if (!info.public_url) {
             await fetch(
                 'https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
@@ -1046,92 +1041,29 @@ async function downloadJson(diskPath) {
             );
             info = await infoRes.json();
         }
+        if (!info.public_url) { console.warn('no public_url'); return null; }
 
-        if (!info.public_url) {
-            console.warn('no public_url');
-            return null;
-        }
-
-        // 3. Получаем href через публичный API
         const dlRes = await fetch(
             'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url)
         );
-        if (!dlRes.ok) {
-            console.warn('public dl failed:', dlRes.status);
-            return null;
-        }
+        if (!dlRes.ok) { console.warn('public dl failed:', dlRes.status); return null; }
         const dlData = await dlRes.json();
         const fileUrl = dlData.href;
 
-        // 4. Скачиваем файл через CORS-прокси (у downloader.disk.yandex.ru нет CORS)
-        const proxies = [
-            'https://corsproxy.io/?url=',
-            'https://api.allorigins.win/raw?url=',
-            'https://api.codetabs.com/v1/proxy?quest='
-        ];
-
-        for (const proxy of proxies) {
-            try {
-                const proxyUrl = proxy + encodeURIComponent(fileUrl);
-                const fileRes = await fetch(proxyUrl);
-                if (fileRes.ok) {
-                    const text = await fileRes.text();
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        console.warn('not JSON from proxy');
-                    }
-                }
-            } catch (e) {
-                console.warn('proxy failed:', proxy, e);
-            }
-        }
-        return null;
-    } catch (e) {
-        console.error('downloadJson error:', e);
-        return null;
-    }
-}
-
-        // 2. Публикуем файл, если нужно
-        if (!info.public_url) {
-            const pubRes = await fetch(
-                'https://cloud-api.yandex.net/v1/disk/resources/publish?path=' + encodeURIComponent(diskPath),
-                { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
-            );
-            console.log('publish status:', pubRes.status);
-            await new Promise(r => setTimeout(r, 2000));
-
-            infoRes = await fetch(
-                'https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath) + '&fields=public_url',
-                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
-            );
-            info = await infoRes.json();
-            console.log('after publish:', info);
-        }
-
-        if (!info.public_url) {
-            console.warn('no public_url');
-            return null;
-        }
-
-        // 3. Получаем download href через публичный API
-        const dlRes = await fetch(
-            'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(info.public_url)
-        );
-        if (!dlRes.ok) {
-            console.warn('public dl failed:', dlRes.status);
-            return null;
-        }
-        const dlData = await dlRes.json();
-
-        // 4. Скачиваем файл
-        const fileRes = await fetch(dlData.href);
+        // Через Cloudflare Worker
+        const proxyUrl = PROXY_URL + encodeURIComponent(fileUrl);
+        const fileRes = await fetch(proxyUrl);
         if (!fileRes.ok) {
-            console.warn('file fetch failed:', fileRes.status);
+            console.warn('proxy failed:', fileRes.status);
             return null;
         }
-        return await fileRes.json();
+        const text = await fileRes.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('not JSON:', text.slice(0, 200));
+            return null;
+        }
     } catch (e) {
         console.error('downloadJson error:', e);
         return null;
