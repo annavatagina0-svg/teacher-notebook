@@ -212,8 +212,10 @@ let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
 let db = null;
 
+// ═══ ПУТИ ═══
 function getUserFolder(fio, login) { return `${ROOT_FOLDER}/Входящие/${slug(fio)}_${login}`; }
 function getStatsFolder(fio, login) { return `${ROOT_FOLDER}/Исходящие/${slug(fio)}_${login}`; }
+function getDataFile(fio, login) { return `${getUserFolder(fio, login)}/${getYear()}.json`; }
 
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
@@ -224,15 +226,14 @@ window.addEventListener('DOMContentLoaded', async () => {
         profile = savedProfile;
         updateProfileUI();
         showScreen('screen-main');
-        // Фоново тянем из облака (без тоста, если пусто)
         setTimeout(() => { loadFromIncoming(true); }, 800);
     } else {
         showScreen('screen-welcome');
     }
 
-    // Слушатель появления сети — досылаем всё неотправленное
     window.addEventListener('online', async () => {
-        const unsent = (await getAllRecords()).filter(r => r.teacher === profile?.fio && !r.sent);
+        if (!profile) return;
+        const unsent = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.sent);
         if (unsent.length > 0) {
             showToast('🌐 Интернет появился — отправляем...');
             await sendToCloudSilent();
@@ -264,15 +265,13 @@ async function saveProfile() {
     showScreen('screen-main');
     showToast('Профиль сохранён');
 
+    // Сохраняем и отправляем одним файлом
     try {
-        const folder = getUserFolder(profile.fio, profile.login);
         await ensureFolder(`${ROOT_FOLDER}/Входящие`);
-        await ensureFolder(folder);
-        await uploadToYandex(`${folder}/profile.json`, JSON.stringify(profile, null, 2));
-    } catch (e) { console.warn('Профиль:', e); }
-
-    // Автозагрузка из облака (если там уже что-то есть)
-    setTimeout(() => { loadFromIncoming(true); }, 800);
+        await ensureFolder(getUserFolder(profile.fio, profile.login));
+        await ensureFolder(`${getUserFolder(profile.fio, profile.login)}/photos`);
+        await sendToCloudSilent();
+    } catch (e) { console.warn(e); }
 }
 
 function updateProfileUI() {
@@ -325,14 +324,10 @@ async function saveEditedProfile() {
     for (const r of records) {
         if (r.teacher === oldFio) { r.teacher = newFio; r.teacherLogin = newLogin; r.pck = newPck; await updateRecord(r); }
     }
-    try {
-        const folder = getUserFolder(newFio, newLogin);
-        await ensureFolder(folder);
-        await uploadToYandex(`${folder}/profile.json`, JSON.stringify(profile, null, 2));
-    } catch (e) {}
     updateProfileUI();
     showToast('✅ Профиль обновлён');
     backToMain();
+    setTimeout(() => sendToCloudSilent(), 500);
 }
 
 // ═══ ВХОД С ДРУГОГО УСТРОЙСТВА ═══
@@ -340,62 +335,57 @@ async function tryLogin() {
     const fio = document.getElementById('login-fio').value.trim();
     const login = document.getElementById('login-login').value.trim();
     if (!fio || !login) { showToast('Введите ФИО и логин'); return; }
-    const folder = getUserFolder(fio, login);
 
-    let exists = false;
-    try {
-        const res = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(folder)}`,
-            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
-        exists = res.ok;
-    } catch (e) {}
+    const dataFile = getDataFile(fio, login);
+    showToast('⏳ Проверяем...');
 
-    if (!exists) { showToast('Профиль не найден'); return; }
+    // Пробуем скачать единый файл данных
+    const data = await downloadJson(dataFile);
 
-    let loaded = null;
-    try { loaded = await downloadJson(`${folder}/profile.json`); } catch (e) {}
+    if (!data || !data.profile) {
+        showToast('Профиль не найден. Проверьте ФИО и логин');
+        return;
+    }
 
-    profile = (loaded && loaded.fio) ? loaded : { fio, login, pck: '—', category: '—', year: getYear() };
+    profile = data.profile;
     await saveSetting('profile', profile);
     updateProfileUI();
     showScreen('screen-main');
-    showToast('Профиль загружен');
 
-    // Тянем записи
-    setTimeout(async () => {
-        const added = await loadFromIncoming(false);
-    }, 400);
+    // Загружаем записи из файла
+    const added = await importRecordsFromData(data);
+    showToast(`Загружено записей: ${added}`);
 }
 
 // ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
 async function loadFromIncoming(silent) {
     if (!profile) return 0;
-    const baseFolder = getUserFolder(profile.fio, profile.login);
-    const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
-    const cloudRecords = [];
-
-    for (const [type, file] of Object.entries(files)) {
-        try {
-            const data = await downloadJson(`${baseFolder}/${file}`);
-            if (data && data.items && data.items.length > 0) {
-                for (const item of data.items) cloudRecords.push(item);
-            }
-        } catch (e) {}
-    }
-
-    // Тянем профиль
-    try {
-        const profileFromCloud = await downloadJson(`${baseFolder}/profile.json`);
-        if (profileFromCloud && profileFromCloud.fio) {
-            profile = { ...profile, ...profileFromCloud };
-            await saveSetting('profile', profile);
-            updateProfileUI();
-        }
-    } catch (e) {}
-
-    if (cloudRecords.length === 0) {
-        if (!silent) showToast('В облаке пока нет записей');
+    const dataFile = getDataFile(profile.fio, profile.login);
+    const data = await downloadJson(dataFile);
+    if (!data || !data.profile) {
+        if (!silent) showToast('В облаке пока нет данных');
         return 0;
     }
+
+    // Обновляем профиль (мог измениться на другом устройстве)
+    profile = { ...profile, ...data.profile };
+    await saveSetting('profile', profile);
+    updateProfileUI();
+
+    const added = await importRecordsFromData(data);
+    if (!silent && added > 0) showToast(`Из облака загружено: ${added}`);
+    return added;
+}
+
+async function importRecordsFromData(data) {
+    const allTypes = ['events', 'trainings', 'assessments', 'methodical', 'activity'];
+    const cloudRecords = [];
+    for (const key of allTypes) {
+        if (data[key] && Array.isArray(data[key])) {
+            for (const item of data[key]) cloudRecords.push(item);
+        }
+    }
+    if (cloudRecords.length === 0) return 0;
 
     const localRecords = await getAllRecords();
     const localUids = new Set();
@@ -421,8 +411,6 @@ async function loadFromIncoming(silent) {
         localCreatedAt.add(cloud.createdAt);
         added++;
     }
-
-    if (!silent && added > 0) showToast(`Из облака загружено: ${added}`);
     return added;
 }
 
@@ -686,7 +674,6 @@ async function saveRecord() {
     clearForm();
     backToMain();
 
-    // Автоотправка в облако (тихо, без блокировки)
     if (navigator.onLine) {
         showToast('💾 Сохранено. Отправляем...');
         setTimeout(() => sendToCloudSilent(), 300);
@@ -775,6 +762,7 @@ async function deleteRecord(id) {
     await deleteRecordById(id);
     showToast('🗑 Удалено');
     showLocalRecords();
+    setTimeout(() => sendToCloudSilent(), 500);
 }
 
 // ═══ СТАТИСТИКА ═══
@@ -787,7 +775,7 @@ async function showStatistics() {
     try {
         const stats = await downloadJson(`${folder}/statistics.json`);
         if (!stats) {
-            document.getElementById('stats-content').innerHTML = `<div class="card"><h3>📊 Статистика пока не готова</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Методист ещё не обработал ваши данные.<br><br>Нажмите <b>«📤 Отправить данные»</b> — тогда ваши записи попадут в обработку.</p></div>`;
+            document.getElementById('stats-content').innerHTML = `<div class="card"><h3>📊 Статистика пока не готова</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке.<br><br>Нажмите <b>«📤 Отправить данные»</b> — тогда ваши записи попадут в обработку.</p></div>`;
             if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
             return;
         }
@@ -839,6 +827,7 @@ async function ensureFolder(diskPath) {
         throw new Error('Папка: ' + (err.message || res.status));
     }
 }
+
 async function uploadToYandex(diskPath, content) {
     const urlRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`,
         { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
@@ -847,6 +836,7 @@ async function uploadToYandex(diskPath, content) {
     const put = await fetch(data.href, { method: 'PUT', body: content });
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
+
 async function uploadBlobToYandex(diskPath, blob) {
     const urlRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`,
         { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
@@ -855,24 +845,38 @@ async function uploadBlobToYandex(diskPath, blob) {
     const put = await fetch(data.href, { method: 'PUT', body: blob });
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
+
+// Скачивание через публичную ссылку НА ФАЙЛ
 async function downloadJson(diskPath) {
     try {
-        let infoRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
-            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+        // 1. Метаданные файла (public_url именно файла)
+        let infoRes = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
+            { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        );
         if (!infoRes.ok) return null;
         let info = await infoRes.json();
+
+        // 2. Публикуем файл, если ещё не опубликован
         if (!info.public_url) {
-            const pubRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(diskPath)}`,
-                { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
-            if (!pubRes.ok && pubRes.status !== 409) return null;
-            await new Promise(r => setTimeout(r, 800));
-            infoRes = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
-                { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } });
+            await fetch(
+                `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(diskPath)}`,
+                { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+            );
+            await new Promise(r => setTimeout(r, 1500));
+            infoRes = await fetch(
+                `https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(diskPath)}&fields=public_url`,
+                { headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+            );
             if (!infoRes.ok) return null;
             info = await infoRes.json();
             if (!info.public_url) return null;
         }
-        const dlRes = await fetch(`https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(info.public_url)}`);
+
+        // 3. Скачиваем через публичный API (без path, т.к. публикуем сам файл)
+        const dlRes = await fetch(
+            `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(info.public_url)}`
+        );
         if (!dlRes.ok) return null;
         const dlData = await dlRes.json();
         const fileRes = await fetch(dlData.href);
@@ -880,18 +884,33 @@ async function downloadJson(diskPath) {
     } catch (e) { console.error('downloadJson:', e); return null; }
 }
 
-// Тихая автоотправка — без блокировки кнопки и алертов
+// Собрать единый файл из всех локальных записей
+async function buildDataFile() {
+    const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
+    const clean = r => { const c = {...r}; delete c.photo; delete c._photoBackup; return c; };
+    return {
+        profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, year: getYear() },
+        events: records.filter(r => r.type === 'event').map(clean),
+        trainings: records.filter(r => r.type === 'training').map(clean),
+        assessments: records.filter(r => r.type === 'assessment').map(clean),
+        methodical: records.filter(r => r.type === 'methodical').map(clean),
+        activity: records.filter(r => r.type === 'activity').map(clean),
+        updated: new Date().toISOString()
+    };
+}
+
 async function sendToCloudSilent() {
     try {
+        if (!profile) return;
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        if (allRecords.length === 0) return;
         const baseFolder = getUserFolder(profile.fio, profile.login);
+
         await ensureFolder(ROOT_FOLDER);
         await ensureFolder(`${ROOT_FOLDER}/Входящие`);
         await ensureFolder(baseFolder);
         await ensureFolder(`${baseFolder}/photos`);
-        await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
 
+        // Загружаем фото (не опубликованные)
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
@@ -903,17 +922,19 @@ async function sendToCloudSilent() {
                 } catch (e) {}
             }
         }
-        const now = new Date().toISOString();
-        const clean = r => { const c = {...r}; delete c.photo; delete c._photoBackup; return c; };
-        const types = ['event', 'training', 'assessment', 'methodical', 'activity'];
-        const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
-        for (const t of types) {
-            const items = allRecords.filter(r => r.type === t).map(clean);
-            if (items.length > 0) {
-                await uploadToYandex(`${baseFolder}/${files[t]}`,
-                    JSON.stringify({ teacher: profile.fio, login: profile.login, pck: profile.pck, updated: now, count: items.length, items }, null, 2));
-            }
-        }
+
+        // Один файл — все данные
+        const data = await buildDataFile();
+        const dataFile = getDataFile(profile.fio, profile.login);
+        await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
+
+        // Публикуем файл (для чтения через CORS-обход)
+        await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(dataFile)}`,
+            { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        ).catch(() => {});
+
+        // Помечаем всё как отправленное
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
         showToast('☁️ Отправлено в облако');
     } catch (e) { console.warn('Silent upload error:', e); }
@@ -924,13 +945,14 @@ async function sendToCloud() {
     btn.disabled = true; btn.textContent = '⏳ Отправка...';
     try {
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        if (allRecords.length === 0) { showToast('Нет записей'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
+        if (allRecords.length === 0 && !profile) { showToast('Нет данных'); btn.disabled = false; btn.textContent = '📤 Отправить данные'; return; }
+
         const baseFolder = getUserFolder(profile.fio, profile.login);
         await ensureFolder(ROOT_FOLDER);
         await ensureFolder(`${ROOT_FOLDER}/Входящие`);
         await ensureFolder(baseFolder);
         await ensureFolder(`${baseFolder}/photos`);
-        await uploadToYandex(`${baseFolder}/profile.json`, JSON.stringify(profile, null, 2));
+
         for (const record of allRecords) {
             if (record.photo && !record.photoUploaded) {
                 try {
@@ -942,19 +964,19 @@ async function sendToCloud() {
                 } catch (e) {}
             }
         }
-        const now = new Date().toISOString();
-        const clean = r => { const c = {...r}; delete c.photo; delete c._photoBackup; return c; };
-        const types = ['event', 'training', 'assessment', 'methodical', 'activity'];
-        const files = { event: 'events.json', training: 'trainings.json', assessment: 'assessments.json', methodical: 'methodical.json', activity: 'activity.json' };
-        for (const t of types) {
-            const items = allRecords.filter(r => r.type === t).map(clean);
-            if (items.length > 0) {
-                await uploadToYandex(`${baseFolder}/${files[t]}`,
-                    JSON.stringify({ teacher: profile.fio, login: profile.login, pck: profile.pck, updated: now, count: items.length, items }, null, 2));
-            }
-        }
+
+        const data = await buildDataFile();
+        const dataFile = getDataFile(profile.fio, profile.login);
+        await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
+
+        // Публикуем файл
+        await fetch(
+            `https://cloud-api.yandex.net/v1/disk/resources/publish?path=${encodeURIComponent(dataFile)}`,
+            { method: 'PUT', headers: { 'Authorization': `OAuth ${YANDEX_TOKEN}` } }
+        ).catch(() => {});
+
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        showToast(`✅ Отправлено: ${allRecords.length}`);
+        showToast(`✅ Отправлено: ${allRecords.length} записей`);
     } catch (e) { console.error(e); alert('Ошибка: ' + e.message); }
     btn.disabled = false; btn.textContent = '📤 Отправить данные';
 }
