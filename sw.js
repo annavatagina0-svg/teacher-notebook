@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-notebook-v24';
+const CACHE_NAME = 'teacher-notebook-v25';
 const FILES_TO_CACHE = [
     './',
     './index.html',
@@ -23,6 +23,7 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
     if (e.request.url.includes('cloud-api.yandex.net')) return;
+    if (e.request.url.includes('relaxdev.ru')) return;
     if (e.request.url.includes('workers.dev')) return;
     if (e.request.url.includes('downloader.disk.yandex.ru')) return;
     e.respondWith(
