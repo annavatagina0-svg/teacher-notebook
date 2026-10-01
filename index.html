@@ -12,7 +12,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .screen { display: none; padding: 16px; padding-bottom: 40px; min-height: 100vh; max-width: 600px; margin: 0 auto; }
 .screen.active { display: block; }
 .hidden { display: none !important; }
-.welcome-box { margin-top: 10vh; text-align: center; padding: 28px 22px; background: white; border-radius: 24px; box-shadow: 0 8px 32px rgba(74,108,247,0.08); }
+.welcome-box { margin-top: 6vh; text-align: center; padding: 28px 22px; background: white; border-radius: 24px; box-shadow: 0 8px 32px rgba(74,108,247,0.08); }
 .logo { font-size: 52px; margin-bottom: 12px; }
 .welcome-box h1 { font-size: 22px; margin-bottom: 8px; font-weight: 700; }
 .welcome-box p { color: #8892a0; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
@@ -51,6 +51,9 @@ textarea { min-height: 60px; resize: vertical; }
 .toggle { display: flex; align-items: center; gap: 8px; background: #fafbfe; border: 1.5px solid #e6ecff; padding: 12px 16px; border-radius: 12px; font-size: 14px; cursor: pointer; flex: 1; font-weight: 500; }
 .toggle input { width: auto; margin: 0; }
 .toggle:has(input:checked) { background: #eef2ff; border-color: #4A6CF7; color: #4A6CF7; }
+.checkbox-line { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #f8faff; border: 1.5px solid #e6ecff; border-radius: 12px; cursor: pointer; margin-bottom: 12px; font-size: 14px; color: #4A6CF7; font-weight: 500; }
+.checkbox-line input { width: auto; margin: 0; }
+.checkbox-line:has(input:checked) { background: #eef2ff; border-color: #4A6CF7; }
 .sub-block { background: #fafbfe; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1.5px solid #e6ecff; }
 .sub-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #4A6CF7; }
 .sub-block-header button { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 0 4px; }
@@ -101,6 +104,10 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <div class="form-group" style="text-align:left;"><label>Логин *</label><input type="text" id="input-login" placeholder="ivanov (латиница, 3+ символа)"><div class="hint">Придумайте сами. Запомните — понадобится для входа с любого устройства.</div></div>
         <div class="form-group" style="text-align:left;"><label>Председатель ПЦК *</label><select id="input-pck"></select></div>
         <div class="form-group" style="text-align:left;"><label>Категория *</label><select id="input-category"><option value="">— выберите —</option><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
+        <label class="checkbox-line">
+            <input type="checkbox" id="existing-profile-check">
+            <span>У меня уже есть профиль (в облаке)</span>
+        </label>
         <button class="btn-primary" onclick="saveProfile()">Войти / Создать профиль</button>
     </div>
 </div>
@@ -195,7 +202,21 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
-const PROXY_URL = 'https://notebook-proxy.annavatagina0.workers.dev/?url=';
+const PROXY_URL = 'https://notebook-proxy.relaxdev.ru/?url=';
+
+const LEVELS = [
+    'образовательная организация',
+    'муниципальный',
+    'областной',
+    'региональный',
+    'межрегиональный',
+    'всероссийский',
+    'международный'
+];
+
+function levelsSelect(id, selected) {
+    return '<select id="' + id + '">' + LEVELS.map(l => '<option value="' + l + '"' + (l === selected ? ' selected' : '') + '>' + l.charAt(0).toUpperCase() + l.slice(1) + '</option>').join('') + '</select>';
+}
 
 const PCK_LIST = [
     'Березина М.С.',
@@ -254,6 +275,8 @@ async function saveProfile() {
     const login = document.getElementById('input-login').value.trim();
     const pck = document.getElementById('input-pck').value;
     const category = document.getElementById('input-category').value;
+    const existingProfile = document.getElementById('existing-profile-check').checked;
+
     if (!fio) { showToast('Введите ФИО'); return; }
     if (!login || login.length < 3 || !/^[a-zA-Z0-9_.-]+$/.test(login)) { showToast('Логин: латиница, 3+ символа'); return; }
     if (!pck) { showToast('Выберите ПЦК'); return; }
@@ -262,13 +285,15 @@ async function saveProfile() {
     showToast('⏳ Проверяем облако...');
 
     let cloudData = null;
+    let downloadFailed = false;
     try {
         cloudData = await Promise.race([
             downloadJson(getDataFile(fio, login)),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
         ]);
     } catch (e) {
         console.warn('Проверка облака не удалась:', e.message);
+        downloadFailed = true;
     }
 
     if (cloudData && cloudData.profile) {
@@ -281,8 +306,7 @@ async function saveProfile() {
             'ПЦК: ' + (cloudData.profile.pck || '—') + '\n' +
             'Категория: ' + (cloudData.profile.category || '—') + '\n' +
             'Записей: ' + total + '\n\n' +
-            'Это вы? Нажмите ОК — войдёте и подтянете записи.\n' +
-            'Отмена — создадите НОВЫЙ профиль (смените логин).'
+            'Это вы? Нажмите ОК — войдёте и подтянете записи.'
         );
         if (!isThisYou) { showToast('Смените логин или ФИО'); return; }
 
@@ -292,6 +316,16 @@ async function saveProfile() {
         showScreen('screen-main');
         const merged = await mergeWithCloud();
         showToast('Записей из облака: +' + merged.added + ', обновлено: ' + merged.updated);
+        return;
+    }
+
+    if (existingProfile) {
+        alert(
+            'Вы отметили «У меня уже есть профиль», но не удалось загрузить данные из облака.\n\n' +
+            (downloadFailed
+                ? 'Похоже, проблема с интернетом. Попробуйте:\n• Переключиться на Wi-Fi\n• Повторить попытку позже'
+                : 'Возможно, профиль ещё не создан или указаны другие ФИО/логин.\n\nПроверьте данные или снимите галочку и создайте профиль.') + '\n\nНовый профиль НЕ создан.'
+        );
         return;
     }
 
@@ -456,11 +490,7 @@ function renderEventForm() {
             '<option value="Абилимпикс">Абилимпикс</option><option value="акция/диктант">Акция / Диктант</option><option value="другое">Другое</option>' +
         '</select></div>' +
         '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
-        '<div class="form-group"><label>Уровень</label><select id="f-level">' +
-            '<option value="образовательная организация">Образовательная организация</option><option value="муниципальный">Муниципальный</option>' +
-            '<option value="областной">Областной</option><option value="региональный">Региональный</option>' +
-            '<option value="межрегиональный">Межрегиональный</option><option value="всероссийский">Всероссийский</option><option value="международный">Международный</option>' +
-        '</select></div>' +
+        '<div class="form-group"><label>Уровень</label>' + levelsSelect('f-level') + '</div>' +
         '<div class="form-group"><label>Вид участия</label><select id="f-participation">' +
             '<option value="очно">Очно</option><option value="дистанционно">Дистанционно</option><option value="заочно">Заочно</option><option value="интернет-конкурс">Интернет-конкурс</option>' +
         '</select></div>' +
@@ -526,7 +556,7 @@ function renderMethodicalForm() {
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
         '<div class="form-group"><label>Роль</label><select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option><option value="разработчик">Разработчик</option></select></div>' +
         '<div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>' +
-        '<div class="form-group"><label>Уровень</label><select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select></div>' +
+        '<div class="form-group"><label>Уровень</label>' + levelsSelect('f-level') + '</div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
@@ -546,7 +576,7 @@ function renderActivityForm() {
         '</select></div>' +
         '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Название / тема *</label><input type="text" id="f-name"></div>' +
-        '<div class="form-group"><label>Уровень</label><select id="f-level"><option value="образовательная организация">ОО</option><option value="муниципальный">Муниципальный</option><option value="региональный">Региональный</option><option value="всероссийский">Всероссийский</option></select></div>' +
+        '<div class="form-group"><label>Уровень</label>' + levelsSelect('f-level') + '</div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
@@ -858,7 +888,7 @@ async function showLocalRecords() {
                 body = '<p>' + [r.assessmentType, r.date].filter(Boolean).join(' • ') + '</p>' + extra + '<div class="tags">' + (r.ovz ? '<span class="tag">♿ ОВЗ</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'methodical') {
                 title = icon + ' ' + r.name; const t = r.methodicalType === 'другое' && r.methodicalTypeCustom ? r.methodicalTypeCustom : r.methodicalType;
-                body = '<p>' + [t, r.role, r.status, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
+                body = '<p>' + [t, r.role, r.status, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'activity') {
                 title = icon + ' ' + r.name; const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
                 body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
@@ -888,7 +918,7 @@ async function loadFromCloud() {
         const data = await downloadJson(filePath);
 
         if (!data) {
-            alert('Не удалось скачать файл из облака.\n\nПуть: ' + filePath + '\n\nПроверьте консоль (F12) — там будет ошибка.');
+            alert('Не удалось скачать файл из облака.\n\nПуть: ' + filePath + '\n\nПроверьте интернет или зайдите позже.');
             if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
             return;
         }
@@ -897,7 +927,7 @@ async function loadFromCloud() {
         const res = await mergeWithCloud();
 
         if (res.added === 0 && res.updated === 0) {
-            alert('Файл скачался, но новых записей нет.\n\nВ облаке: ' + total + ' записей.\nЛокально уже все есть (совпадают по uid/createdAt).');
+            alert('Файл скачался, но новых записей нет.\n\nВ облаке: ' + total + ' записей.\nЛокально уже все есть.');
         } else {
             showToast('Из облака: +' + res.added + ' новых, ' + res.updated + ' обновлено');
         }
@@ -943,7 +973,7 @@ async function sendToCloud() {
         await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
 
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        showToast('✅ Отправлено: ' + allRecords.length + ' (из облака подтянуто: ' + merged.added + ')');
+        showToast('✅ Отправлено: ' + allRecords.length + ' (из облака: +' + merged.added + ')');
         showLocalRecords();
     } catch (e) {
         console.error(e);
@@ -1024,41 +1054,27 @@ async function uploadBlobToYandex(diskPath, blob) {
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
 
-// Скачивание через Cloudflare Worker
 async function downloadJson(diskPath) {
     try {
-        // 1. Прямая ссылка на файл через OAuth (без публикации)
         const dlRes = await Promise.race([
-            fetch(
-                'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(diskPath),
-                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }
-            ),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))
+            fetch('https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(diskPath),
+                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout-meta')), 15000))
         ]);
 
-        if (!dlRes.ok) {
-            console.warn('meta failed:', dlRes.status);
-            return null;
-        }
+        if (!dlRes.ok) { console.warn('meta failed:', dlRes.status); return null; }
 
         const dlData = await dlRes.json();
         const fileUrl = dlData.href;
-        if (!fileUrl) {
-            console.warn('no href');
-            return null;
-        }
+        if (!fileUrl) { console.warn('no href'); return null; }
 
-        // 2. Скачиваем через прокси (обход CORS)
         const proxyUrl = PROXY_URL + encodeURIComponent(fileUrl);
         const fileRes = await Promise.race([
             fetch(proxyUrl),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout-proxy')), 25000))
         ]);
 
-        if (!fileRes.ok) {
-            console.warn('proxy failed:', fileRes.status);
-            return null;
-        }
+        if (!fileRes.ok) { console.warn('proxy failed:', fileRes.status); return null; }
 
         const text = await fileRes.text();
         try {
