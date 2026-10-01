@@ -202,7 +202,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <script>
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
-const PROXY_URL = 'https://notebook-proxy.relaxdev.ru/?url=';
+const PROXY_URL = 'https://notebook-proxy.relaxdev.ru/?';
 
 const LEVELS = [
     'образовательная организация',
@@ -1056,25 +1056,20 @@ async function uploadBlobToYandex(diskPath, blob) {
 
 async function downloadJson(diskPath) {
     try {
-        const dlRes = await Promise.race([
-            fetch('https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(diskPath),
-                { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout-meta')), 15000))
-        ]);
+        const proxyUrl = PROXY_URL
+            + 'path=' + encodeURIComponent(diskPath)
+            + '&token=' + encodeURIComponent(YANDEX_TOKEN);
 
-        if (!dlRes.ok) { console.warn('meta failed:', dlRes.status); return null; }
-
-        const dlData = await dlRes.json();
-        const fileUrl = dlData.href;
-        if (!fileUrl) { console.warn('no href'); return null; }
-
-        const proxyUrl = PROXY_URL + encodeURIComponent(fileUrl);
         const fileRes = await Promise.race([
             fetch(proxyUrl),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout-proxy')), 25000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout-proxy')), 30000))
         ]);
 
-        if (!fileRes.ok) { console.warn('proxy failed:', fileRes.status); return null; }
+        if (!fileRes.ok) {
+            const errText = await fileRes.text();
+            console.warn('proxy failed:', fileRes.status, errText);
+            return null;
+        }
 
         const text = await fileRes.text();
         try {
