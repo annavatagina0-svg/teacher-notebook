@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-notebook-v26';
+const CACHE_NAME = 'teacher-notebook-v28';
 const FILES_TO_CACHE = [
     './',
     './index.html',
