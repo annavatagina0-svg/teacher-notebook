@@ -30,7 +30,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .quick-label { font-size: 14px; font-weight: 700; color: #2c3e50; line-height: 1.2; }
 .quick-sub { font-size: 11px; color: #8892a0; margin-top: 2px; }
 
-/* ═══ РАСПИСАНИЕ ═══ */
 .schedule-block { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px; overflow: hidden; }
 .schedule-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; font-size: 15px; font-weight: 700; user-select: none; }
 .schedule-head .sched-icon { font-size: 22px; }
@@ -56,7 +55,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .pair-room { color: #4A6CF7; font-weight: 500; }
 .sched-empty { text-align: center; color: #8892a0; font-size: 13px; padding: 14px; }
 
-/* ═══ ПРИКАЗЫ ═══ */
 .orders-month-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .orders-month-bar label { font-size: 13px; color: #6b7684; font-weight: 600; }
 .orders-month-bar select { flex: 1; padding: 10px 12px; border: 1.5px solid #e6ecff; border-radius: 12px; font-size: 14px; background: white; font-family: inherit; color: #2c3e50; }
@@ -68,7 +66,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .order-line1 .order-group { color: #6b7684; }
 .order-line1 .order-room { color: #27ae60; }
 .order-line2 { font-size: 12px; color: #6b7684; }
-/* ═══ /РАСПИСАНИЕ И ПРИКАЗЫ ═══ */
 
 .send-main-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; border: none; padding: 14px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); margin-bottom: 20px; }
 .send-main-btn.hidden { display: none; }
@@ -149,6 +146,28 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .btn-ok { background: #4A6CF7; color: white; }
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2c3e50; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 2000; max-width: 90%; text-align: center; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ═══ СТАТИСТИКА ═══ */
+.stats-summary { background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; padding: 22px; border-radius: 20px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(74,108,247,0.25); }
+.stats-summary .big { font-size: 40px; font-weight: 800; line-height: 1; }
+.stats-summary .small { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+.stats-summary .bar { margin-top: 14px; height: 8px; background: rgba(255,255,255,0.25); border-radius: 4px; overflow: hidden; }
+.stats-summary .bar > div { height: 100%; background: white; border-radius: 4px; transition: width 0.5s; }
+.stats-summary .bar-label { font-size: 12px; opacity: 0.85; margin-top: 6px; text-align: right; }
+.crit-card { background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #c5cbd3; }
+.crit-card.done { border-left-color: #27ae60; }
+.crit-card.partial { border-left-color: #f39c12; }
+.crit-card.zero { border-left-color: #e74c3c; }
+.crit-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.crit-code { font-size: 11px; font-weight: 700; color: #4A6CF7; background: #eef2ff; padding: 2px 8px; border-radius: 8px; flex-shrink: 0; }
+.crit-name { font-size: 14px; font-weight: 600; color: #2c3e50; flex: 1; }
+.crit-score { font-size: 15px; font-weight: 800; color: #4A6CF7; flex-shrink: 0; }
+.crit-score small { font-size: 12px; color: #8892a0; font-weight: 500; }
+.crit-desc { font-size: 12px; color: #6b7684; line-height: 1.5; margin-bottom: 8px; }
+.crit-advice { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: #fff8e6; color: #92400e; line-height: 1.4; }
+.crit-advice.ok { background: #e8f8ee; color: #1e8449; }
+.crit-bar { height: 6px; background: #eef2ff; border-radius: 3px; overflow: hidden; margin: 8px 0; }
+.crit-bar > div { height: 100%; border-radius: 3px; transition: width 0.4s; }
 </style>
 </head>
 <body>
@@ -206,7 +225,6 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <span class="send-badge" id="unsent-count">0</span>
     </button>
 
-    <!-- ═══ РАСПИСАНИЕ ═══ -->
     <div class="schedule-block" id="schedule-block">
         <div class="schedule-head" onclick="toggleScheduleBlock()">
             <span class="sched-icon">📅</span>
@@ -217,7 +235,6 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
             <div class="sched-empty">Загрузка...</div>
         </div>
     </div>
-    <!-- ═══ /РАСПИСАНИЕ ═══ -->
 
     <h1>📓 Блокнот педагога</h1>
     <p class="subtitle">Выберите раздел</p>
@@ -316,15 +333,145 @@ const PCK_LIST = [
     'Материкова А.А.', 'Мурашкина С.В.', 'Трофимова А.М.', 'Усова М.Н.'
 ];
 
-// Расписание: ориентировочные времена пар СПО (для определения «прошло/не прошло»)
 const PAIR_TIMES = [
-    { num: 1, start: 8.0,  end: 9.58 },  // 8:00–9:35
-    { num: 2, start: 9.75, end: 11.33 }, // 9:45–11:20
-    { num: 3, start: 11.83, end: 13.42 },// 11:50–13:25
-    { num: 4, start: 13.58, end: 15.17 },// 13:35–15:10
-    { num: 5, start: 15.33, end: 16.92 },// 15:20–16:55
-    { num: 6, start: 17.08, end: 18.67 },// 17:05–18:40
-    { num: 7, start: 18.83, end: 20.42 } // 18:50–20:25
+    { num: 1, start: 8.0,  end: 9.58 },
+    { num: 2, start: 9.75, end: 11.33 },
+    { num: 3, start: 11.83, end: 13.42 },
+    { num: 4, start: 13.58, end: 15.17 },
+    { num: 5, start: 15.33, end: 16.92 },
+    { num: 6, start: 17.08, end: 18.67 },
+    { num: 7, start: 18.83, end: 20.42 }
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   КРИТЕРИИ СТАТИСТИКИ (K1–K15)
+   Правь здесь: code, name, max, desc, score(records), advice(records)
+   score — функция от массива записей педагога, возвращает число
+   advice — функция, возвращает строку-подсказку
+   ═══════════════════════════════════════════════════════════════ */
+const CRITERIA = [
+    {
+        code: 'K1', name: 'Студенты — участники мероприятий', max: 8,
+        desc: 'За каждое событие, где участвуют студенты (конкурс, олимпиада, фестиваль, Абилимпикс). По 2 балла за событие, максимум 8.',
+        score: r => Math.min(8, r.filter(x => x.type === 'event' && x.hasStudents).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'event' && x.hasStudents).length; return n >= 4 ? 'Максимум достигнут' : 'Добавь ещё ' + (4 - n) + ' событий со студентами'; }
+    },
+    {
+        code: 'K2', name: 'Победы студентов', max: 10,
+        desc: 'За каждое призовое место студентов (1–3, гран-при). По 2 балла за место, максимум 10.',
+        score: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length;
+            return Math.min(10, n * 2);
+        },
+        advice: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length;
+            return n >= 5 ? 'Максимум достигнут' : 'Зафиксируй ещё ' + (5 - n) + ' призовых мест студентов';
+        }
+    },
+    {
+        code: 'K3', name: 'Собственное участие в конкурсах', max: 8,
+        desc: 'За участие педагога в конкурсах, олимпиадах, фестивалях (роль — участник/конкурсант/спикер). 2 балла за событие.',
+        score: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].includes(t.role)) n++;
+            return Math.min(8, n * 2);
+        },
+        advice: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].includes(t.role)) n++;
+            return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' участий';
+        }
+    },
+    {
+        code: 'K4', name: 'Экспертная работа (жюри, судья)', max: 6,
+        desc: 'За работу в жюри, экспертом, судьёй, организатором. 2 балла за событие.',
+        score: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].includes(t.role)) n++;
+            return Math.min(6, n * 2);
+        },
+        advice: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].includes(t.role)) n++;
+            return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' экспертных выходов';
+        }
+    },
+    {
+        code: 'K5', name: 'Повышение квалификации (КПК)', max: 8,
+        desc: 'За каждый пройденный КПК. 2 балла за курс, максимум 8.',
+        score: r => Math.min(8, r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' КПК'; }
+    },
+    {
+        code: 'K6', name: 'Переподготовка / стажировки', max: 6,
+        desc: 'Профессиональная переподготовка, стажировки, магистратура. 3 балла за документ.',
+        score: r => Math.min(6, r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].includes(x.trainingType)).length * 3),
+        advice: r => { const n = r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].includes(x.trainingType)).length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' документа'; }
+    },
+    {
+        code: 'K7', name: 'Публикации', max: 8,
+        desc: 'Методические публикации, статьи. 2 балла за публикацию.',
+        score: r => Math.min(8, r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' публикаций'; }
+    },
+    {
+        code: 'K8', name: 'Методические разработки (УМК, программы)', max: 8,
+        desc: 'УМК, рабочие программы, дидактические материалы, электронные курсы. 2 балла за разработку.',
+        score: r => Math.min(8, r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].includes(x.methodicalType)).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].includes(x.methodicalType)).length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' разработок'; }
+    },
+    {
+        code: 'K9', name: 'Открытые уроки и мастер-классы', max: 6,
+        desc: 'Открытые уроки и мастер-классы для коллег. 2 балла за мероприятие.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].includes(x.activityType)).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].includes(x.activityType)).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; }
+    },
+    {
+        code: 'K10', name: 'Взаимопосещения', max: 6,
+        desc: 'Посещение уроков коллег и посещение ваших уроков. 1 балл за посещение.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' посещений'; }
+    },
+    {
+        code: 'K11', name: 'Наставничество', max: 6,
+        desc: 'Работа наставником. 3 балла за программу наставничества.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length * 3),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' программы'; }
+    },
+    {
+        code: 'K12', name: 'Работа с ОВЗ', max: 5,
+        desc: 'Мероприятия и контроль с участием студентов с ОВЗ. 2 балла за запись.',
+        score: r => {
+            const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length;
+            const b = r.filter(x => x.type === 'assessment' && x.ovz).length;
+            return Math.min(5, (a + b) * 2);
+        },
+        advice: r => {
+            const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length;
+            const b = r.filter(x => x.type === 'assessment' && x.ovz).length;
+            const n = a + b; return n >= 3 ? 'Максимум достигнут' : 'Отметь работу с ОВЗ ещё ' + (3 - n) + ' раз';
+        }
+    },
+    {
+        code: 'K13', name: 'Профориентация', max: 6,
+        desc: 'Профориентационные мероприятия, экскурсии, приглашение специалистов. 2 балла за мероприятие.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType)).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType)).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; }
+    },
+    {
+        code: 'K14', name: 'Контроль знаний', max: 6,
+        desc: 'Входной, срезовые, итоговые контроли и проектная деятельность. 2 балла за мероприятие.',
+        score: r => Math.min(6, r.filter(x => x.type === 'assessment').length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'assessment').length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' контролей'; }
+    },
+    {
+        code: 'K15', name: 'Трансляция опыта (выступления, ПЦК)', max: 6,
+        desc: 'Выступления на педсовете, методсовете, ПЦК, публикации в СМИ. 1 балл за выступление.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' выступлений'; }
+    }
 ];
 
 let profile = null;
@@ -335,8 +482,8 @@ let teacherRolesCounter = 0;
 let editingRecordId = null;
 let db = null;
 let formPhotos = [];
-let scheduleCache = null;  // { days: [...], updated: ... }
-let ordersCache = null;    // { items: [...], updated: ... }
+let scheduleCache = null;
+let ordersCache = null;
 let ordersMonthFilter = '__all__';
 
 function levelsSelect(id, selected) {
@@ -352,7 +499,26 @@ function getStatsFolder(fio, login) { return ROOT_FOLDER + '/Исходящие/
 function getSchedulePath() { return ROOT_FOLDER + '/Справочники/schedule.json'; }
 function getOrdersPath() { return ROOT_FOLDER + '/Справочники/orders.json'; }
 
-// ═══ Утилита: короткое ФИО для сравнения ═══
+/* ═══════════════════════════════════════════════════════════════
+   ГЛАВНЫЙ ФИКС: НОРМАЛИЗАЦИЯ ФИО
+   "Ватагина Анна Николаевна" → "ватагинаан"
+   "Ватагина А.Н."           → "ватагинаан"
+   "Ватагина А. Н."          → "ватагинаан"
+   "ВАТАГИНА А.Н."           → "ватагинаан"
+   ═══════════════════════════════════════════════════════════════ */
+function normalizeFio(fio) {
+    const raw = String(fio || '').trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
+    if (!raw) return '';
+    const parts = raw.split(' ');
+    if (!parts[0]) return '';
+    let res = parts[0].toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]/g, '');
+    for (let i = 1; i < parts.length; i++) {
+        const p = parts[i].replace(/\./g, '').trim();
+        if (p) res += p[0].toLowerCase().replace(/ё/g, 'е');
+    }
+    return res;
+}
+
 function shortFio(fio) {
     const parts = String(fio || '').trim().split(/\s+/);
     if (parts.length < 2) return fio || '';
@@ -363,7 +529,6 @@ function shortFio(fio) {
     return res;
 }
 
-// ═══ Общая утилита скачивания через прокси ═══
 async function downloadJson(diskPath) {
     try {
         const url = PROXY_URL + 'path=' + encodeURIComponent(diskPath) +
@@ -378,7 +543,6 @@ async function downloadJson(diskPath) {
     } catch (e) { return null; }
 }
 
-// ═══ Расписание ═══
 async function loadScheduleCache() {
     if (scheduleCache) return scheduleCache;
     const data = await downloadJson(getSchedulePath());
@@ -420,17 +584,23 @@ async function renderSchedule() {
         body.innerHTML = '<div class="sched-empty">Нет профиля</div>';
         return;
     }
-    const key = shortFio(profile.fio);
+    const key = normalizeFio(profile.fio);
     const todayIso = new Date().toISOString().slice(0, 10);
 
     let html = '';
     let found = false;
     for (const day of data.days) {
         const teachers = day.teachers || {};
-        const pairs = teachers[key] || [];
+        // Ищем совпадение по нормализованному ключу
+        let pairs = null;
+        for (const k of Object.keys(teachers)) {
+            if (normalizeFio(k) === key) { pairs = teachers[k]; break; }
+        }
+        if (!pairs) continue;
+        found = true;
+
         const isToday = day.date === todayIso;
         const isTomorrow = !isToday && day.date > todayIso;
-
         const dayLabel = (isToday ? 'Сегодня, ' : (isTomorrow ? 'Завтра, ' : '')) + dateRu(day.date);
         const dayOpen = isToday ? ' open' : '';
         const count = pairs.length;
@@ -440,11 +610,8 @@ async function renderSchedule() {
         if (pairs.length === 0) {
             pairsHtml = '<div class="sched-empty">Пар нет</div>';
         } else {
-            // Определяем ближайшую (первую не прошедшую)
             let nearestPair = null;
-            for (const p of pairs) {
-                if (!pairIsPast(p.pair, day.date)) { nearestPair = p; break; }
-            }
+            for (const p of pairs) { if (!pairIsPast(p.pair, day.date)) { nearestPair = p; break; } }
             for (const p of pairs) {
                 const past = pairIsPast(p.pair, day.date);
                 const isNearest = (nearestPair === p);
@@ -466,24 +633,25 @@ async function renderSchedule() {
             '</div>' +
             '<div class="sched-day-list">' + pairsHtml + '</div>' +
             '</div>';
-        found = true;
     }
 
     if (!found) {
-    // Диагностика: покажем наш ключ и ключи из файла
-    const allKeys = [];
-    for (const day of data.days) {
-        for (const k of Object.keys(day.teachers || {})) {
-            if (allKeys.indexOf(k) === -1) allKeys.push(k);
+        const allKeys = [];
+        for (const day of data.days) {
+            for (const k of Object.keys(day.teachers || {})) {
+                if (allKeys.indexOf(k) === -1) allKeys.push(k);
+            }
         }
+        const sample = allKeys.slice(0, 8).join('<br>');
+        html = '<div class="sched-empty" style="text-align:left;font-size:12px;">' +
+               'Тебя нет в расписании.<br><br>' +
+               '<b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br>' +
+               '<b>Ключи из файла:</b><br>' + sample +
+               '</div>';
     }
-    const sample = allKeys.slice(0, 5).join('<br>');
-    html = '<div class="sched-empty">' +
-           'Тебя нет в расписании.<br><br>' +
-           '<b>Твой ключ:</b><br>' + key + '<br><br>' +
-           '<b>Примеры ключей из файла:</b><br>' + sample +
-           '</div>';
+    body.innerHTML = html;
 }
+
 function pluralPairs(n) {
     const n10 = n % 10, n100 = n % 100;
     if (n10 === 1 && n100 !== 11) return 'пара';
@@ -498,7 +666,7 @@ async function toggleScheduleBlock() {
         block.classList.remove('open');
     } else {
         block.classList.add('open');
-       await renderSchedule();
+        await renderSchedule();
     }
 }
 
@@ -507,7 +675,6 @@ function toggleScheduleDay(dateIso) {
     if (el) el.classList.toggle('open');
 }
 
-// ═══ Приказы (должники) ═══
 async function loadOrdersCache(forceReload) {
     if (ordersCache && !forceReload) return ordersCache;
     const data = await downloadJson(getOrdersPath());
@@ -534,26 +701,25 @@ async function renderOrders() {
         container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Нет профиля</p>';
         return;
     }
-    const key = shortFio(profile.fio);
-    const mine = data.items.filter(it => shortFio(it.teacher || '') === key);
+    const key = normalizeFio(profile.fio);
+    const mine = data.items.filter(it => normalizeFio(it.teacher || '') === key);
 
     if (!mine.length) {
-    const allTeachers = [];
-    for (const it of data.items) {
-        const t = it.teacher || '';
-        if (t && allTeachers.indexOf(t) === -1) allTeachers.push(t);
+        const allTeachers = [];
+        for (const it of data.items) {
+            const t = it.teacher || '';
+            if (t && allTeachers.indexOf(t) === -1) allTeachers.push(t);
+        }
+        const sample = allTeachers.slice(0, 8).join('<br>');
+        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;font-size:12px;text-align:left;">' +
+            '<b>Тебя нет в приказах.</b><br><br>' +
+            '<b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br>' +
+            '<b>Учителя из файла:</b><br>' + sample +
+            '</p>';
+        return;
     }
-    const sample = allTeachers.slice(0, 5).join('<br>');
-    container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;font-size:14px;">' +
-        'Тебя нет в приказах.<br><br>' +
-        '<b>Твой ключ:</b><br>' + key + '<br><br>' +
-        '<b>Учителя из файла:</b><br>' + sample +
-        '</p>';
-    return;
-}
 
-    // Группируем по месяцам
-    const monthsMap = new Map(); // '2026-10' → [items]
+    const monthsMap = new Map();
     for (const it of mine) {
         if (!it.date) continue;
         const key2 = it.date.slice(0, 7);
@@ -562,7 +728,6 @@ async function renderOrders() {
     }
     const monthKeys = Array.from(monthsMap.keys()).sort();
 
-    // Заголовок + выбор месяца
     let html = '<div class="orders-month-bar">' +
         '<label>Месяц:</label>' +
         '<select id="orders-month-select" onchange="onOrdersMonthChange(this.value)">' +
@@ -627,7 +792,6 @@ function onOrdersMonthChange(val) {
     renderOrders();
 }
 
-// ═══ Записи ═══
 function switchRecordsTab(tab) {
     currentRecordsTab = tab;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -646,7 +810,6 @@ function switchRecordsTab(tab) {
     }
 }
 
-// ═══ Инициализация ═══
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
     pckSelect.innerHTML = '<option value="">— выберите —</option>' +
@@ -658,11 +821,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         updateProfileUI();
         showScreen('screen-main');
         updateUnsentCount();
-        // Подгружаем расписание в фоне
-        loadScheduleCache().then(() => {
-            const block = document.getElementById('schedule-block');
-            if (block && block.classList.contains('open')) renderSchedule();
-        });
+        loadScheduleCache();
     } else {
         showScreen('screen-welcome');
     }
@@ -692,7 +851,6 @@ async function updateUnsentCount() {
     } catch(e) {}
 }
 
-// ═══ ПРОФИЛЬ ═══
 async function saveProfile() {
     const fio = document.getElementById('input-fio').value.trim();
     const login = document.getElementById('input-login').value.trim();
@@ -815,7 +973,6 @@ async function saveEditedProfile() {
     backToMain();
 }
 
-// ═══ MERGE ═══
 async function mergeWithCloud() {
     if (!profile) return { added: 0, updated: 0 };
     const data = await downloadJson(getDataFile(profile.fio, profile.login));
@@ -869,7 +1026,6 @@ function recordKey(r) {
     return null;
 }
 
-// ═══ ФОРМЫ (без изменений) ═══
 function openForm(type) {
     editingRecordId = null;
     currentFormType = type;
@@ -1100,7 +1256,6 @@ function addDiploma(groupId, data) {
         '</div>');
 }
 
-// ═══ БАЗА ═══
 function openDB() {
     return new Promise((resolve, reject) => {
         if (db) return resolve(db);
@@ -1121,7 +1276,6 @@ async function getAllRecords() { const d = await openDB(); return new Promise(r 
 async function updateRecord(rec) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').put(rec); tx.oncomplete = r; }); }
 async function deleteRecordById(id) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; }); }
 
-// ═══ СОХРАНЕНИЕ ═══
 async function saveRecord() {
     try {
         const type = currentFormType;
@@ -1275,7 +1429,6 @@ function compressImage(file, maxWidth = 800, quality = 0.7) {
     });
 }
 
-// ═══ РЕДАКТИРОВАНИЕ ═══
 async function editRecord(id) {
     const all = await getAllRecords();
     const rec = all.find(r => r.id === id);
@@ -1330,7 +1483,6 @@ async function editRecord(id) {
     showScreen('screen-form');
 }
 
-// ═══ ФОТО К СУЩЕСТВУЮЩЕЙ ЗАПИСИ ═══
 async function addPhotoToRecord(id) {
     const input = document.createElement('input');
     input.type = 'file'; input.accept = 'image/*'; input.multiple = true;
@@ -1356,7 +1508,6 @@ async function addPhotoToRecord(id) {
     input.click();
 }
 
-// ═══ ЗАПИСИ ═══
 async function showLocalRecords() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
     const filtered = records.filter(r => currentRecordsTab === 'my' ? (r.source !== 'order') : (r.source === 'order'));
@@ -1408,7 +1559,6 @@ async function deleteRecord(id) {
     showLocalRecords();
 }
 
-// ═══ РУЧНАЯ ЗАГРУЗКА ═══
 function handleManualUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1467,7 +1617,6 @@ function openYandexDiskFolder() {
     window.open(url, '_blank');
 }
 
-// ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
 async function loadFromCloud() {
     const btn = document.getElementById('load-cloud-btn');
     const manualBtn = document.getElementById('manual-load-btn');
@@ -1501,7 +1650,6 @@ async function loadFromCloud() {
     if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
 }
 
-// ═══ ОТПРАВКА В ОБЛАКО ═══
 async function sendToCloud() {
     const btn = document.getElementById('send-cloud-btn');
     const mainBtn = document.getElementById('main-send-btn');
@@ -1564,32 +1712,99 @@ async function sendToCloud() {
     if (document.getElementById('screen-records').classList.contains('active')) showLocalRecords();
 }
 
-// ═══ СТАТИСТИКА ═══
+/* ═══════════════════════════════════════════════════════════════
+   СТАТИСТИКА — сводная таблица по критериям
+   ═══════════════════════════════════════════════════════════════ */
+function critColor(score, max) {
+    if (score <= 0) return 'zero';
+    if (score >= max) return 'done';
+    return 'partial';
+}
+function critBarColor(score, max) {
+    if (score <= 0) return '#e74c3c';
+    if (score >= max) return '#27ae60';
+    return '#f39c12';
+}
+
 async function showStatistics() {
     const btn = document.getElementById('stats-btn');
     if (btn) btn.disabled = true;
     showScreen('screen-stats');
-    document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
-    const folder = getStatsFolder(profile.fio, profile.login);
-    let html = '';
+    const c = document.getElementById('stats-content');
+    c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
+
+    // Локальный расчёт по критериям
+    const myRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
+
+    let cloudStats = null;
     try {
-        const stats = await downloadJson(folder + '/statistics.json');
-        if (!stats) {
-            html += '<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;">Данные в обработке. Появится после расчёта.</p></div>';
-        } else {
-            html += '<div class="card"><h3>📊 Моя статистика</h3>';
-            if (stats.updated) html += '<p style="font-size:12px;color:#8892a0;">Обновлено: ' + new Date(stats.updated).toLocaleString('ru-RU') + '</p>';
-            if (stats.total != null) html += '<p style="font-size:15px;margin:8px 0;">Баллов: <b>' + stats.total + '</b> из ' + (stats.total_max || 100) + '</p>';
-            html += '</div>';
-        }
-    } catch (e) {
-        html += '<p style="text-align:center;color:#e74c3c;padding:40px 20px;">Ошибка загрузки статистики</p>';
+        cloudStats = await downloadJson(getStatsFolder(profile.fio, profile.login) + '/statistics.json');
+    } catch(e) {}
+
+    // Считаем по каждому критерию
+    const rows = CRITERIA.map(cr => {
+        let score = 0;
+        try { score = cr.score(myRecords) || 0; } catch(e) { score = 0; }
+        if (score > cr.max) score = cr.max;
+        let advice = '';
+        try { advice = cr.advice(myRecords) || ''; } catch(e) {}
+        return { cr, score, advice };
+    });
+
+    const totalLocal = rows.reduce((s, r) => s + r.score, 0);
+    const totalMax = rows.reduce((s, r) => s + r.cr.max, 0);
+
+    const total = (cloudStats && typeof cloudStats.total === 'number') ? cloudStats.total : totalLocal;
+    const totalMaxCloud = (cloudStats && typeof cloudStats.total_max === 'number') ? cloudStats.total_max : totalMax;
+    const percent = totalMaxCloud > 0 ? Math.round(total * 100 / totalMaxCloud) : 0;
+
+    let html = '';
+
+    // Сводка сверху
+    html += '<div class="stats-summary">' +
+        '<div class="big">' + total + ' <span style="font-size:20px;font-weight:600;opacity:0.85;">/ ' + totalMaxCloud + '</span></div>' +
+        '<div class="small">' + (cloudStats ? 'По данным облака' : 'Предварительный расчёт по записям') + '</div>' +
+        '<div class="bar"><div style="width:' + percent + '%"></div></div>' +
+        '<div class="bar-label">' + percent + '% от максимума</div>' +
+        '</div>';
+
+    if (cloudStats && cloudStats.updated) {
+        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">Обновлено в облаке: ' + new Date(cloudStats.updated).toLocaleString('ru-RU') + '</p>';
+    } else {
+        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">⚠️ Расчёт предварительный. Точные баллы появятся после обработки в облаке.</p>';
     }
-    document.getElementById('stats-content').innerHTML = html;
+
+    html += '<h3 style="font-size:15px;font-weight:700;margin:18px 4px 10px;">Детализация по критериям</h3>';
+
+    // Сортируем: сначала "недобрал", потом "сделано"
+    rows.sort((a, b) => {
+        const ra = a.score / a.cr.max;
+        const rb = b.score / b.cr.max;
+        return ra - rb;
+    });
+
+    for (const r of rows) {
+        const cls = critColor(r.score, r.cr.max);
+        const barColor = critBarColor(r.score, r.cr.max);
+        const w = r.cr.max > 0 ? Math.round(r.score * 100 / r.cr.max) : 0;
+        const adviceCls = r.score >= r.cr.max ? 'crit-advice ok' : 'crit-advice';
+        const adviceText = r.advice || (r.score >= r.cr.max ? 'Максимум достигнут' : 'Добавь записи по этому критерию');
+        html += '<div class="crit-card ' + cls + '">' +
+            '<div class="crit-head">' +
+                '<span class="crit-code">' + r.cr.code + '</span>' +
+                '<span class="crit-name">' + r.cr.name + '</span>' +
+                '<span class="crit-score">' + r.score + ' <small>/ ' + r.cr.max + '</small></span>' +
+            '</div>' +
+            '<div class="crit-desc">' + r.cr.desc + '</div>' +
+            '<div class="crit-bar"><div style="width:' + w + '%;background:' + barColor + ';"></div></div>' +
+            '<div class="' + adviceCls + '">💡 ' + adviceText + '</div>' +
+            '</div>';
+    }
+
+    c.innerHTML = html;
     if (btn) btn.disabled = false;
 }
 
-// ═══ ОБЛАКО ═══
 function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
 function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
 function buildPhotoName(record, idx, total) {
