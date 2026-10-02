@@ -489,7 +489,7 @@ async function toggleScheduleBlock() {
         block.classList.remove('open');
     } else {
         block.classList.add('open');
-        if (!scheduleCache) await renderSchedule();
+       await renderSchedule();
     }
 }
 
