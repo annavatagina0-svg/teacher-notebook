@@ -21,60 +21,56 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .profile-name { font-size: 15px; font-weight: 600; }
 .profile-hint { font-size: 12px; color: #8892a0; margin-top: 2px; }
 .quick-actions { display: flex; gap: 12px; margin-bottom: 12px; }
-.quick-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: white;
-    border: none;
-    padding: 14px 16px;
-    border-radius: 18px;
-    cursor: pointer;
-    font-family: inherit;
-    box-shadow: 0 4px 14px rgba(74,108,247,0.10);
-    transition: 0.15s;
-    text-align: left;
-    position: relative;
-    overflow: hidden;
-}
-.quick-btn::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 5px;
-    background: linear-gradient(180deg, #4A6CF7, #6B8AFF);
-}
-.quick-btn:active { transform: scale(0.97); box-shadow: 0 2px 6px rgba(74,108,247,0.15); }
-.quick-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    font-size: 20px;
-    flex-shrink: 0;
-    background: #eef2ff;
-}
+.quick-btn { flex: 1; display: flex; align-items: center; gap: 12px; background: white; border: none; padding: 14px 16px; border-radius: 18px; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(74,108,247,0.10); transition: 0.15s; text-align: left; position: relative; overflow: hidden; }
+.quick-btn::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #4A6CF7, #6B8AFF); }
+.quick-btn:active { transform: scale(0.97); }
+.quick-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 20px; flex-shrink: 0; background: #eef2ff; }
 .quick-btn:nth-child(2) .quick-icon { background: #e8f8ee; }
 .quick-text { display: flex; flex-direction: column; min-width: 0; }
-.quick-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: #2c3e50;
-    line-height: 1.2;
-}
-.quick-sub {
-    font-size: 11px;
-    color: #8892a0;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+.quick-label { font-size: 14px; font-weight: 700; color: #2c3e50; line-height: 1.2; }
+.quick-sub { font-size: 11px; color: #8892a0; margin-top: 2px; }
+
+/* ═══ РАСПИСАНИЕ ═══ */
+.schedule-block { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px; overflow: hidden; }
+.schedule-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; font-size: 15px; font-weight: 700; user-select: none; }
+.schedule-head .sched-icon { font-size: 22px; }
+.schedule-head .sched-arrow { margin-left: auto; font-size: 14px; color: #8892a0; transition: transform 0.2s; }
+.schedule-block.open .schedule-head .sched-arrow { transform: rotate(180deg); }
+.schedule-body { display: none; padding: 0 14px 12px; }
+.schedule-block.open .schedule-body { display: block; }
+.sched-day { border-top: 1px solid #eef2ff; padding: 10px 0; }
+.sched-day:first-child { border-top: none; }
+.sched-day-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px; cursor: pointer; font-weight: 600; font-size: 13px; color: #4A6CF7; border-radius: 8px; user-select: none; }
+.sched-day-head:hover { background: #f8faff; }
+.sched-day-head .sched-count { background: #eef2ff; color: #4A6CF7; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.sched-day-head .sched-arrow2 { margin-left: auto; font-size: 12px; transition: transform 0.2s; }
+.sched-day.open .sched-day-head .sched-arrow2 { transform: rotate(180deg); }
+.sched-day-list { display: none; padding: 6px 0; }
+.sched-day.open .sched-day-list { display: block; }
+.pair-card { background: #fafbfe; border-left: 3px solid #4A6CF7; border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: 13px; }
+.pair-card.past { opacity: 0.55; border-left-color: #c5cbd3; }
+.pair-card.past .pair-title { text-decoration: line-through; }
+.pair-card.nearest { background: #eef2ff; border-left-color: #4A6CF7; box-shadow: 0 0 0 2px rgba(74,108,247,0.15); }
+.pair-title { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 2px; }
+.pair-desc { font-size: 12px; color: #6b7684; }
+.pair-room { color: #4A6CF7; font-weight: 500; }
+.sched-empty { text-align: center; color: #8892a0; font-size: 13px; padding: 14px; }
+
+/* ═══ ПРИКАЗЫ ═══ */
+.orders-month-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.orders-month-bar label { font-size: 13px; color: #6b7684; font-weight: 600; }
+.orders-month-bar select { flex: 1; padding: 10px 12px; border: 1.5px solid #e6ecff; border-radius: 12px; font-size: 14px; background: white; font-family: inherit; color: #2c3e50; }
+.order-card { background: white; padding: 12px 14px; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border-left: 4px solid #4A6CF7; font-size: 13px; }
+.order-card.past { opacity: 0.55; border-left-color: #c5cbd3; }
+.order-card.past .order-line1 { text-decoration: line-through; }
+.order-line1 { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 6px; }
+.order-line1 .order-time { color: #4A6CF7; }
+.order-line1 .order-group { color: #6b7684; }
+.order-line1 .order-room { color: #27ae60; }
+.order-line2 { font-size: 12px; color: #6b7684; }
+/* ═══ /РАСПИСАНИЕ И ПРИКАЗЫ ═══ */
+
 .send-main-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; border: none; padding: 14px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); margin-bottom: 20px; }
-.send-main-btn:active { transform: scale(0.98); }
 .send-main-btn.hidden { display: none; }
 .send-badge { background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: 700; }
 h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
@@ -84,14 +80,9 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .menu-icon { font-size: 26px; }
 .menu-text { flex: 1; }
 .menu-title { font-size: 15px; font-weight: 600; color: #2c3e50; }
-.menu-sub { font-size: 12px; color: #8892a0; margin-top: 2px; line-height: 1.3; }
+.menu-sub { font-size: 12px; color: #8892a0; margin-top: 2px; }
 .menu-arrow { color: #c5cbd3; font-size: 20px; }
-.row { display: flex; gap: 10px; margin-bottom: 12px; }
-.btn { flex: 1; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid #e6ecff; background: white; color: #4A6CF7; font-family: inherit; }
-.btn:active { transform: scale(0.98); background: #f8faff; }
 .btn-primary { width: 100%; padding: 16px; border-radius: 14px; background: #4A6CF7; color: white; border: none; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); }
-.btn-primary:active { transform: scale(0.98); }
-.btn-primary:disabled { background: #c5cbd3; box-shadow: none; cursor: not-allowed; }
 .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .back-btn { width: 40px; height: 40px; border-radius: 12px; background: white; border: none; font-size: 20px; color: #4A6CF7; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .form-header h2 { font-size: 20px; font-weight: 700; }
@@ -116,7 +107,6 @@ textarea { min-height: 60px; resize: vertical; }
 .sub-block-header button { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 0 4px; }
 .add-btn { width: 100%; background: white; border: 2px dashed #4A6CF7; color: #4A6CF7; padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: 600; margin-top: 8px; }
 .grade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.photo-preview { max-width: 100%; max-height: 200px; margin-top: 12px; border-radius: 12px; display: none; }
 .photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .photo-thumb { position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; border: 2px solid #e6ecff; }
 .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -210,11 +200,24 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         </button>
     </div>
 
-   <button class="send-main-btn hidden" id="main-send-btn" onclick="sendToCloud()">
-    <span id="main-send-icon">📤</span>
-    <span id="main-send-text">Отправить в облако</span>
-    <span class="send-badge" id="unsent-count">0</span>
-</button>
+    <button class="send-main-btn hidden" id="main-send-btn" onclick="sendToCloud()">
+        <span id="main-send-icon">📤</span>
+        <span id="main-send-text">Отправить в облако</span>
+        <span class="send-badge" id="unsent-count">0</span>
+    </button>
+
+    <!-- ═══ РАСПИСАНИЕ ═══ -->
+    <div class="schedule-block" id="schedule-block">
+        <div class="schedule-head" onclick="toggleScheduleBlock()">
+            <span class="sched-icon">📅</span>
+            <span>Расписание</span>
+            <span class="sched-arrow">▼</span>
+        </div>
+        <div class="schedule-body" id="schedule-body">
+            <div class="sched-empty">Загрузка...</div>
+        </div>
+    </div>
+    <!-- ═══ /РАСПИСАНИЕ ═══ -->
 
     <h1>📓 Блокнот педагога</h1>
     <p class="subtitle">Выберите раздел</p>
@@ -304,29 +307,24 @@ const ROOT_FOLDER = 'Приложение_Блокнот';
 const PROXY_URL = 'https://notebook-proxy.relaxdev.ru/?';
 
 const LEVELS = [
-    'образовательная организация',
-    'муниципальный',
-    'областной',
-    'региональный',
-    'межрегиональный',
-    'всероссийский',
-    'международный'
+    'образовательная организация', 'муниципальный', 'городской', 'областной',
+    'региональный', 'межрегиональный', 'всероссийский', 'федеральный', 'международный'
 ];
 
-function levelsSelect(id, selected) {
-    return '<select id="' + id + '">' + LEVELS.map(l => '<option value="' + l + '"' + (l === selected ? ' selected' : '') + '>' + l.charAt(0).toUpperCase() + l.slice(1) + '</option>').join('') + '</select>';
-}
-
 const PCK_LIST = [
-    'Березина М.С.',
-    'Бочкарев Ю.Т.',
-    'Горошко В.Э.',
-    'Ильина К.А.',
-    'Куликова К.С.',
-    'Материкова А.А.',
-    'Мурашкина С.В.',
-    'Трофимова А.М.',
-    'Усова М.Н.'
+    'Березина М.С.', 'Бочкарев Ю.Т.', 'Горошко В.Э.', 'Ильина К.А.', 'Куликова К.С.',
+    'Материкова А.А.', 'Мурашкина С.В.', 'Трофимова А.М.', 'Усова М.Н.'
+];
+
+// Расписание: ориентировочные времена пар СПО (для определения «прошло/не прошло»)
+const PAIR_TIMES = [
+    { num: 1, start: 8.0,  end: 9.58 },  // 8:00–9:35
+    { num: 2, start: 9.75, end: 11.33 }, // 9:45–11:20
+    { num: 3, start: 11.83, end: 13.42 },// 11:50–13:25
+    { num: 4, start: 13.58, end: 15.17 },// 13:35–15:10
+    { num: 5, start: 15.33, end: 16.92 },// 15:20–16:55
+    { num: 6, start: 17.08, end: 18.67 },// 17:05–18:40
+    { num: 7, start: 18.83, end: 20.42 } // 18:50–20:25
 ];
 
 let profile = null;
@@ -337,20 +335,303 @@ let teacherRolesCounter = 0;
 let editingRecordId = null;
 let db = null;
 let formPhotos = [];
+let scheduleCache = null;  // { days: [...], updated: ... }
+let ordersCache = null;    // { items: [...], updated: ... }
+let ordersMonthFilter = '__all__';
+
+function levelsSelect(id, selected) {
+    return '<select id="' + id + '">' + LEVELS.map(l =>
+        '<option value="' + l + '"' + (l === selected ? ' selected' : '') + '>' +
+        l.charAt(0).toUpperCase() + l.slice(1) + '</option>'
+    ).join('') + '</select>';
+}
 
 function getDataFile(fio, login) { return ROOT_FOLDER + '/Входящие/' + slug(fio) + '_' + login + '_' + getYear() + '.json'; }
 function getPhotosFolder(fio, login) { return ROOT_FOLDER + '/Входящие/photos/' + slug(fio) + '_' + login; }
 function getStatsFolder(fio, login) { return ROOT_FOLDER + '/Исходящие/' + slug(fio) + '_' + login; }
+function getSchedulePath() { return ROOT_FOLDER + '/Справочники/schedule.json'; }
+function getOrdersPath() { return ROOT_FOLDER + '/Справочники/orders.json'; }
 
-function recordKey(r) {
-    if (r.uid) return r.uid;
-    if (r.createdAt) return 'c:' + r.createdAt;
-    return null;
+// ═══ Утилита: короткое ФИО для сравнения ═══
+function shortFio(fio) {
+    const parts = String(fio || '').trim().split(/\s+/);
+    if (parts.length < 2) return fio || '';
+    let res = parts[0];
+    for (let i = 1; i < parts.length; i++) {
+        if (parts[i]) res += ' ' + parts[i][0].toUpperCase() + '.';
+    }
+    return res;
 }
 
+// ═══ Общая утилита скачивания через прокси ═══
+async function downloadJson(diskPath) {
+    try {
+        const url = PROXY_URL + 'path=' + encodeURIComponent(diskPath) +
+                    '&token=' + encodeURIComponent(YANDEX_TOKEN);
+        const res = await Promise.race([
+            fetch(url),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000))
+        ]);
+        if (!res.ok) return null;
+        const text = await res.text();
+        try { return JSON.parse(text); } catch(e) { return null; }
+    } catch (e) { return null; }
+}
+
+// ═══ Расписание ═══
+async function loadScheduleCache() {
+    if (scheduleCache) return scheduleCache;
+    const data = await downloadJson(getSchedulePath());
+    scheduleCache = data || { days: [], updated: null };
+    return scheduleCache;
+}
+
+function pairIsPast(pairNum, dateIso) {
+    const info = PAIR_TIMES.find(p => p.num === pairNum);
+    if (!info) return false;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const pairDate = new Date(dateIso + 'T00:00:00');
+    if (pairDate < today) return true;
+    if (pairDate > today) return false;
+    const nowHours = now.getHours() + now.getMinutes() / 60;
+    return nowHours >= info.end;
+}
+
+function dateRu(dateIso) {
+    try {
+        const d = new Date(dateIso + 'T00:00:00');
+        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+        const dn = ['вс','пн','вт','ср','чт','пт','сб'][d.getDay()];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' (' + dn + ')';
+    } catch(e) { return dateIso; }
+}
+
+async function renderSchedule() {
+    const body = document.getElementById('schedule-body');
+    if (!body) return;
+    body.innerHTML = '<div class="sched-empty">Загрузка...</div>';
+    const data = await loadScheduleCache();
+    if (!data || !data.days || !data.days.length) {
+        body.innerHTML = '<div class="sched-empty">Расписание ещё не загружено</div>';
+        return;
+    }
+    if (!profile || !profile.fio) {
+        body.innerHTML = '<div class="sched-empty">Нет профиля</div>';
+        return;
+    }
+    const key = shortFio(profile.fio);
+    const todayIso = new Date().toISOString().slice(0, 10);
+
+    let html = '';
+    let found = false;
+    for (const day of data.days) {
+        const teachers = day.teachers || {};
+        const pairs = teachers[key] || [];
+        const isToday = day.date === todayIso;
+        const isTomorrow = !isToday && day.date > todayIso;
+
+        const dayLabel = (isToday ? 'Сегодня, ' : (isTomorrow ? 'Завтра, ' : '')) + dateRu(day.date);
+        const dayOpen = isToday ? ' open' : '';
+        const count = pairs.length;
+        const countLabel = count === 0 ? 'нет пар' : (count + ' ' + pluralPairs(count));
+
+        let pairsHtml = '';
+        if (pairs.length === 0) {
+            pairsHtml = '<div class="sched-empty">Пар нет</div>';
+        } else {
+            // Определяем ближайшую (первую не прошедшую)
+            let nearestPair = null;
+            for (const p of pairs) {
+                if (!pairIsPast(p.pair, day.date)) { nearestPair = p; break; }
+            }
+            for (const p of pairs) {
+                const past = pairIsPast(p.pair, day.date);
+                const isNearest = (nearestPair === p);
+                const cls = 'pair-card' + (past ? ' past' : '') + (isNearest ? ' nearest' : '');
+                const timeStr = p.time ? p.time + ' · ' : '';
+                pairsHtml += '<div class="' + cls + '">' +
+                    '<div class="pair-title">' + p.pair + ' пара · ' + timeStr +
+                    (p.group ? p.group : '') + ' · <span class="pair-room">каб. ' + (p.room || '—') + '</span></div>' +
+                    '<div class="pair-desc">' + (p.discipline || '') + '</div>' +
+                    '</div>';
+            }
+        }
+
+        html += '<div class="sched-day' + dayOpen + '" id="sched-day-' + day.date + '">' +
+            '<div class="sched-day-head" onclick="toggleScheduleDay(\'' + day.date + '\')">' +
+                '<span>' + dayLabel + '</span>' +
+                '<span class="sched-count">' + countLabel + '</span>' +
+                '<span class="sched-arrow2">▼</span>' +
+            '</div>' +
+            '<div class="sched-day-list">' + pairsHtml + '</div>' +
+            '</div>';
+        found = true;
+    }
+
+    if (!found) {
+        html = '<div class="sched-empty">Ты не найдена в расписании</div>';
+    }
+    body.innerHTML = html;
+}
+
+function pluralPairs(n) {
+    const n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return 'пара';
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'пары';
+    return 'пар';
+}
+
+async function toggleScheduleBlock() {
+    const block = document.getElementById('schedule-block');
+    const wasOpen = block.classList.contains('open');
+    if (wasOpen) {
+        block.classList.remove('open');
+    } else {
+        block.classList.add('open');
+        if (!scheduleCache) await renderSchedule();
+    }
+}
+
+function toggleScheduleDay(dateIso) {
+    const el = document.getElementById('sched-day-' + dateIso);
+    if (el) el.classList.toggle('open');
+}
+
+// ═══ Приказы (должники) ═══
+async function loadOrdersCache(forceReload) {
+    if (ordersCache && !forceReload) return ordersCache;
+    const data = await downloadJson(getOrdersPath());
+    ordersCache = data || { items: [], updated: null };
+    return ordersCache;
+}
+
+function orderIsPast(item) {
+    if (!item.date) return false;
+    const todayIso = new Date().toISOString().slice(0, 10);
+    return item.date < todayIso;
+}
+
+async function renderOrders() {
+    const container = document.getElementById('records-list');
+    if (!container) return;
+    container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка приказов...</p>';
+    const data = await loadOrdersCache();
+    if (!data || !data.items || !data.items.length) {
+        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Приказы ещё не выгружены в облако</p>';
+        return;
+    }
+    if (!profile || !profile.fio) {
+        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Нет профиля</p>';
+        return;
+    }
+    const key = shortFio(profile.fio);
+    const mine = data.items.filter(it => shortFio(it.teacher || '') === key);
+
+    if (!mine.length) {
+        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">В приказах тебя нет</p>';
+        return;
+    }
+
+    // Группируем по месяцам
+    const monthsMap = new Map(); // '2026-10' → [items]
+    for (const it of mine) {
+        if (!it.date) continue;
+        const key2 = it.date.slice(0, 7);
+        if (!monthsMap.has(key2)) monthsMap.set(key2, []);
+        monthsMap.get(key2).push(it);
+    }
+    const monthKeys = Array.from(monthsMap.keys()).sort();
+
+    // Заголовок + выбор месяца
+    let html = '<div class="orders-month-bar">' +
+        '<label>Месяц:</label>' +
+        '<select id="orders-month-select" onchange="onOrdersMonthChange(this.value)">' +
+        '<option value="__all__"' + (ordersMonthFilter === '__all__' ? ' selected' : '') + '>Все</option>' +
+        monthKeys.map(mk => {
+            const label = monthLabel(mk);
+            return '<option value="' + mk + '"' + (ordersMonthFilter === mk ? ' selected' : '') + '>' + label + '</option>';
+        }).join('') +
+        '</select>' +
+        '</div>';
+
+    let list = mine.slice();
+    if (ordersMonthFilter !== '__all__') {
+        list = list.filter(it => (it.date || '').startsWith(ordersMonthFilter));
+    }
+    list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+    if (!list.length) {
+        html += '<p style="text-align:center;color:#8892a0;padding:20px;">Нет записей за выбранный месяц</p>';
+    } else {
+        html += list.map(it => {
+            const past = orderIsPast(it);
+            const cls = 'order-card' + (past ? ' past' : '');
+            const d = it.date ? formatDateRu(it.date) : '—';
+            const t = it.time || '';
+            const grp = it.group || '';
+            const room = it.place || '';
+            const student = it.student || '—';
+            return '<div class="' + cls + '">' +
+                '<div class="order-line1">' +
+                    '<span>' + d + '</span>' +
+                    (t ? '<span class="order-time">' + t + '</span>' : '') +
+                    (grp ? '<span class="order-group">' + grp + '</span>' : '') +
+                    (room ? '<span class="order-room">' + room + '</span>' : '') +
+                '</div>' +
+                '<div class="order-line2">' + student + '</div>' +
+                '</div>';
+        }).join('');
+    }
+    container.innerHTML = html;
+}
+
+function monthLabel(mk) {
+    try {
+        const [y, m] = mk.split('-');
+        const names = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+        return names[parseInt(m, 10) - 1] + ' ' + y;
+    } catch(e) { return mk; }
+}
+
+function formatDateRu(iso) {
+    try {
+        const d = new Date(iso + 'T00:00:00');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        return dd + '.' + mm;
+    } catch(e) { return iso; }
+}
+
+function onOrdersMonthChange(val) {
+    ordersMonthFilter = val;
+    renderOrders();
+}
+
+// ═══ Записи ═══
+function switchRecordsTab(tab) {
+    currentRecordsTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[tab === 'my' ? 0 : 1].classList.add('active');
+
+    const loadBtn = document.getElementById('load-cloud-btn');
+    const sendBtn = document.getElementById('send-cloud-btn');
+    if (tab === 'my') {
+        if (loadBtn) loadBtn.classList.remove('hidden');
+        if (sendBtn) sendBtn.classList.remove('hidden');
+        showLocalRecords();
+    } else {
+        if (loadBtn) loadBtn.classList.add('hidden');
+        if (sendBtn) sendBtn.classList.add('hidden');
+        renderOrders();
+    }
+}
+
+// ═══ Инициализация ═══
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
-    pckSelect.innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => '<option value="' + p + '">' + p + '</option>').join('');
+    pckSelect.innerHTML = '<option value="">— выберите —</option>' +
+        PCK_LIST.map(p => '<option value="' + p + '">' + p + '</option>').join('');
 
     const savedProfile = await getSetting('profile');
     if (savedProfile) {
@@ -358,6 +639,11 @@ window.addEventListener('DOMContentLoaded', async () => {
         updateProfileUI();
         showScreen('screen-main');
         updateUnsentCount();
+        // Подгружаем расписание в фоне
+        loadScheduleCache().then(() => {
+            const block = document.getElementById('schedule-block');
+            if (block && block.classList.contains('open')) renderSchedule();
+        });
     } else {
         showScreen('screen-welcome');
     }
@@ -410,10 +696,7 @@ async function saveProfile() {
             downloadJson(getDataFile(fio, login)),
             new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
         ]);
-    } catch (e) {
-        console.warn('Проверка облака не удалась:', e.message);
-        downloadFailed = true;
-    }
+    } catch (e) { downloadFailed = true; }
 
     if (cloudData && cloudData.profile) {
         const total = (cloudData.events||[]).length + (cloudData.trainings||[]).length +
@@ -424,8 +707,7 @@ async function saveProfile() {
             'ФИО: ' + (cloudData.profile.fio || '—') + '\n' +
             'ПЦК: ' + (cloudData.profile.pck || '—') + '\n' +
             'Категория: ' + (cloudData.profile.category || '—') + '\n' +
-            'Записей: ' + total + '\n\n' +
-            'Это вы? Нажмите ОК — войдёте и подтянете записи.'
+            'Записей: ' + total + '\n\nЭто вы?'
         );
         if (!isThisYou) { showToast('Смените логин или ФИО'); return; }
 
@@ -436,19 +718,12 @@ async function saveProfile() {
         showScreen('screen-main');
         const merged = await mergeWithCloud();
         updateUnsentCount();
-        showToast('Записей из облака: +' + merged.added + ', обновлено: ' + merged.updated);
+        showToast('Записей из облака: +' + merged.added);
         return;
     }
 
     if (existingProfile) {
-        document.getElementById('manual-load-btn').classList.remove('hidden');
-        document.getElementById('open-disk-btn').classList.remove('hidden');
-        alert(
-            'Вы отметили «У меня уже есть профиль», но не удалось загрузить данные из облака.\n\n' +
-            (downloadFailed
-                ? 'Похоже, проблема с интернетом. Попробуйте:\n• Переключиться на Wi-Fi\n• Воспользоваться кнопкой «📁 Загрузить из файла»\n• Скачать файл вручную: «🔗 Открыть файл на Яндекс.Диске»\n\nНовый профиль НЕ создан.'
-                : 'Возможно, профиль ещё не создан или указаны другие ФИО/логин.\n\nПроверьте данные или снимите галочку и создайте профиль.\n\nНовый профиль НЕ создан.')
-        );
+        alert('Не удалось загрузить данные из облака. Проверьте интернет или снимите галочку «У меня уже есть профиль».');
         return;
     }
 
@@ -470,14 +745,14 @@ function updateProfileUI() {
 
 function showProfileSwitcher() {
     document.getElementById('modal-profile').classList.add('active');
-    document.getElementById('profiles-list').innerHTML = '' +
+    document.getElementById('profiles-list').innerHTML =
         '<div class="profile-item active"><span>' + profile.fio + '</span><span>✓</span></div>' +
         '<div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>' +
         '<div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>';
 }
 function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
 async function resetProfile() {
-    if (!confirm('Сбросить профиль на этом устройстве? Данные в облаке останутся.')) return;
+    if (!confirm('Сбросить профиль на этом устройстве?')) return;
     await saveSetting('profile', null);
     profile = null; closeModal(); location.reload();
 }
@@ -485,7 +760,8 @@ function openEditProfile() {
     closeModal();
     document.getElementById('edit-fio').value = profile.fio;
     document.getElementById('edit-login').value = profile.login;
-    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => '<option value="' + p + '"' + (p === profile.pck ? ' selected' : '') + '>' + p + '</option>').join('');
+    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' +
+        PCK_LIST.map(p => '<option value="' + p + '"' + (p === profile.pck ? ' selected' : '') + '>' + p + '</option>').join('');
     document.getElementById('edit-category').value = profile.category;
     document.getElementById('edit-is-class-teacher').checked = profile.isClassTeacher || false;
     showScreen('screen-edit-profile');
@@ -503,7 +779,9 @@ async function saveEditedProfile() {
     if (oldFio !== newFio || oldLogin !== newLogin) {
         if (!confirm('Файлы в облаке будут переименованы. Продолжить?')) return;
         try {
-            await fetch('https://cloud-api.yandex.net/v1/disk/resources/move?from=' + encodeURIComponent(getDataFile(oldFio, oldLogin)) + '&path=' + encodeURIComponent(getDataFile(newFio, newLogin)) + '&overwrite=true',
+            await fetch('https://cloud-api.yandex.net/v1/disk/resources/move?from=' +
+                encodeURIComponent(getDataFile(oldFio, oldLogin)) +
+                '&path=' + encodeURIComponent(getDataFile(newFio, newLogin)) + '&overwrite=true',
                 { method: 'POST', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
         } catch (e) {}
     }
@@ -541,31 +819,21 @@ async function mergeWithCloud() {
         const key = recordKey(cloud);
         if (!key) continue;
         const local = localByKey.get(key);
-
         if (!local) {
             cloud.teacher = profile.fio;
             cloud.teacherLogin = profile.login;
             cloud.pck = profile.pck;
-            cloud.sent = true;
-            cloud.photoUploaded = true;
-            cloud.photosUploaded = true;
-            cloud.fromCloud = true;
+            cloud.sent = true; cloud.photoUploaded = true; cloud.photosUploaded = true; cloud.fromCloud = true;
             if (!cloud.uid) cloud.uid = key;
             await saveRecordToDB(cloud);
             added++;
         } else {
-            const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
-            const localTime = new Date(local.updatedAt || local.createdAt).getTime();
-            if (cloudTime > localTime) {
+            const ct = new Date(cloud.updatedAt || cloud.createdAt).getTime();
+            const lt = new Date(local.updatedAt || local.createdAt).getTime();
+            if (ct > lt) {
                 const merged = Object.assign({}, cloud, {
-                    id: local.id,
-                    teacher: profile.fio,
-                    teacherLogin: profile.login,
-                    pck: profile.pck,
-                    sent: true,
-                    photoUploaded: true,
-                    photosUploaded: true,
-                    fromCloud: true
+                    id: local.id, teacher: profile.fio, teacherLogin: profile.login,
+                    pck: profile.pck, sent: true, photoUploaded: true, photosUploaded: true, fromCloud: true
                 });
                 if (!merged.uid) merged.uid = local.uid || key;
                 await updateRecord(merged);
@@ -576,7 +844,13 @@ async function mergeWithCloud() {
     return { added, updated };
 }
 
-// ═══ ФОРМЫ ═══
+function recordKey(r) {
+    if (r.uid) return r.uid;
+    if (r.createdAt) return 'c:' + r.createdAt;
+    return null;
+}
+
+// ═══ ФОРМЫ (без изменений) ═══
 function openForm(type) {
     editingRecordId = null;
     currentFormType = type;
@@ -620,10 +894,8 @@ function renderFormPhotoPreviews() {
         '<div class="photo-thumb"><img src="' + p + '"><button type="button" class="remove-photo" onclick="removeFormPhoto(' + i + ')">✕</button></div>'
     ).join('');
 }
-function removeFormPhoto(idx) {
-    formPhotos.splice(idx, 1);
-    renderFormPhotoPreviews();
-}
+function removeFormPhoto(idx) { formPhotos.splice(idx, 1); renderFormPhotoPreviews(); }
+
 function renderEventForm() {
     return '<div class="card"><h3>Основное</h3>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
@@ -666,7 +938,7 @@ function renderTrainingForm() {
         '<div class="form-group"><label>Дата получения документа</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото документа <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
+    '<div class="card"><h3>Фото документа</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderAssessmentForm() {
     return '<div class="card"><h3>Контроль</h3>' +
@@ -699,12 +971,12 @@ function renderMethodicalForm() {
         '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
         '<div class="form-group"><label>Роль</label><select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option><option value="разработчик">Разработчик</option></select></div>' +
-        '<div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>' +
+        '<div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="опробирован">Опробирован</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>' +
         '<div class="form-group"><label>Уровень</label>' + levelsSelect('f-level') + '</div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
+    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderActivityForm() {
     return '<div class="card"><h3>Трансляция и активность</h3>' +
@@ -724,7 +996,7 @@ function renderActivityForm() {
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
+    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 
 function toggleCustom(selectId, groupId) {
@@ -790,9 +1062,7 @@ function addStudentsGroup(data) {
         '<div class="s-diplomas" id="s-diplomas-' + id + '"></div>' +
         '<button type="button" class="add-btn" onclick="addDiploma(' + id + ')">+ Добавить место</button>' +
         '</div>');
-    if (g.diplomas && g.diplomas.length) {
-        for (const d of g.diplomas) addDiploma(id, d);
-    }
+    if (g.diplomas && g.diplomas.length) for (const d of g.diplomas) addDiploma(id, d);
 }
 function addDiploma(groupId, data) {
     const container = document.getElementById('s-diplomas-' + groupId);
@@ -833,32 +1103,20 @@ async function updateRecord(rec) { const d = await openDB(); return new Promise(
 async function deleteRecordById(id) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; }); }
 
 // ═══ СОХРАНЕНИЕ ═══
-// ═══ СОХРАНЕНИЕ ═══
 async function saveRecord() {
     try {
         const type = currentFormType;
         const now = new Date().toISOString();
         let record;
-
-        if (!profile || !profile.fio) {
-            alert('Профиль не загружен. Обновите страницу.');
-            return;
-        }
+        if (!profile || !profile.fio) { alert('Профиль не загружен'); return; }
 
         if (editingRecordId) {
             const all = await getAllRecords();
             record = all.find(r => r.id === editingRecordId) || {};
             record.updatedAt = now;
         } else {
-            record = {
-                uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8),
-                createdAt: now,
-                updatedAt: now,
-                sent: false,
-                fromCloud: false
-            };
+            record = { uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8), createdAt: now, updatedAt: now, sent: false, fromCloud: false };
         }
-
         record.type = type;
         record.teacher = profile.fio;
         record.teacherLogin = profile.login;
@@ -893,14 +1151,9 @@ async function saveRecord() {
                     const r = b.querySelector('.t-role');
                     const res = b.querySelector('.t-result');
                     const pl = b.querySelector('.t-place');
-                    record.teacherRoles.push({
-                        role: r ? r.value : '',
-                        result: res ? res.value : '',
-                        place: pl ? pl.value : ''
-                    });
+                    record.teacherRoles.push({ role: r ? r.value : '', result: res ? res.value : '', place: pl ? pl.value : '' });
                 });
             }
-
             if (record.hasStudents) {
                 const groupsBlocks = document.querySelectorAll('#f-students-container .sub-block');
                 record.studentsGroups = [];
@@ -912,10 +1165,7 @@ async function saveRecord() {
                     g.querySelectorAll('.s-diplomas .sub-block').forEach(d => {
                         const pEl = d.querySelector('.s-place');
                         const wEl = d.querySelector('.s-winner');
-                        diplomas.push({
-                            place: pEl ? pEl.value : '',
-                            winner: wEl ? wEl.value : ''
-                        });
+                        diplomas.push({ place: pEl ? pEl.value : '', winner: wEl ? wEl.value : '' });
                     });
                     record.studentsGroups.push({
                         group: gEl ? gEl.value : '',
@@ -925,22 +1175,13 @@ async function saveRecord() {
                     });
                 });
             }
-
-            if (formPhotos.length) {
-                record.photos = formPhotos.slice();
-                delete record.photo;
-                record.photosUploaded = false;
-            }
+            if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         } else if (type === 'training') {
             record.trainingType = getVal('f-type');
             if (record.trainingType === 'другое') record.trainingTypeCustom = getVal('f-type-custom');
             record.hours = getVal('f-hours');
             record.place = getVal('f-place');
-            if (formPhotos.length) {
-                record.photos = formPhotos.slice();
-                delete record.photo;
-                record.photosUploaded = false;
-            }
+            if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         } else if (type === 'assessment') {
             record.assessmentType = getVal('f-type');
             record.group = getVal('f-group');
@@ -963,25 +1204,16 @@ async function saveRecord() {
             record.role = getVal('f-role');
             record.status = getVal('f-status');
             record.level = getVal('f-level');
-            if (formPhotos.length) {
-                record.photos = formPhotos.slice();
-                delete record.photo;
-                record.photosUploaded = false;
-            }
+            if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         } else if (type === 'activity') {
             record.activityType = getVal('f-type');
             if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
             record.level = getVal('f-level');
-            if (formPhotos.length) {
-                record.photos = formPhotos.slice();
-                delete record.photo;
-                record.photosUploaded = false;
-            }
+            if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         }
 
         if (editingRecordId) {
-            record.sent = false;
-            record.fromCloud = false;
+            record.sent = false; record.fromCloud = false;
             await updateRecord(record);
         } else {
             await saveRecordToDB(record);
@@ -1005,7 +1237,6 @@ function clearForm() {
     studentsGroupCounter = 0; teacherRolesCounter = 0;
     formPhotos = [];
 }
-
 function compressImage(file, maxWidth = 800, quality = 0.7) {
     return new Promise(resolve => {
         const reader = new FileReader();
@@ -1037,16 +1268,13 @@ async function editRecord(id) {
     currentFormType = rec.type;
     document.getElementById('form-title').textContent = '✏️ Редактирование';
     renderForm(rec.type);
-
     formPhotos = (rec.photos || (rec.photo ? [rec.photo] : [])).slice();
     renderFormPhotoPreviews();
 
     setTimeout(() => {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v == null ? '' : v; };
         const setC = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
-        set('f-name', rec.name);
-        set('f-date', rec.date);
-        setC('f-prof', rec.prof);
+        set('f-name', rec.name); set('f-date', rec.date); setC('f-prof', rec.prof);
 
         if (rec.type === 'event') {
             set('f-type', rec.eventType);
@@ -1086,9 +1314,7 @@ async function editRecord(id) {
 // ═══ ФОТО К СУЩЕСТВУЮЩЕЙ ЗАПИСИ ═══
 async function addPhotoToRecord(id) {
     const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.multiple = true;
+    input.type = 'file'; input.accept = 'image/*'; input.multiple = true;
     input.onchange = async (e) => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
@@ -1105,20 +1331,13 @@ async function addPhotoToRecord(id) {
         rec.photosUploaded = false;
         rec.sent = false;
         await updateRecord(rec);
-        showToast('✅ Добавлено фото: ' + files.length + '. Отправьте в облако.');
+        showToast('✅ Добавлено фото: ' + files.length);
         showLocalRecords();
     };
     input.click();
 }
 
 // ═══ ЗАПИСИ ═══
-function switchRecordsTab(tab) {
-    currentRecordsTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab')[tab === 'my' ? 0 : 1].classList.add('active');
-    showLocalRecords();
-}
-
 async function showLocalRecords() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
     const filtered = records.filter(r => currentRecordsTab === 'my' ? (r.source !== 'order') : (r.source === 'order'));
@@ -1179,7 +1398,6 @@ function handleManualUpload(event) {
         try {
             const data = JSON.parse(e.target.result);
             if (!data.profile) { showToast('Неверный формат файла'); return; }
-            
             const cloudRecords = [];
             for (const key of ['events','trainings','assessments','methodical','activity']) {
                 if (data[key] && Array.isArray(data[key])) cloudRecords.push.apply(cloudRecords, data[key]);
@@ -1204,9 +1422,9 @@ function handleManualUpload(event) {
                     await saveRecordToDB(cloud);
                     added++;
                 } else {
-                    const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
-                    const localTime = new Date(local.updatedAt || local.createdAt).getTime();
-                    if (cloudTime > localTime) {
+                    const ct = new Date(cloud.updatedAt || cloud.createdAt).getTime();
+                    const lt = new Date(local.updatedAt || local.createdAt).getTime();
+                    if (ct > lt) {
                         const merged = Object.assign({}, cloud, { id: local.id, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true, photosUploaded: true, fromCloud: true });
                         if (!merged.uid) merged.uid = local.uid || key;
                         await updateRecord(merged);
@@ -1214,274 +1432,4 @@ function handleManualUpload(event) {
                     }
                 }
             }
-            showToast('Из файла: +' + added + ' новых, ' + updated + ' обновлено');
-            document.getElementById('manual-upload').value = '';
-            showLocalRecords();
-        } catch (err) {
-            alert('Ошибка чтения файла: ' + err.message);
-        }
-    };
-    reader.readAsText(file);
-}
-
-// ═══ ОТКРЫТИЕ ФАЙЛА НА ЯНДЕКС.ДИСКЕ ═══
-function openYandexDiskFolder() {
-    const filePath = getDataFile(profile.fio, profile.login);
-    const url = 'https://disk.yandex.ru/client/disk/' + encodeURI(filePath);
-    window.open(url, '_blank');
-}
-
-// ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
-async function loadFromCloud() {
-    const btn = document.getElementById('load-cloud-btn');
-    const manualBtn = document.getElementById('manual-load-btn');
-    const diskBtn = document.getElementById('open-disk-btn');
-    
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
-    if (manualBtn) manualBtn.classList.add('hidden');
-    if (diskBtn) diskBtn.classList.add('hidden');
-    
-    try {
-        const filePath = getDataFile(profile.fio, profile.login);
-        const data = await downloadJson(filePath);
-
-        if (!data) {
-            if (manualBtn) manualBtn.classList.remove('hidden');
-            if (diskBtn) diskBtn.classList.remove('hidden');
-            alert('Не удалось скачать файл из облака.\n\nПуть: ' + filePath + '\n\nПроверьте интернет или зайдите позже.\n\nВоспользуйтесь кнопками:\n• «📁 Загрузить из файла» — выбрать JSON с телефона\n• «🔗 Открыть файл на Яндекс.Диске» — скачать вручную');
-            if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
-            return;
-        }
-
-        const total = (data.events||[]).length + (data.trainings||[]).length + (data.assessments||[]).length + (data.methodical||[]).length + (data.activity||[]).length;
-        const res = await mergeWithCloud();
-
-        if (res.added === 0 && res.updated === 0) {
-            alert('Файл скачался, но новых записей нет.\n\nВ облаке: ' + total + ' записей.\nЛокально уже все есть.');
-        } else {
-            showToast('Из облака: +' + res.added + ' новых, ' + res.updated + ' обновлено');
-        }
-        updateUnsentCount();
-        showLocalRecords();
-    } catch (e) {
-        if (manualBtn) manualBtn.classList.remove('hidden');
-        if (diskBtn) diskBtn.classList.remove('hidden');
-        alert('Ошибка: ' + e.message);
-    }
-    if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
-}
-
-// ═══ ОТПРАВКА В ОБЛАКО ═══
-// ═══ ОТПРАВКА В ОБЛАКО ═══
-async function sendToCloud() {
-    const btn = document.getElementById('send-cloud-btn');
-    const mainBtn = document.getElementById('main-send-btn');
-    const mainIcon = document.getElementById('main-send-icon');
-    const mainText = document.getElementById('main-send-text');
-    const mainBadge = document.getElementById('unsent-count');
-
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
-    if (mainBtn) { mainBtn.disabled = true; }
-    if (mainIcon) mainIcon.textContent = '⏳';
-    if (mainText) mainText.textContent = 'Отправляем...';
-    if (mainBadge) mainBadge.style.display = 'none';
-
-    try {
-        const merged = await mergeWithCloud();
-        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-
-        if (allRecords.length === 0) {
-            showToast('Нет данных для отправки');
-        } else {
-            await ensureFolder(ROOT_FOLDER);
-            await ensureFolder(ROOT_FOLDER + '/Входящие');
-            await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
-            await ensureFolder(getPhotosFolder(profile.fio, profile.login));
-
-            for (const record of allRecords) {
-                if (!record.photos) record.photos = record.photo ? [record.photo] : [];
-                if (record.photos.length && !record.photosUploaded) {
-                    try {
-                        const filenames = [];
-                        for (let i = 0; i < record.photos.length; i++) {
-                            const filename = buildPhotoName(record, i, record.photos.length);
-                            const blob = await (await fetch(record.photos[i])).blob();
-                            await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
-                            filenames.push(filename);
-                        }
-                        record.photoFilenames = filenames;
-                        record.photosUploaded = true;
-                        delete record.photo;
-                        delete record.photos;
-                        await updateRecord(record);
-                    } catch (e) { console.error('photo upload error', e); }
-                }
-            }
-
-            const data = await buildDataFile();
-            const dataFile = getDataFile(profile.fio, profile.login);
-            await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
-
-            for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-            showToast('✅ Отправлено: ' + allRecords.length + ' (из облака: +' + merged.added + ')');
-        }
-    } catch (e) {
-        console.error(e);
-        alert('Ошибка: ' + e.message);
-    }
-
-    // Восстановление кнопок — выполняется в любом случае
-    if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
-    if (mainBtn) { mainBtn.disabled = false; }
-    if (mainIcon) mainIcon.textContent = '📤';
-    if (mainText) mainText.textContent = 'Отправить в облако';
-    if (mainBadge) mainBadge.style.display = '';
-    updateUnsentCount();
-    if (document.getElementById('screen-records').classList.contains('active')) {
-        showLocalRecords();
-    }
-}
-
-// ═══ СТАТИСТИКА ═══
-async function showStatistics() {
-    const btn = document.getElementById('stats-btn');
-    if (btn) { btn.disabled = true; }
-    showScreen('screen-stats');
-    document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
-    const folder = getStatsFolder(profile.fio, profile.login);
-    
-    let html = '';
-    
-    if (profile.isClassTeacher) {
-        html += '<div class="card" style="background:#f0f8ff; border:2px solid #4A6CF7;">' +
-                '<h3>👨‍🏫 Классное руководство</h3>' +
-                '<p style="font-size:14px;color:#6b7684;">Здесь будет отображаться статистика вашей группы.</p>' +
-                '<p style="font-size:12px;color:#8892a0;margin-top:10px;">(Модуль в разработке. Данные появятся после настройки справочников.)</p>' +
-                '</div>';
-    }
-    
-    try {
-        const stats = await downloadJson(folder + '/statistics.json');
-        if (!stats) {
-            html += '<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке. Статистика появится здесь после завершения расчёта.</p></div>';
-        } else {
-            html += '<div class="card"><h3>📊 Моя статистика</h3>';
-            if (stats.updated) html += '<p style="font-size:12px;color:#8892a0;">Обновлено: ' + new Date(stats.updated).toLocaleString('ru-RU') + '</p>';
-            if (stats.total) html += '<p style="font-size:15px;margin:8px 0;">Баллов: <b>' + stats.total + '</b></p>';
-            html += '</div>';
-        }
-    } catch (e) {
-        html += '<p style="text-align:center;color:#e74c3c;padding:40px 20px;">Ошибка загрузки статистики</p>';
-    }
-    document.getElementById('stats-content').innerHTML = html;
-    if (btn) { btn.disabled = false; }
-}
-
-// ═══ ОБЛАКО ═══
-function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
-function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
-function buildPhotoName(record, idx, total) {
-    const date = record.date || new Date().toISOString().slice(0, 10);
-    const base = record.type + '_' + date + '_' + slug(record.name);
-    return (total && total > 1) ? base + '_' + (idx + 1) + '.jpg' : base + '.jpg';
-}
-
-async function ensureFolder(diskPath) {
-    const res = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath),
-        { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-    if (res.status !== 201 && res.status !== 409) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error('Папка: ' + (err.message || res.status));
-    }
-}
-async function uploadToYandex(diskPath, content) {
-    const urlRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources/upload?path=' + encodeURIComponent(diskPath) + '&overwrite=true',
-        { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-    if (!urlRes.ok) { const e = await urlRes.json().catch(()=>({})); throw new Error(e.message || 'URL ' + urlRes.status); }
-    const data = await urlRes.json();
-    const put = await fetch(data.href, { method: 'PUT', body: content });
-    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
-}
-async function uploadBlobToYandex(diskPath, blob) {
-    const urlRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources/upload?path=' + encodeURIComponent(diskPath) + '&overwrite=true',
-        { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-    if (!urlRes.ok) throw new Error('URL error');
-    const data = await urlRes.json();
-    const put = await fetch(data.href, { method: 'PUT', body: blob });
-    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
-}
-
-async function downloadJson(diskPath) {
-    try {
-        const proxyUrl = PROXY_URL
-            + 'path=' + encodeURIComponent(diskPath)
-            + '&token=' + encodeURIComponent(YANDEX_TOKEN);
-
-        const fileRes = await Promise.race([
-            fetch(proxyUrl),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout-proxy')), 30000))
-        ]);
-
-        if (!fileRes.ok) {
-            const errText = await fileRes.text();
-            console.warn('proxy failed:', fileRes.status, errText);
-            return null;
-        }
-
-        const text = await fileRes.text();
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('not JSON:', text.slice(0, 200));
-            return null;
-        }
-    } catch (e) {
-        console.warn('downloadJson error:', e.message);
-        return null;
-    }
-}
-
-async function buildDataFile() {
-    const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
-    const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c.photos; delete c._photoBackup; return c; };
-    return {
-        profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, isClassTeacher: profile.isClassTeacher, year: getYear() },
-        events: records.filter(r => r.type === 'event').map(clean),
-        trainings: records.filter(r => r.type === 'training').map(clean),
-        assessments: records.filter(r => r.type === 'assessment').map(clean),
-        methodical: records.filter(r => r.type === 'methodical').map(clean),
-        activity: records.filter(r => r.type === 'activity').map(clean),
-        updated: new Date().toISOString()
-    };
-}
-
-async function forceUpdate() {
-    if (!confirm('Обновить приложение?')) return;
-    showToast('⏳ Обновляем...');
-    try {
-        if ('serviceWorker' in navigator) {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const r of regs) { await r.unregister(); }
-        }
-        if ('caches' in window) {
-            const keys = await caches.keys();
-            for (const k of keys) { await caches.delete(k); }
-        }
-        showToast('✅ Готово. Перезагрузка...');
-        setTimeout(() => { window.location.reload(true); }, 800);
-    } catch (e) { alert('Ошибка: ' + e.message); }
-}
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
-}
-</script>
-<script>
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-</script>
-</body>
-</html>
+            showToast('Из файла: +' +
