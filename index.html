@@ -1432,4 +1432,219 @@ function handleManualUpload(event) {
                     }
                 }
             }
-            showToast('Из файла: +' +
+            showToast('Из файла: +' + added + ' новых, ' + updated + ' обновлено');
+            document.getElementById('manual-upload').value = '';
+            showLocalRecords();
+        } catch (err) {
+            alert('Ошибка чтения файла: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function openYandexDiskFolder() {
+    const filePath = getDataFile(profile.fio, profile.login);
+    const url = 'https://disk.yandex.ru/client/disk/' + encodeURI(filePath);
+    window.open(url, '_blank');
+}
+
+// ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
+async function loadFromCloud() {
+    const btn = document.getElementById('load-cloud-btn');
+    const manualBtn = document.getElementById('manual-load-btn');
+    const diskBtn = document.getElementById('open-disk-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
+    if (manualBtn) manualBtn.classList.add('hidden');
+    if (diskBtn) diskBtn.classList.add('hidden');
+    try {
+        const filePath = getDataFile(profile.fio, profile.login);
+        const data = await downloadJson(filePath);
+        if (!data) {
+            if (manualBtn) manualBtn.classList.remove('hidden');
+            if (diskBtn) diskBtn.classList.remove('hidden');
+            alert('Не удалось скачать файл из облака.');
+            if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
+            return;
+        }
+        const res = await mergeWithCloud();
+        if (res.added === 0 && res.updated === 0) {
+            alert('Новых записей нет.');
+        } else {
+            showToast('Из облака: +' + res.added + ' новых, ' + res.updated + ' обновлено');
+        }
+        updateUnsentCount();
+        showLocalRecords();
+    } catch (e) {
+        if (manualBtn) manualBtn.classList.remove('hidden');
+        if (diskBtn) diskBtn.classList.remove('hidden');
+        alert('Ошибка: ' + e.message);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
+}
+
+// ═══ ОТПРАВКА В ОБЛАКО ═══
+async function sendToCloud() {
+    const btn = document.getElementById('send-cloud-btn');
+    const mainBtn = document.getElementById('main-send-btn');
+    const mainIcon = document.getElementById('main-send-icon');
+    const mainText = document.getElementById('main-send-text');
+    const mainBadge = document.getElementById('unsent-count');
+
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
+    if (mainBtn) mainBtn.disabled = true;
+    if (mainIcon) mainIcon.textContent = '⏳';
+    if (mainText) mainText.textContent = 'Отправляем...';
+    if (mainBadge) mainBadge.style.display = 'none';
+
+    try {
+        const merged = await mergeWithCloud();
+        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+        if (allRecords.length === 0) {
+            showToast('Нет данных для отправки');
+        } else {
+            await ensureFolder(ROOT_FOLDER);
+            await ensureFolder(ROOT_FOLDER + '/Входящие');
+            await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
+            await ensureFolder(getPhotosFolder(profile.fio, profile.login));
+
+            for (const record of allRecords) {
+                if (!record.photos) record.photos = record.photo ? [record.photo] : [];
+                if (record.photos.length && !record.photosUploaded) {
+                    try {
+                        const filenames = [];
+                        for (let i = 0; i < record.photos.length; i++) {
+                            const filename = buildPhotoName(record, i, record.photos.length);
+                            const blob = await (await fetch(record.photos[i])).blob();
+                            await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
+                            filenames.push(filename);
+                        }
+                        record.photoFilenames = filenames;
+                        record.photosUploaded = true;
+                        delete record.photo;
+                        delete record.photos;
+                        await updateRecord(record);
+                    } catch (e) { console.error('photo upload error', e); }
+                }
+            }
+            const data = await buildDataFile();
+            const dataFile = getDataFile(profile.fio, profile.login);
+            await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
+            for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
+            showToast('✅ Отправлено: ' + allRecords.length);
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Ошибка: ' + e.message);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
+    if (mainBtn) mainBtn.disabled = false;
+    if (mainIcon) mainIcon.textContent = '📤';
+    if (mainText) mainText.textContent = 'Отправить в облако';
+    if (mainBadge) mainBadge.style.display = '';
+    updateUnsentCount();
+    if (document.getElementById('screen-records').classList.contains('active')) showLocalRecords();
+}
+
+// ═══ СТАТИСТИКА ═══
+async function showStatistics() {
+    const btn = document.getElementById('stats-btn');
+    if (btn) btn.disabled = true;
+    showScreen('screen-stats');
+    document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
+    const folder = getStatsFolder(profile.fio, profile.login);
+    let html = '';
+    try {
+        const stats = await downloadJson(folder + '/statistics.json');
+        if (!stats) {
+            html += '<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;">Данные в обработке. Появится после расчёта.</p></div>';
+        } else {
+            html += '<div class="card"><h3>📊 Моя статистика</h3>';
+            if (stats.updated) html += '<p style="font-size:12px;color:#8892a0;">Обновлено: ' + new Date(stats.updated).toLocaleString('ru-RU') + '</p>';
+            if (stats.total != null) html += '<p style="font-size:15px;margin:8px 0;">Баллов: <b>' + stats.total + '</b> из ' + (stats.total_max || 100) + '</p>';
+            html += '</div>';
+        }
+    } catch (e) {
+        html += '<p style="text-align:center;color:#e74c3c;padding:40px 20px;">Ошибка загрузки статистики</p>';
+    }
+    document.getElementById('stats-content').innerHTML = html;
+    if (btn) btn.disabled = false;
+}
+
+// ═══ ОБЛАКО ═══
+function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
+function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
+function buildPhotoName(record, idx, total) {
+    const date = record.date || new Date().toISOString().slice(0, 10);
+    const base = record.type + '_' + date + '_' + slug(record.name);
+    return (total && total > 1) ? base + '_' + (idx + 1) + '.jpg' : base + '.jpg';
+}
+
+async function ensureFolder(diskPath) {
+    const res = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath),
+        { method: 'PUT', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
+    if (res.status !== 201 && res.status !== 409) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error('Папка: ' + (err.message || res.status));
+    }
+}
+async function uploadToYandex(diskPath, content) {
+    const urlRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources/upload?path=' + encodeURIComponent(diskPath) + '&overwrite=true',
+        { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
+    if (!urlRes.ok) { const e = await urlRes.json().catch(()=>({})); throw new Error(e.message || 'URL ' + urlRes.status); }
+    const data = await urlRes.json();
+    const put = await fetch(data.href, { method: 'PUT', body: content });
+    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
+}
+async function uploadBlobToYandex(diskPath, blob) {
+    const urlRes = await fetch('https://cloud-api.yandex.net/v1/disk/resources/upload?path=' + encodeURIComponent(diskPath) + '&overwrite=true',
+        { headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
+    if (!urlRes.ok) throw new Error('URL error');
+    const data = await urlRes.json();
+    const put = await fetch(data.href, { method: 'PUT', body: blob });
+    if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
+}
+
+async function buildDataFile() {
+    const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
+    const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c.photos; delete c._photoBackup; return c; };
+    return {
+        profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, isClassTeacher: profile.isClassTeacher, year: getYear() },
+        events: records.filter(r => r.type === 'event').map(clean),
+        trainings: records.filter(r => r.type === 'training').map(clean),
+        assessments: records.filter(r => r.type === 'assessment').map(clean),
+        methodical: records.filter(r => r.type === 'methodical').map(clean),
+        activity: records.filter(r => r.type === 'activity').map(clean),
+        updated: new Date().toISOString()
+    };
+}
+
+async function forceUpdate() {
+    if (!confirm('Обновить приложение?')) return;
+    showToast('⏳ Обновляем...');
+    try {
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) { await r.unregister(); }
+        }
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            for (const k of keys) { await caches.delete(k); }
+        }
+        showToast('✅ Готово. Перезагрузка...');
+        setTimeout(() => { window.location.reload(true); }, 800);
+    } catch (e) { alert('Ошибка: ' + e.message); }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+</script>
+</body>
+</html>
