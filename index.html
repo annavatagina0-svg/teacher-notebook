@@ -833,93 +833,168 @@ async function updateRecord(rec) { const d = await openDB(); return new Promise(
 async function deleteRecordById(id) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; }); }
 
 // ═══ СОХРАНЕНИЕ ═══
+// ═══ СОХРАНЕНИЕ ═══
 async function saveRecord() {
-    const type = currentFormType;
-    const now = new Date().toISOString();
-    let record;
+    try {
+        const type = currentFormType;
+        const now = new Date().toISOString();
+        let record;
 
-    if (editingRecordId) {
-        const all = await getAllRecords();
-        record = all.find(r => r.id === editingRecordId) || {};
-        record.updatedAt = now;
-    } else {
-        record = {
-            uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8),
-            createdAt: now,
-            updatedAt: now,
-            sent: false,
-            fromCloud: false
-        };
-    }
-
-    record.type = type;
-    record.teacher = profile.fio;
-    record.teacherLogin = profile.login;
-    record.pck = profile.pck;
-    record.year = getYear();
-
-    const getVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-    const getCheck = id => { const el = document.getElementById(id); return el ? el.checked : false; };
-
-       if (type !== 'assessment') {
-        record.name = getVal('f-name').trim();
-        if (!record.name) { showToast('Введите название'); return; }
-    } else {
-        record.name = getVal('f-subject').trim() || 'Контроль';
-    }
-    record.date = getVal('f-date');
-    record.prof = getCheck('f-prof');
-
-    if (type === 'event') {
-        record.eventType = getVal('f-type');
-        if (record.eventType === 'другое') record.eventTypeCustom = getVal('f-type-custom');
-        record.level = getVal('f-level'); record.participation = getVal('f-participation'); record.place = getVal('f-place');
-        record.hasTeacher = getCheck('f-has-teacher'); record.hasStudents = getCheck('f-has-students');
-        if (record.hasTeacher) record.teacherRoles = [...document.querySelectorAll('#f-roles-container .sub-block')].map(b => ({ role: b.querySelector('.t-role').value, result: b.querySelector('.t-result').value, place: b.querySelector('.t-place').value }));
-        if (record.hasStudents) record.studentsGroups = [...document.querySelectorAll('#f-students-container .sub-block')].map(g => ({
-            group: g.querySelector('.s-group').value, count: g.querySelector('.s-count').value, names: g.querySelector('.s-names').value,
-            diplomas: [...g.querySelectorAll('.s-diplomas .sub-block')].map(d => ({ place: d.querySelector('.s-place').value, winner: d.querySelector('.s-winner').value }))
-        }));
-        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
-    } else if (type === 'training') {
-        record.trainingType = getVal('f-type');
-        if (record.trainingType === 'другое') record.trainingTypeCustom = getVal('f-type-custom');
-        record.hours = getVal('f-hours'); record.place = getVal('f-place');
-        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
-    } else if (type === 'assessment') {
-        record.assessmentType = getVal('f-type'); record.group = getVal('f-group'); record.subject = getVal('f-subject');
-        record.total = parseInt(getVal('f-total')) || 0; record.absent = parseInt(getVal('f-absent')) || 0; record.ovz = getCheck('f-ovz');
-        if (record.assessmentType === 'проектная деятельность') record.project = getVal('f-project');
-        else {
-            record.count5 = parseInt(getVal('f-c5')) || 0; record.count4 = parseInt(getVal('f-c4')) || 0;
-            record.count3 = parseInt(getVal('f-c3')) || 0; record.count2 = parseInt(getVal('f-c2')) || 0;
-            record.taken = record.count5 + record.count4 + record.count3 + record.count2;
+        if (!profile || !profile.fio) {
+            alert('Профиль не загружен. Обновите страницу.');
+            return;
         }
-    } else if (type === 'methodical') {
-        record.methodicalType = getVal('f-type');
-        if (record.methodicalType === 'другое') record.methodicalTypeCustom = getVal('f-type-custom');
-        record.role = getVal('f-role'); record.status = getVal('f-status'); record.level = getVal('f-level');
-        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
-    } else if (type === 'activity') {
-        record.activityType = getVal('f-type');
-        if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
-        record.level = getVal('f-level');
-        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
-    }
 
-    if (editingRecordId) {
-        record.sent = false;
-        record.fromCloud = false;
-        await updateRecord(record);
-    } else {
-        await saveRecordToDB(record);
+        if (editingRecordId) {
+            const all = await getAllRecords();
+            record = all.find(r => r.id === editingRecordId) || {};
+            record.updatedAt = now;
+        } else {
+            record = {
+                uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8),
+                createdAt: now,
+                updatedAt: now,
+                sent: false,
+                fromCloud: false
+            };
+        }
+
+        record.type = type;
+        record.teacher = profile.fio;
+        record.teacherLogin = profile.login;
+        record.pck = profile.pck;
+        record.year = getYear();
+
+        const getVal = id => { const el = document.getElementById(id); return el ? String(el.value || '') : ''; };
+        const getCheck = id => { const el = document.getElementById(id); return el ? !!el.checked : false; };
+
+        if (type !== 'assessment') {
+            record.name = getVal('f-name').trim();
+            if (!record.name) { showToast('Введите название'); return; }
+        } else {
+            record.name = getVal('f-subject').trim() || 'Контроль';
+        }
+        record.date = getVal('f-date');
+        record.prof = getCheck('f-prof');
+
+        if (type === 'event') {
+            record.eventType = getVal('f-type');
+            if (record.eventType === 'другое') record.eventTypeCustom = getVal('f-type-custom');
+            record.level = getVal('f-level');
+            record.participation = getVal('f-participation');
+            record.place = getVal('f-place');
+            record.hasTeacher = getCheck('f-has-teacher');
+            record.hasStudents = getCheck('f-has-students');
+
+            if (record.hasTeacher) {
+                const rolesBlocks = document.querySelectorAll('#f-roles-container .sub-block');
+                record.teacherRoles = [];
+                rolesBlocks.forEach(b => {
+                    const r = b.querySelector('.t-role');
+                    const res = b.querySelector('.t-result');
+                    const pl = b.querySelector('.t-place');
+                    record.teacherRoles.push({
+                        role: r ? r.value : '',
+                        result: res ? res.value : '',
+                        place: pl ? pl.value : ''
+                    });
+                });
+            }
+
+            if (record.hasStudents) {
+                const groupsBlocks = document.querySelectorAll('#f-students-container .sub-block');
+                record.studentsGroups = [];
+                groupsBlocks.forEach(g => {
+                    const gEl = g.querySelector('.s-group');
+                    const cEl = g.querySelector('.s-count');
+                    const nEl = g.querySelector('.s-names');
+                    const diplomas = [];
+                    g.querySelectorAll('.s-diplomas .sub-block').forEach(d => {
+                        const pEl = d.querySelector('.s-place');
+                        const wEl = d.querySelector('.s-winner');
+                        diplomas.push({
+                            place: pEl ? pEl.value : '',
+                            winner: wEl ? wEl.value : ''
+                        });
+                    });
+                    record.studentsGroups.push({
+                        group: gEl ? gEl.value : '',
+                        count: cEl ? cEl.value : '',
+                        names: nEl ? nEl.value : '',
+                        diplomas: diplomas
+                    });
+                });
+            }
+
+            if (formPhotos.length) {
+                record.photos = formPhotos.slice();
+                delete record.photo;
+                record.photosUploaded = false;
+            }
+        } else if (type === 'training') {
+            record.trainingType = getVal('f-type');
+            if (record.trainingType === 'другое') record.trainingTypeCustom = getVal('f-type-custom');
+            record.hours = getVal('f-hours');
+            record.place = getVal('f-place');
+            if (formPhotos.length) {
+                record.photos = formPhotos.slice();
+                delete record.photo;
+                record.photosUploaded = false;
+            }
+        } else if (type === 'assessment') {
+            record.assessmentType = getVal('f-type');
+            record.group = getVal('f-group');
+            record.subject = getVal('f-subject');
+            record.total = parseInt(getVal('f-total')) || 0;
+            record.absent = parseInt(getVal('f-absent')) || 0;
+            record.ovz = getCheck('f-ovz');
+            if (record.assessmentType === 'проектная деятельность') {
+                record.project = getVal('f-project');
+            } else {
+                record.count5 = parseInt(getVal('f-c5')) || 0;
+                record.count4 = parseInt(getVal('f-c4')) || 0;
+                record.count3 = parseInt(getVal('f-c3')) || 0;
+                record.count2 = parseInt(getVal('f-c2')) || 0;
+                record.taken = record.count5 + record.count4 + record.count3 + record.count2;
+            }
+        } else if (type === 'methodical') {
+            record.methodicalType = getVal('f-type');
+            if (record.methodicalType === 'другое') record.methodicalTypeCustom = getVal('f-type-custom');
+            record.role = getVal('f-role');
+            record.status = getVal('f-status');
+            record.level = getVal('f-level');
+            if (formPhotos.length) {
+                record.photos = formPhotos.slice();
+                delete record.photo;
+                record.photosUploaded = false;
+            }
+        } else if (type === 'activity') {
+            record.activityType = getVal('f-type');
+            if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
+            record.level = getVal('f-level');
+            if (formPhotos.length) {
+                record.photos = formPhotos.slice();
+                delete record.photo;
+                record.photosUploaded = false;
+            }
+        }
+
+        if (editingRecordId) {
+            record.sent = false;
+            record.fromCloud = false;
+            await updateRecord(record);
+        } else {
+            await saveRecordToDB(record);
+        }
+        editingRecordId = null;
+        clearForm();
+        backToMain();
+        showToast('✅ Сохранено. Не забудьте «Отправить в облако».');
+    } catch (e) {
+        console.error('saveRecord error:', e);
+        alert('Ошибка при сохранении:\n' + e.message);
     }
-    editingRecordId = null;
-    clearForm();
-    backToMain();
-    showToast('✅ Сохранено. Не забудьте «Отправить в облако».');
 }
-
 function clearForm() {
     document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea').forEach(el => el.value = '');
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
