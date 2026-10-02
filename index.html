@@ -68,7 +68,8 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .record-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
 .record-header h3 { flex: 1; font-size: 15px; margin-bottom: 0; }
 .record-actions { display: flex; gap: 2px; flex-shrink: 0; }
-.record-edit, .record-delete { background: none; border: none; font-size: 17px; cursor: pointer; padding: 4px 6px; opacity: 0.5; }
+.record-edit, .record-delete, .record-photo { background: none; border: none; font-size: 17px; cursor: pointer; padding: 4px 6px; opacity: 0.6; }
+.record-photo { opacity: 0.8; color: #4A6CF7; }
 .record p { font-size: 13px; color: #6b7684; margin: 3px 0; line-height: 1.4; }
 .record .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
 .record .tag { background: #eef2ff; color: #4A6CF7; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
@@ -78,7 +79,12 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .cloud-btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
 .cloud-btn.load { background: #e8f8ee; color: #27ae60; border: 2px solid #d5f0e0; }
 .cloud-btn.send { background: #eef2ff; color: #4A6CF7; border: 2px solid #e6ecff; }
+.cloud-btn.manual { background: #fff4e6; color: #d97706; border: 2px solid #fde6c8; }
+.cloud-btn.disk { background: #e8f0fe; color: #1a73e8; border: 2px solid #d2e3fc; }
 .cloud-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab { flex: 1; padding: 12px; text-align: center; background: white; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; color: #8892a0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.tab.active { background: #4A6CF7; color: white; }
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal.active { display: flex; }
 .modal-content { background: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
@@ -104,6 +110,10 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <div class="form-group" style="text-align:left;"><label>Логин *</label><input type="text" id="input-login" placeholder="ivanov (латиница, 3+ символа)"><div class="hint">Придумайте сами. Запомните — понадобится для входа с любого устройства.</div></div>
         <div class="form-group" style="text-align:left;"><label>Председатель ПЦК *</label><select id="input-pck"></select></div>
         <div class="form-group" style="text-align:left;"><label>Категория *</label><select id="input-category"><option value="">— выберите —</option><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
+        <label class="checkbox-line" style="margin-bottom: 16px;">
+            <input type="checkbox" id="input-is-class-teacher">
+            <span>Я классный руководитель</span>
+        </label>
         <label class="checkbox-line">
             <input type="checkbox" id="existing-profile-check">
             <span>У меня уже есть профиль (в облаке)</span>
@@ -148,7 +158,6 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <span class="menu-arrow">→</span>
     </button>
     <div class="row" style="margin-top:20px;">
-        <button class="btn" onclick="showOrders()">📎 Дополнительно</button>
         <button class="btn" onclick="showLocalRecords()">📋 Мои записи</button>
     </div>
     <button class="btn-primary" onclick="showStatistics()" id="stats-btn" style="margin-top:10px;background:white;color:#4A6CF7;border:2px solid #e6ecff;box-shadow:none;">📊 Обновить статистику</button>
@@ -163,7 +172,14 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 
 <div id="screen-records" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>Мои записи</h2></div>
+    <div class="tabs">
+        <div class="tab active" onclick="switchRecordsTab('my')">📋 Мои записи</div>
+        <div class="tab" onclick="switchRecordsTab('orders')">📎 Из приказов</div>
+    </div>
     <button class="cloud-btn load" onclick="loadFromCloud()" id="load-cloud-btn">☁️ Загрузить из облака</button>
+    <button class="cloud-btn manual hidden" onclick="document.getElementById('manual-upload').click()" id="manual-load-btn">📁 Загрузить из файла</button>
+    <button class="cloud-btn disk hidden" onclick="openYandexDiskFolder()" id="open-disk-btn">🔗 Открыть файл на Яндекс.Диске</button>
+    <input type="file" id="manual-upload" accept=".json" style="display:none" onchange="handleManualUpload(event)">
     <button class="cloud-btn send" onclick="sendToCloud()" id="send-cloud-btn">📤 Отправить в облако</button>
     <div id="records-list"></div>
 </div>
@@ -173,11 +189,6 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <div id="stats-content"></div>
 </div>
 
-<div id="screen-orders" class="screen">
-    <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>📎 Дополнительно</h2></div>
-    <div id="orders-content"></div>
-</div>
-
 <div id="screen-edit-profile" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>✏️ Редактировать профиль</h2></div>
     <div class="card">
@@ -185,6 +196,10 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <div class="form-group"><label>Логин</label><input type="text" id="edit-login"></div>
         <div class="form-group"><label>Председатель ПЦК</label><select id="edit-pck"></select></div>
         <div class="form-group"><label>Категория</label><select id="edit-category"><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
+        <label class="checkbox-line" style="margin-top: 10px;">
+            <input type="checkbox" id="edit-is-class-teacher">
+            <span>Я классный руководитель</span>
+        </label>
     </div>
     <button class="save-btn" onclick="saveEditedProfile()">💾 Сохранить изменения</button>
 </div>
@@ -232,6 +247,7 @@ const PCK_LIST = [
 
 let profile = null;
 let currentFormType = 'event';
+let currentRecordsTab = 'my';
 let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
 let editingRecordId = null;
@@ -275,6 +291,7 @@ async function saveProfile() {
     const login = document.getElementById('input-login').value.trim();
     const pck = document.getElementById('input-pck').value;
     const category = document.getElementById('input-category').value;
+    const isClassTeacher = document.getElementById('input-is-class-teacher').checked;
     const existingProfile = document.getElementById('existing-profile-check').checked;
 
     if (!fio) { showToast('Введите ФИО'); return; }
@@ -311,6 +328,7 @@ async function saveProfile() {
         if (!isThisYou) { showToast('Смените логин или ФИО'); return; }
 
         profile = cloudData.profile;
+        profile.isClassTeacher = profile.isClassTeacher || false;
         await saveSetting('profile', profile);
         updateProfileUI();
         showScreen('screen-main');
@@ -320,16 +338,18 @@ async function saveProfile() {
     }
 
     if (existingProfile) {
+        document.getElementById('manual-load-btn').classList.remove('hidden');
+        document.getElementById('open-disk-btn').classList.remove('hidden');
         alert(
             'Вы отметили «У меня уже есть профиль», но не удалось загрузить данные из облака.\n\n' +
             (downloadFailed
-                ? 'Похоже, проблема с интернетом. Попробуйте:\n• Переключиться на Wi-Fi\n• Повторить попытку позже'
-                : 'Возможно, профиль ещё не создан или указаны другие ФИО/логин.\n\nПроверьте данные или снимите галочку и создайте профиль.') + '\n\nНовый профиль НЕ создан.'
+                ? 'Похоже, проблема с интернетом. Попробуйте:\n• Переключиться на Wi-Fi\n• Воспользоваться кнопкой «📁 Загрузить из файла»\n• Скачать файл вручную: «🔗 Открыть файл на Яндекс.Диске»\n\nНовый профиль НЕ создан.'
+                : 'Возможно, профиль ещё не создан или указаны другие ФИО/логин.\n\nПроверьте данные или снимите галочку и создайте профиль.\n\nНовый профиль НЕ создан.')
         );
         return;
     }
 
-    profile = { fio, login, pck, category, year: getYear(), createdAt: new Date().toISOString() };
+    profile = { fio, login, pck, category, isClassTeacher, year: getYear(), createdAt: new Date().toISOString() };
     await saveSetting('profile', profile);
     updateProfileUI();
     showScreen('screen-main');
@@ -340,7 +360,9 @@ function updateProfileUI() {
     const initials = profile.fio.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
     document.getElementById('avatar').textContent = initials || '?';
     document.getElementById('teacher-display').textContent = profile.fio;
-    document.getElementById('teacher-sub').textContent = profile.category + ' • ПЦК: ' + profile.pck;
+    let sub = profile.category + ' • ПЦК: ' + profile.pck;
+    if (profile.isClassTeacher) sub += ' • 👨‍🏫 Классный руководитель';
+    document.getElementById('teacher-sub').textContent = sub;
 }
 
 function showProfileSwitcher() {
@@ -362,6 +384,7 @@ function openEditProfile() {
     document.getElementById('edit-login').value = profile.login;
     document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' + PCK_LIST.map(p => '<option value="' + p + '"' + (p === profile.pck ? ' selected' : '') + '>' + p + '</option>').join('');
     document.getElementById('edit-category').value = profile.category;
+    document.getElementById('edit-is-class-teacher').checked = profile.isClassTeacher || false;
     showScreen('screen-edit-profile');
 }
 async function saveEditedProfile() {
@@ -369,6 +392,7 @@ async function saveEditedProfile() {
     const newLogin = document.getElementById('edit-login').value.trim();
     const newPck = document.getElementById('edit-pck').value;
     const newCategory = document.getElementById('edit-category').value;
+    const newIsClassTeacher = document.getElementById('edit-is-class-teacher').checked;
     if (!newFio || !newLogin || !newPck || !newCategory) { showToast('Заполните все поля'); return; }
     if (!/^[a-zA-Z0-9_.-]+$/.test(newLogin) || newLogin.length < 3) { showToast('Логин: латиница, 3+ символа'); return; }
     const oldFio = profile.fio;
@@ -380,7 +404,7 @@ async function saveEditedProfile() {
                 { method: 'POST', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
         } catch (e) {}
     }
-    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory, year: getYear(), createdAt: profile.createdAt };
+    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory, isClassTeacher: newIsClassTeacher, year: getYear(), createdAt: profile.createdAt };
     await saveSetting('profile', profile);
     const records = await getAllRecords();
     for (const r of records) {
@@ -861,18 +885,50 @@ async function editRecord(id) {
     showScreen('screen-form');
 }
 
+// ═══ ФОТО К СУЩЕСТВУЮЩЕЙ ЗАПИСИ ═══
+async function addPhotoToRecord(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast('⏳ Обработка фото...');
+        const compressed = await compressImage(file);
+        const all = await getAllRecords();
+        const rec = all.find(r => r.id === id);
+        if (!rec) return;
+        rec.photo = compressed;
+        rec.photoUploaded = false;
+        rec.sent = false;
+        await updateRecord(rec);
+        showToast('✅ Фото прикреплено. Отправьте в облако.');
+        showLocalRecords();
+    };
+    input.click();
+}
+
 // ═══ ЗАПИСИ ═══
+function switchRecordsTab(tab) {
+    currentRecordsTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[tab === 'my' ? 0 : 1].classList.add('active');
+    showLocalRecords();
+}
+
 async function showLocalRecords() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
+    const filtered = records.filter(r => currentRecordsTab === 'my' ? (r.source !== 'order') : (r.source === 'order'));
     const c = document.getElementById('records-list');
-    if (!records.length) {
+    if (!filtered.length) {
         c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей.<br><br>Нажмите «☁️ Загрузить из облака» — если данные есть на другом устройстве.</p>';
     } else {
-        c.innerHTML = records.reverse().map(r => {
+        c.innerHTML = filtered.reverse().map(r => {
             const age = Date.now() - new Date(r.createdAt).getTime();
             const canEdit = age < 48*60*60*1000;
             const editBtn = canEdit ? '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>' : '';
             const delBtn = canEdit ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить">🗑</button>' : '';
+            const photoBtn = '<button class="record-photo" onclick="addPhotoToRecord(' + r.id + ')" title="Прикрепить фото">📷</button>';
             let title = '', body = '';
             const icon = { event: '🏆', training: '🎓', assessment: '📊', methodical: '📚', activity: '🗣' }[r.type] || '📄';
             if (r.type === 'event') {
@@ -896,7 +952,7 @@ async function showLocalRecords() {
             let cls = 'record';
             if (r.fromCloud) cls += ' cloud';
             else if (!r.sent) cls += ' unsent';
-            return '<div class="' + cls + '"><div class="record-header"><h3>' + title + '</h3><div class="record-actions">' + editBtn + delBtn + '</div></div>' + body + '</div>';
+            return '<div class="' + cls + '"><div class="record-header"><h3>' + title + '</h3><div class="record-actions">' + photoBtn + editBtn + delBtn + '</div></div>' + body + '</div>';
         }).join('');
     }
     showScreen('screen-records');
@@ -909,16 +965,85 @@ async function deleteRecord(id) {
     showLocalRecords();
 }
 
+// ═══ РУЧНАЯ ЗАГРУЗКА ═══
+function handleManualUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.profile) { showToast('Неверный формат файла'); return; }
+            
+            const cloudRecords = [];
+            for (const key of ['events','trainings','assessments','methodical','activity']) {
+                if (data[key] && Array.isArray(data[key])) cloudRecords.push.apply(cloudRecords, data[key]);
+            }
+            const localRecords = await getAllRecords();
+            const localByKey = new Map();
+            for (const r of localRecords) {
+                const k = recordKey(r);
+                if (k) localByKey.set(k, r);
+            }
+            let added = 0, updated = 0;
+            for (const cloud of cloudRecords) {
+                const key = recordKey(cloud);
+                if (!key) continue;
+                const local = localByKey.get(key);
+                if (!local) {
+                    cloud.teacher = data.profile.fio || profile.fio;
+                    cloud.teacherLogin = data.profile.login || profile.login;
+                    cloud.pck = data.profile.pck || profile.pck;
+                    cloud.sent = true; cloud.photoUploaded = true; cloud.fromCloud = true;
+                    if (!cloud.uid) cloud.uid = key;
+                    await saveRecordToDB(cloud);
+                    added++;
+                } else {
+                    const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
+                    const localTime = new Date(local.updatedAt || local.createdAt).getTime();
+                    if (cloudTime > localTime) {
+                        const merged = Object.assign({}, cloud, { id: local.id, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true, fromCloud: true });
+                        if (!merged.uid) merged.uid = local.uid || key;
+                        await updateRecord(merged);
+                        updated++;
+                    }
+                }
+            }
+            showToast('Из файла: +' + added + ' новых, ' + updated + ' обновлено');
+            document.getElementById('manual-upload').value = '';
+            showLocalRecords();
+        } catch (err) {
+            alert('Ошибка чтения файла: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ═══ ОТКРЫТИЕ ФАЙЛА НА ЯНДЕКС.ДИСКЕ ═══
+function openYandexDiskFolder() {
+    const filePath = getDataFile(profile.fio, profile.login);
+    const url = 'https://disk.yandex.ru/client/disk/' + encodeURI(filePath);
+    window.open(url, '_blank');
+}
+
 // ═══ ЗАГРУЗКА ИЗ ОБЛАКА ═══
 async function loadFromCloud() {
     const btn = document.getElementById('load-cloud-btn');
+    const manualBtn = document.getElementById('manual-load-btn');
+    const diskBtn = document.getElementById('open-disk-btn');
+    
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
+    if (manualBtn) manualBtn.classList.add('hidden');
+    if (diskBtn) diskBtn.classList.add('hidden');
+    
     try {
         const filePath = getDataFile(profile.fio, profile.login);
         const data = await downloadJson(filePath);
 
         if (!data) {
-            alert('Не удалось скачать файл из облака.\n\nПуть: ' + filePath + '\n\nПроверьте интернет или зайдите позже.');
+            if (manualBtn) manualBtn.classList.remove('hidden');
+            if (diskBtn) diskBtn.classList.remove('hidden');
+            alert('Не удалось скачать файл из облака.\n\nПуть: ' + filePath + '\n\nПроверьте интернет или зайдите позже.\n\nВоспользуйтесь кнопками:\n• «📁 Загрузить из файла» — выбрать JSON с телефона\n• «🔗 Открыть файл на Яндекс.Диске» — скачать вручную');
             if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
             return;
         }
@@ -933,6 +1058,8 @@ async function loadFromCloud() {
         }
         showLocalRecords();
     } catch (e) {
+        if (manualBtn) manualBtn.classList.remove('hidden');
+        if (diskBtn) diskBtn.classList.remove('hidden');
         alert('Ошибка: ' + e.message);
     }
     if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить из облака'; }
@@ -989,39 +1116,32 @@ async function showStatistics() {
     showScreen('screen-stats');
     document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     const folder = getStatsFolder(profile.fio, profile.login);
+    
+    let html = '';
+    
+    if (profile.isClassTeacher) {
+        html += '<div class="card" style="background:#f0f8ff; border:2px solid #4A6CF7;">' +
+                '<h3>👨‍🏫 Классное руководство</h3>' +
+                '<p style="font-size:14px;color:#6b7684;">Здесь будет отображаться статистика вашей группы.</p>' +
+                '<p style="font-size:12px;color:#8892a0;margin-top:10px;">(Модуль в разработке. Данные появятся после настройки справочников.)</p>' +
+                '</div>';
+    }
+    
     try {
         const stats = await downloadJson(folder + '/statistics.json');
         if (!stats) {
-            document.getElementById('stats-content').innerHTML = '<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке. Статистика появится здесь после завершения расчёта.</p></div>';
-            if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
-            return;
-        }
-        let html = '<div class="card"><h3>📊 Моя статистика</h3>';
-        if (stats.updated) html += '<p style="font-size:12px;color:#8892a0;">Обновлено: ' + new Date(stats.updated).toLocaleString('ru-RU') + '</p>';
-        if (stats.total) html += '<p style="font-size:15px;margin:8px 0;">Баллов: <b>' + stats.total + '</b></p>';
-        html += '</div>';
-        document.getElementById('stats-content').innerHTML = html;
-    } catch (e) {
-        document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#e74c3c;padding:40px 20px;">Ошибка загрузки</p>';
-    }
-    if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
-}
-
-// ═══ ДОПОЛНИТЕЛЬНО ═══
-async function showOrders() {
-    showScreen('screen-orders');
-    document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
-    try {
-        const folder = getStatsFolder(profile.fio, profile.login);
-        const data = await downloadJson(folder + '/orders.json');
-        if (data && data.items && data.items.length) {
-            document.getElementById('orders-content').innerHTML = data.items.map(o => '<div class="record"><h3>📎 ' + (o.title || 'Приказ') + '</h3><p>' + [o.number, o.date, o.type].filter(Boolean).join(' • ') + '</p>' + (o.note ? '<p>' + o.note + '</p>' : '') + '</div>').join('');
+            html += '<div class="card"><h3>📊 Статистика в обработке</h3><p style="font-size:14px;color:#6b7684;line-height:1.5;">Данные в обработке. Статистика появится здесь после завершения расчёта.</p></div>';
         } else {
-            document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Данных из приказов пока нет.</p>';
+            html += '<div class="card"><h3>📊 Моя статистика</h3>';
+            if (stats.updated) html += '<p style="font-size:12px;color:#8892a0;">Обновлено: ' + new Date(stats.updated).toLocaleString('ru-RU') + '</p>';
+            if (stats.total) html += '<p style="font-size:15px;margin:8px 0;">Баллов: <b>' + stats.total + '</b></p>';
+            html += '</div>';
         }
     } catch (e) {
-        document.getElementById('orders-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Не удалось загрузить.</p>';
+        html += '<p style="text-align:center;color:#e74c3c;padding:40px 20px;">Ошибка загрузки статистики</p>';
     }
+    document.getElementById('stats-content').innerHTML = html;
+    if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
 }
 
 // ═══ ОБЛАКО ═══
@@ -1088,7 +1208,7 @@ async function buildDataFile() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
     const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c._photoBackup; return c; };
     return {
-        profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, year: getYear() },
+        profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, isClassTeacher: profile.isClassTeacher, year: getYear() },
         events: records.filter(r => r.type === 'event').map(clean),
         trainings: records.filter(r => r.type === 'training').map(clean),
         assessments: records.filter(r => r.type === 'assessment').map(clean),
