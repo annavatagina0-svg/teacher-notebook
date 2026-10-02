@@ -861,8 +861,12 @@ async function saveRecord() {
     const getVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
     const getCheck = id => { const el = document.getElementById(id); return el ? el.checked : false; };
 
-    record.name = getVal('f-name').trim();
-    if (!record.name) { showToast('Введите название'); return; }
+       if (type !== 'assessment') {
+        record.name = getVal('f-name').trim();
+        if (!record.name) { showToast('Введите название'); return; }
+    } else {
+        record.name = getVal('f-subject').trim() || 'Контроль';
+    }
     record.date = getVal('f-date');
     record.prof = getCheck('f-prof');
 
