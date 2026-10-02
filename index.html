@@ -20,7 +20,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
 .profile-name { font-size: 15px; font-weight: 600; }
 .profile-hint { font-size: 12px; color: #8892a0; margin-top: 2px; }
-.quick-actions { display: flex; gap: 12px; margin-bottom: 20px; }
+.quick-actions { display: flex; gap: 12px; margin-bottom: 12px; }
 .quick-btn {
     flex: 1;
     display: flex;
@@ -73,6 +73,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.send-main-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; border: none; padding: 14px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); margin-bottom: 20px; }
+.send-main-btn:active { transform: scale(0.98); }
+.send-main-btn.hidden { display: none; }
+.send-badge { background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: 700; }
 h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .subtitle { font-size: 14px; color: #8892a0; margin-bottom: 20px; }
 .menu-btn { display: flex; align-items: center; gap: 14px; width: 100%; background: white; border: none; padding: 16px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-family: inherit; }
@@ -113,6 +117,10 @@ textarea { min-height: 60px; resize: vertical; }
 .add-btn { width: 100%; background: white; border: 2px dashed #4A6CF7; color: #4A6CF7; padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: 600; margin-top: 8px; }
 .grade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .photo-preview { max-width: 100%; max-height: 200px; margin-top: 12px; border-radius: 12px; display: none; }
+.photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.photo-thumb { position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; border: 2px solid #e6ecff; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb .remove-photo { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
 input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #fafbfe; border: 1.5px dashed #e6ecff; border-radius: 12px; cursor: pointer; }
 .save-btn { width: 100%; background: #4A6CF7; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; }
 .record { background: white; padding: 16px; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #4A6CF7; }
@@ -129,6 +137,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .record .tag.prof { background: #fff4e6; color: #d97706; }
 .record .tag.cloud { background: #e8f8ee; color: #27ae60; }
 .record .tag.unsent { background: #f0f3f7; color: #8892a0; }
+.record .photo-count { background: #eef2ff; color: #4A6CF7; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
 .cloud-btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
 .cloud-btn.load { background: #e8f8ee; color: #27ae60; border: 2px solid #d5f0e0; }
 .cloud-btn.send { background: #eef2ff; color: #4A6CF7; border: 2px solid #e6ecff; }
@@ -184,22 +193,29 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         </div>
     </div>
 
-   <div class="quick-actions">
-    <button class="quick-btn" onclick="showLocalRecords()">
-        <div class="quick-icon">📋</div>
-        <div class="quick-text">
-            <div class="quick-label">Мои записи</div>
-            <div class="quick-sub">События и приказы</div>
-        </div>
+    <div class="quick-actions">
+        <button class="quick-btn" onclick="showLocalRecords()">
+            <div class="quick-icon">📋</div>
+            <div class="quick-text">
+                <div class="quick-label">Мои записи</div>
+                <div class="quick-sub">События и приказы</div>
+            </div>
+        </button>
+        <button class="quick-btn" onclick="showStatistics()" id="stats-btn">
+            <div class="quick-icon">📊</div>
+            <div class="quick-text">
+                <div class="quick-label">Статистика</div>
+                <div class="quick-sub">Баллы и отчёты</div>
+            </div>
+        </button>
+    </div>
+
+    <button class="send-main-btn hidden" id="main-send-btn" onclick="sendToCloud()">
+        <span>📤</span>
+        <span>Отправить в облако</span>
+        <span class="send-badge" id="unsent-count">0</span>
     </button>
-    <button class="quick-btn" onclick="showStatistics()" id="stats-btn">
-        <div class="quick-icon">📊</div>
-        <div class="quick-text">
-            <div class="quick-label">Статистика</div>
-            <div class="quick-sub">Баллы и отчёты</div>
-        </div>
-    </button>
-</div>
+
     <h1>📓 Блокнот педагога</h1>
     <p class="subtitle">Выберите раздел</p>
 
@@ -320,6 +336,7 @@ let studentsGroupCounter = 0;
 let teacherRolesCounter = 0;
 let editingRecordId = null;
 let db = null;
+let formPhotos = [];
 
 function getDataFile(fio, login) { return ROOT_FOLDER + '/Входящие/' + slug(fio) + '_' + login + '_' + getYear() + '.json'; }
 function getPhotosFolder(fio, login) { return ROOT_FOLDER + '/Входящие/photos/' + slug(fio) + '_' + login; }
@@ -340,6 +357,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         profile = savedProfile;
         updateProfileUI();
         showScreen('screen-main');
+        updateUnsentCount();
     } else {
         showScreen('screen-welcome');
     }
@@ -350,8 +368,24 @@ function showScreen(id) {
     document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
 }
-function backToMain() { showScreen('screen-main'); }
+function backToMain() { showScreen('screen-main'); updateUnsentCount(); }
 function cancelForm() { editingRecordId = null; backToMain(); }
+
+async function updateUnsentCount() {
+    if (!profile) return;
+    try {
+        const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.sent);
+        const btn = document.getElementById('main-send-btn');
+        const badge = document.getElementById('unsent-count');
+        if (!btn) return;
+        if (records.length > 0) {
+            btn.classList.remove('hidden');
+            if (badge) badge.textContent = records.length;
+        } else {
+            btn.classList.add('hidden');
+        }
+    } catch(e) {}
+}
 
 // ═══ ПРОФИЛЬ ═══
 async function saveProfile() {
@@ -401,6 +435,7 @@ async function saveProfile() {
         updateProfileUI();
         showScreen('screen-main');
         const merged = await mergeWithCloud();
+        updateUnsentCount();
         showToast('Записей из облака: +' + merged.added + ', обновлено: ' + merged.updated);
         return;
     }
@@ -513,6 +548,7 @@ async function mergeWithCloud() {
             cloud.pck = profile.pck;
             cloud.sent = true;
             cloud.photoUploaded = true;
+            cloud.photosUploaded = true;
             cloud.fromCloud = true;
             if (!cloud.uid) cloud.uid = key;
             await saveRecordToDB(cloud);
@@ -528,6 +564,7 @@ async function mergeWithCloud() {
                     pck: profile.pck,
                     sent: true,
                     photoUploaded: true,
+                    photosUploaded: true,
                     fromCloud: true
                 });
                 if (!merged.uid) merged.uid = local.uid || key;
@@ -561,16 +598,31 @@ function renderForm(type) {
     bindPhotoPreview();
 }
 function bindPhotoPreview() {
-    document.querySelectorAll('input[type="file"]').forEach(inp => {
-        inp.onchange = function() {
-            const preview = document.getElementById(this.id + '-preview');
-            if (preview && this.files[0]) {
-                const r = new FileReader();
-                r.onload = ev => { preview.src = ev.target.result; preview.style.display = 'block'; };
-                r.readAsDataURL(this.files[0]);
-            }
-        };
-    });
+    formPhotos = [];
+    const container = document.getElementById('f-photo-preview-container');
+    if (container) container.innerHTML = '';
+    const inp = document.getElementById('f-photo');
+    if (!inp) return;
+    inp.onchange = async function() {
+        const files = Array.from(this.files || []);
+        for (const file of files) {
+            const compressed = await compressImage(file);
+            formPhotos.push(compressed);
+        }
+        renderFormPhotoPreviews();
+        this.value = '';
+    };
+}
+function renderFormPhotoPreviews() {
+    const container = document.getElementById('f-photo-preview-container');
+    if (!container) return;
+    container.innerHTML = formPhotos.map((p, i) =>
+        '<div class="photo-thumb"><img src="' + p + '"><button type="button" class="remove-photo" onclick="removeFormPhoto(' + i + ')">✕</button></div>'
+    ).join('');
+}
+function removeFormPhoto(idx) {
+    formPhotos.splice(idx, 1);
+    renderFormPhotoPreviews();
 }
 function renderEventForm() {
     return '<div class="card"><h3>Основное</h3>' +
@@ -598,7 +650,7 @@ function renderEventForm() {
     '</div>' +
     '<div id="f-teacher-block" class="card hidden"><h3>Моё участие</h3><div id="f-roles-container"></div><button type="button" class="add-btn" onclick="addTeacherRole()">+ Добавить роль</button></div>' +
     '<div id="f-students-block" class="card hidden"><h3>Студенты</h3><div id="f-students-container"></div><button type="button" class="add-btn" onclick="addStudentsGroup()">+ Добавить группу</button></div>' +
-    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
+    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderTrainingForm() {
     return '<div class="card"><h3>Обучение</h3>' +
@@ -614,7 +666,7 @@ function renderTrainingForm() {
         '<div class="form-group"><label>Дата получения документа</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото документа</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
+    '<div class="card"><h3>Фото документа <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderAssessmentForm() {
     return '<div class="card"><h3>Контроль</h3>' +
@@ -652,7 +704,7 @@ function renderMethodicalForm() {
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
+    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderActivityForm() {
     return '<div class="card"><h3>Трансляция и активность</h3>' +
@@ -672,7 +724,7 @@ function renderActivityForm() {
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*"><img id="f-photo-preview" class="photo-preview"></div>';
+    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 
 function toggleCustom(selectId, groupId) {
@@ -824,12 +876,12 @@ async function saveRecord() {
             group: g.querySelector('.s-group').value, count: g.querySelector('.s-count').value, names: g.querySelector('.s-names').value,
             diplomas: [...g.querySelectorAll('.s-diplomas .sub-block')].map(d => ({ place: d.querySelector('.s-place').value, winner: d.querySelector('.s-winner').value }))
         }));
-        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
+        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
     } else if (type === 'training') {
         record.trainingType = getVal('f-type');
         if (record.trainingType === 'другое') record.trainingTypeCustom = getVal('f-type-custom');
         record.hours = getVal('f-hours'); record.place = getVal('f-place');
-        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
+        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
     } else if (type === 'assessment') {
         record.assessmentType = getVal('f-type'); record.group = getVal('f-group'); record.subject = getVal('f-subject');
         record.total = parseInt(getVal('f-total')) || 0; record.absent = parseInt(getVal('f-absent')) || 0; record.ovz = getCheck('f-ovz');
@@ -843,12 +895,12 @@ async function saveRecord() {
         record.methodicalType = getVal('f-type');
         if (record.methodicalType === 'другое') record.methodicalTypeCustom = getVal('f-type-custom');
         record.role = getVal('f-role'); record.status = getVal('f-status'); record.level = getVal('f-level');
-        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
+        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
     } else if (type === 'activity') {
         record.activityType = getVal('f-type');
         if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
         record.level = getVal('f-level');
-        const newPhoto = await getPhoto('f-photo'); if (newPhoto) record.photo = newPhoto;
+        if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
     }
 
     if (editingRecordId) {
@@ -868,17 +920,13 @@ function clearForm() {
     document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea').forEach(el => el.value = '');
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     document.querySelectorAll('input[type="file"]').forEach(f => f.value = '');
-    document.querySelectorAll('.photo-preview').forEach(p => { p.src = ''; p.style.display = 'none'; });
+    const container = document.getElementById('f-photo-preview-container'); if (container) container.innerHTML = '';
     const sc = document.getElementById('f-students-container'); if (sc) sc.innerHTML = '';
     const rc = document.getElementById('f-roles-container'); if (rc) rc.innerHTML = '';
     studentsGroupCounter = 0; teacherRolesCounter = 0;
+    formPhotos = [];
 }
 
-async function getPhoto(inputId) {
-    const input = document.getElementById(inputId);
-    if (!input || !input.files || !input.files[0]) return null;
-    return await compressImage(input.files[0]);
-}
 function compressImage(file, maxWidth = 800, quality = 0.7) {
     return new Promise(resolve => {
         const reader = new FileReader();
@@ -910,6 +958,9 @@ async function editRecord(id) {
     currentFormType = rec.type;
     document.getElementById('form-title').textContent = '✏️ Редактирование';
     renderForm(rec.type);
+
+    formPhotos = (rec.photos || (rec.photo ? [rec.photo] : [])).slice();
+    renderFormPhotoPreviews();
 
     setTimeout(() => {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v == null ? '' : v; };
@@ -958,19 +1009,24 @@ async function addPhotoToRecord(id) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
+    input.multiple = true;
     input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
         showToast('⏳ Обработка фото...');
-        const compressed = await compressImage(file);
         const all = await getAllRecords();
         const rec = all.find(r => r.id === id);
         if (!rec) return;
-        rec.photo = compressed;
-        rec.photoUploaded = false;
+        if (!rec.photos) rec.photos = rec.photo ? [rec.photo] : [];
+        for (const file of files) {
+            const compressed = await compressImage(file);
+            rec.photos.push(compressed);
+        }
+        delete rec.photo;
+        rec.photosUploaded = false;
         rec.sent = false;
         await updateRecord(rec);
-        showToast('✅ Фото прикреплено. Отправьте в облако.');
+        showToast('✅ Добавлено фото: ' + files.length + '. Отправьте в облако.');
         showLocalRecords();
     };
     input.click();
@@ -997,25 +1053,27 @@ async function showLocalRecords() {
             const editBtn = canEdit ? '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>' : '';
             const delBtn = canEdit ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить">🗑</button>' : '';
             const photoBtn = '<button class="record-photo" onclick="addPhotoToRecord(' + r.id + ')" title="Прикрепить фото">📷</button>';
+            const photoCount = (r.photos && r.photos.length) ? r.photos.length : (r.photoFilenames && r.photoFilenames.length) ? r.photoFilenames.length : (r.photo ? 1 : 0);
+            const photoTag = photoCount > 0 ? '<span class="photo-count">📷 ' + photoCount + '</span>' : '';
             let title = '', body = '';
             const icon = { event: '🏆', training: '🎓', assessment: '📊', methodical: '📚', activity: '🗣' }[r.type] || '📄';
             if (r.type === 'event') {
                 title = icon + ' ' + r.name;
                 const t = r.eventType === 'другое' && r.eventTypeCustom ? r.eventTypeCustom : r.eventType;
-                body = '<p>' + [r.date, r.level, r.participation].filter(Boolean).join(' • ') + '</p><div class="tags"><span class="tag">' + t + '</span>' + (r.prof ? '<span class="tag prof">Профессионалитет</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>' + (r.studentsGroups ? r.studentsGroups.map(g => '<p>👥 ' + g.group + ': ' + (g.count || '?') + ' чел.</p>').join('') : '');
+                body = '<p>' + [r.date, r.level, r.participation].filter(Boolean).join(' • ') + '</p><div class="tags"><span class="tag">' + t + '</span>' + photoTag + (r.prof ? '<span class="tag prof">Профессионалитет</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>' + (r.studentsGroups ? r.studentsGroups.map(g => '<p>👥 ' + g.group + ': ' + (g.count || '?') + ' чел.</p>').join('') : '');
             } else if (r.type === 'training') {
                 title = icon + ' ' + r.name; const t = r.trainingType === 'другое' && r.trainingTypeCustom ? r.trainingTypeCustom : r.trainingType;
-                body = '<p>' + [t, r.hours && r.hours + ' ч.', r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
+                body = '<p>' + [t, r.hours && r.hours + ' ч.', r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'assessment') {
                 title = icon + ' ' + (r.subject || '—') + (r.group ? ' (' + r.group + ')' : '');
                 let extra = r.assessmentType === 'проектная деятельность' ? '<p>В проекте: ' + (r.project || 0) + ' чел.</p>' : (r.taken ? '<p>Сдавало: ' + r.taken + '</p>' : '');
-                body = '<p>' + [r.assessmentType, r.date].filter(Boolean).join(' • ') + '</p>' + extra + '<div class="tags">' + (r.ovz ? '<span class="tag">♿ ОВЗ</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
+                body = '<p>' + [r.assessmentType, r.date].filter(Boolean).join(' • ') + '</p>' + extra + '<div class="tags">' + photoTag + (r.ovz ? '<span class="tag">♿ ОВЗ</span>' : '') + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'methodical') {
                 title = icon + ' ' + r.name; const t = r.methodicalType === 'другое' && r.methodicalTypeCustom ? r.methodicalTypeCustom : r.methodicalType;
-                body = '<p>' + [t, r.role, r.status, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
+                body = '<p>' + [t, r.role, r.status, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'activity') {
                 title = icon + ' ' + r.name; const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
-                body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
+                body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             }
             let cls = 'record';
             if (r.fromCloud) cls += ' cloud';
@@ -1062,7 +1120,7 @@ function handleManualUpload(event) {
                     cloud.teacher = data.profile.fio || profile.fio;
                     cloud.teacherLogin = data.profile.login || profile.login;
                     cloud.pck = data.profile.pck || profile.pck;
-                    cloud.sent = true; cloud.photoUploaded = true; cloud.fromCloud = true;
+                    cloud.sent = true; cloud.photoUploaded = true; cloud.photosUploaded = true; cloud.fromCloud = true;
                     if (!cloud.uid) cloud.uid = key;
                     await saveRecordToDB(cloud);
                     added++;
@@ -1070,7 +1128,7 @@ function handleManualUpload(event) {
                     const cloudTime = new Date(cloud.updatedAt || cloud.createdAt).getTime();
                     const localTime = new Date(local.updatedAt || local.createdAt).getTime();
                     if (cloudTime > localTime) {
-                        const merged = Object.assign({}, cloud, { id: local.id, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true, fromCloud: true });
+                        const merged = Object.assign({}, cloud, { id: local.id, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true, photosUploaded: true, fromCloud: true });
                         if (!merged.uid) merged.uid = local.uid || key;
                         await updateRecord(merged);
                         updated++;
@@ -1124,6 +1182,7 @@ async function loadFromCloud() {
         } else {
             showToast('Из облака: +' + res.added + ' новых, ' + res.updated + ' обновлено');
         }
+        updateUnsentCount();
         showLocalRecords();
     } catch (e) {
         if (manualBtn) manualBtn.classList.remove('hidden');
@@ -1136,13 +1195,16 @@ async function loadFromCloud() {
 // ═══ ОТПРАВКА В ОБЛАКО ═══
 async function sendToCloud() {
     const btn = document.getElementById('send-cloud-btn');
+    const mainBtn = document.getElementById('main-send-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
+    if (mainBtn) { mainBtn.disabled = true; }
     try {
         const merged = await mergeWithCloud();
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
         if (allRecords.length === 0) {
             showToast('Нет данных для отправки');
             if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
+            if (mainBtn) { mainBtn.disabled = false; }
             return;
         }
 
@@ -1152,12 +1214,20 @@ async function sendToCloud() {
         await ensureFolder(getPhotosFolder(profile.fio, profile.login));
 
         for (const record of allRecords) {
-            if (record.photo && !record.photoUploaded) {
+            if (!record.photos) record.photos = record.photo ? [record.photo] : [];
+            if (record.photos.length && !record.photosUploaded) {
                 try {
-                    const filename = buildPhotoName(record);
-                    const blob = await (await fetch(record.photo)).blob();
-                    await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
-                    record.photoFilename = filename; record.photoUploaded = true; record.photo = null;
+                    const filenames = [];
+                    for (let i = 0; i < record.photos.length; i++) {
+                        const filename = buildPhotoName(record, i, record.photos.length);
+                        const blob = await (await fetch(record.photos[i])).blob();
+                        await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
+                        filenames.push(filename);
+                    }
+                    record.photoFilenames = filenames;
+                    record.photosUploaded = true;
+                    delete record.photo;
+                    delete record.photos;
                     await updateRecord(record);
                 } catch (e) { console.error('photo upload error', e); }
             }
@@ -1169,18 +1239,20 @@ async function sendToCloud() {
 
         for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
         showToast('✅ Отправлено: ' + allRecords.length + ' (из облака: +' + merged.added + ')');
+        updateUnsentCount();
         showLocalRecords();
     } catch (e) {
         console.error(e);
         alert('Ошибка: ' + e.message);
     }
     if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
+    if (mainBtn) { mainBtn.disabled = false; }
 }
 
 // ═══ СТАТИСТИКА ═══
 async function showStatistics() {
     const btn = document.getElementById('stats-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
+    if (btn) { btn.disabled = true; }
     showScreen('screen-stats');
     document.getElementById('stats-content').innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     const folder = getStatsFolder(profile.fio, profile.login);
@@ -1209,13 +1281,17 @@ async function showStatistics() {
         html += '<p style="text-align:center;color:#e74c3c;padding:40px 20px;">Ошибка загрузки статистики</p>';
     }
     document.getElementById('stats-content').innerHTML = html;
-    if (btn) { btn.disabled = false; btn.textContent = '📊 Обновить статистику'; }
+    if (btn) { btn.disabled = false; }
 }
 
 // ═══ ОБЛАКО ═══
 function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
 function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
-function buildPhotoName(record) { const date = record.date || new Date().toISOString().slice(0, 10); return record.type + '_' + date + '_' + slug(record.name) + '.jpg'; }
+function buildPhotoName(record, idx, total) {
+    const date = record.date || new Date().toISOString().slice(0, 10);
+    const base = record.type + '_' + date + '_' + slug(record.name);
+    return (total && total > 1) ? base + '_' + (idx + 1) + '.jpg' : base + '.jpg';
+}
 
 async function ensureFolder(diskPath) {
     const res = await fetch('https://cloud-api.yandex.net/v1/disk/resources?path=' + encodeURIComponent(diskPath),
@@ -1274,7 +1350,7 @@ async function downloadJson(diskPath) {
 
 async function buildDataFile() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
-    const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c._photoBackup; return c; };
+    const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c.photos; delete c._photoBackup; return c; };
     return {
         profile: { fio: profile.fio, login: profile.login, pck: profile.pck, category: profile.category, isClassTeacher: profile.isClassTeacher, year: getYear() },
         events: records.filter(r => r.type === 'event').map(clean),
