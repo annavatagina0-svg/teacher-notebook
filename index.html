@@ -6,20 +6,39 @@
 <meta name="theme-color" content="#4A6CF7">
 <title>Блокнот педагога</title>
 <link rel="manifest" href="manifest.json">
+
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 1 · ОФОРМЛЕНИЕ
+   Что тут: все стили. Ищи по подписям ниже:
+     · ОБЩЕЕ        — body, screen, кнопки, карточки
+     · ФОРМЫ        — input, select, toggle, sub-block, photo
+     · ЗАПИСИ       — карточки записей, теги
+     · МОДАЛ/ТОСТ   — окна и уведомления
+     · РАСПИСАНИЕ   — schedule-block, sched-day, pair-card
+     · ПРИКАЗЫ      — orders-month-bar, order-card
+     · СТАТИСТИКА   — stats-summary, crit-card
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── ОБЩЕЕ ─── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2c3e50; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 .screen { display: none; padding: 16px; padding-bottom: 40px; min-height: 100vh; max-width: 600px; margin: 0 auto; }
 .screen.active { display: block; }
 .hidden { display: none !important; }
+h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.subtitle { font-size: 14px; color: #8892a0; margin-bottom: 20px; }
+
 .welcome-box { margin-top: 6vh; text-align: center; padding: 28px 22px; background: white; border-radius: 24px; box-shadow: 0 8px 32px rgba(74,108,247,0.08); }
 .logo { font-size: 52px; margin-bottom: 12px; }
 .welcome-box h1 { font-size: 22px; margin-bottom: 8px; font-weight: 700; }
 .welcome-box p { color: #8892a0; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+
 .profile-card { display: flex; align-items: center; gap: 12px; background: white; padding: 14px 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; cursor: pointer; }
 .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
 .profile-name { font-size: 15px; font-weight: 600; }
 .profile-hint { font-size: 12px; color: #8892a0; margin-top: 2px; }
+
 .quick-actions { display: flex; gap: 12px; margin-bottom: 12px; }
 .quick-btn { flex: 1; display: flex; align-items: center; gap: 12px; background: white; border: none; padding: 14px 16px; border-radius: 18px; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(74,108,247,0.10); transition: 0.15s; text-align: left; position: relative; overflow: hidden; }
 .quick-btn::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #4A6CF7, #6B8AFF); }
@@ -30,48 +49,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .quick-label { font-size: 14px; font-weight: 700; color: #2c3e50; line-height: 1.2; }
 .quick-sub { font-size: 11px; color: #8892a0; margin-top: 2px; }
 
-.schedule-block { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px; overflow: hidden; }
-.schedule-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; font-size: 15px; font-weight: 700; user-select: none; }
-.schedule-head .sched-icon { font-size: 22px; }
-.schedule-head .sched-arrow { margin-left: auto; font-size: 14px; color: #8892a0; transition: transform 0.2s; }
-.schedule-block.open .schedule-head .sched-arrow { transform: rotate(180deg); }
-.schedule-body { display: none; padding: 0 14px 12px; }
-.schedule-block.open .schedule-body { display: block; }
-.sched-day { border-top: 1px solid #eef2ff; padding: 10px 0; }
-.sched-day:first-child { border-top: none; }
-.sched-day-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px; cursor: pointer; font-weight: 600; font-size: 13px; color: #4A6CF7; border-radius: 8px; user-select: none; }
-.sched-day-head:hover { background: #f8faff; }
-.sched-day-head .sched-count { background: #eef2ff; color: #4A6CF7; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-.sched-day-head .sched-arrow2 { margin-left: auto; font-size: 12px; transition: transform 0.2s; }
-.sched-day.open .sched-day-head .sched-arrow2 { transform: rotate(180deg); }
-.sched-day-list { display: none; padding: 6px 0; }
-.sched-day.open .sched-day-list { display: block; }
-.pair-card { background: #fafbfe; border-left: 3px solid #4A6CF7; border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: 13px; }
-.pair-card.past { opacity: 0.55; border-left-color: #c5cbd3; }
-.pair-card.past .pair-title { text-decoration: line-through; }
-.pair-card.nearest { background: #eef2ff; border-left-color: #4A6CF7; box-shadow: 0 0 0 2px rgba(74,108,247,0.15); }
-.pair-title { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 2px; }
-.pair-desc { font-size: 12px; color: #6b7684; }
-.pair-room { color: #4A6CF7; font-weight: 500; }
-.sched-empty { text-align: center; color: #8892a0; font-size: 13px; padding: 14px; }
-
-.orders-month-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.orders-month-bar label { font-size: 13px; color: #6b7684; font-weight: 600; }
-.orders-month-bar select { flex: 1; padding: 10px 12px; border: 1.5px solid #e6ecff; border-radius: 12px; font-size: 14px; background: white; font-family: inherit; color: #2c3e50; }
-.order-card { background: white; padding: 12px 14px; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border-left: 4px solid #4A6CF7; font-size: 13px; }
-.order-card.past { opacity: 0.55; border-left-color: #c5cbd3; }
-.order-card.past .order-line1 { text-decoration: line-through; }
-.order-line1 { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 6px; }
-.order-line1 .order-time { color: #4A6CF7; }
-.order-line1 .order-group { color: #6b7684; }
-.order-line1 .order-room { color: #27ae60; }
-.order-line2 { font-size: 12px; color: #6b7684; }
-
 .send-main-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; border: none; padding: 14px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); margin-bottom: 20px; }
 .send-main-btn.hidden { display: none; }
 .send-badge { background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: 700; }
-h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-.subtitle { font-size: 14px; color: #8892a0; margin-bottom: 20px; }
+
 .menu-btn { display: flex; align-items: center; gap: 14px; width: 100%; background: white; border: none; padding: 16px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-family: inherit; }
 .menu-btn:active { transform: scale(0.98); background: #f8faff; }
 .menu-icon { font-size: 26px; }
@@ -79,7 +60,12 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .menu-title { font-size: 15px; font-weight: 600; color: #2c3e50; }
 .menu-sub { font-size: 12px; color: #8892a0; margin-top: 2px; }
 .menu-arrow { color: #c5cbd3; font-size: 20px; }
+
 .btn-primary { width: 100%; padding: 16px; border-radius: 14px; background: #4A6CF7; color: white; border: none; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(74,108,247,0.3); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { background: #c5cbd3; box-shadow: none; cursor: not-allowed; }
+
+/* ─── ФОРМЫ ─── */
 .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .back-btn { width: 40px; height: 40px; border-radius: 12px; background: white; border: none; font-size: 20px; color: #4A6CF7; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .form-header h2 { font-size: 20px; font-weight: 700; }
@@ -110,6 +96,8 @@ textarea { min-height: 60px; resize: vertical; }
 .photo-thumb .remove-photo { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
 input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #fafbfe; border: 1.5px dashed #e6ecff; border-radius: 12px; cursor: pointer; }
 .save-btn { width: 100%; background: #4A6CF7; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; }
+
+/* ─── ЗАПИСИ ─── */
 .record { background: white; padding: 16px; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #4A6CF7; }
 .record.cloud { border-left-color: #27ae60; }
 .record.unsent { border-left-color: #c5cbd3; opacity: 0.85; }
@@ -134,6 +122,8 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .tab { flex: 1; padding: 12px; text-align: center; background: white; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; color: #8892a0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .tab.active { background: #4A6CF7; color: white; }
+
+/* ─── МОДАЛ И ТОСТ ─── */
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal.active { display: flex; }
 .modal-content { background: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
@@ -141,13 +131,49 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .profile-item { padding: 12px 16px; border-radius: 10px; background: #fafbfe; margin-bottom: 8px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
 .profile-item.active { background: #eef2ff; color: #4A6CF7; font-weight: 600; }
 .modal-buttons { display: flex; gap: 8px; margin-top: 16px; }
-.btn-cancel, .btn-ok { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
-.btn-cancel { background: #f0f3f7; color: #6b7684; }
-.btn-ok { background: #4A6CF7; color: white; }
+.btn-cancel { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; background: #f0f3f7; color: #6b7684; }
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2c3e50; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 2000; max-width: 90%; text-align: center; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-/* ═══ СТАТИСТИКА ═══ */
+/* ─── РАСПИСАНИЕ ─── */
+.schedule-block { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px; overflow: hidden; }
+.schedule-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; font-size: 15px; font-weight: 700; user-select: none; }
+.schedule-head .sched-icon { font-size: 22px; }
+.schedule-head .sched-arrow { margin-left: auto; font-size: 14px; color: #8892a0; transition: transform 0.2s; }
+.schedule-block.open .schedule-head .sched-arrow { transform: rotate(180deg); }
+.schedule-body { display: none; padding: 0 14px 12px; }
+.schedule-block.open .schedule-body { display: block; }
+.sched-day { border-top: 1px solid #eef2ff; padding: 10px 0; }
+.sched-day:first-child { border-top: none; }
+.sched-day-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px; cursor: pointer; font-weight: 600; font-size: 13px; color: #4A6CF7; border-radius: 8px; user-select: none; }
+.sched-day-head .sched-count { background: #eef2ff; color: #4A6CF7; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.sched-day-head .sched-arrow2 { margin-left: auto; font-size: 12px; transition: transform 0.2s; }
+.sched-day.open .sched-day-head .sched-arrow2 { transform: rotate(180deg); }
+.sched-day-list { display: none; padding: 6px 0; }
+.sched-day.open .sched-day-list { display: block; }
+.pair-card { background: #fafbfe; border-left: 3px solid #4A6CF7; border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: 13px; }
+.pair-card.past { opacity: 0.55; border-left-color: #c5cbd3; }
+.pair-card.past .pair-title { text-decoration: line-through; }
+.pair-card.nearest { background: #eef2ff; border-left-color: #4A6CF7; box-shadow: 0 0 0 2px rgba(74,108,247,0.15); }
+.pair-title { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 2px; }
+.pair-desc { font-size: 12px; color: #6b7684; }
+.pair-room { color: #4A6CF7; font-weight: 500; }
+.sched-empty { text-align: center; color: #8892a0; font-size: 13px; padding: 14px; }
+
+/* ─── ПРИКАЗЫ ─── */
+.orders-month-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.orders-month-bar label { font-size: 13px; color: #6b7684; font-weight: 600; }
+.orders-month-bar select { flex: 1; padding: 10px 12px; border: 1.5px solid #e6ecff; border-radius: 12px; font-size: 14px; background: white; font-family: inherit; color: #2c3e50; }
+.order-card { background: white; padding: 12px 14px; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border-left: 4px solid #4A6CF7; font-size: 13px; }
+.order-card.past { opacity: 0.55; border-left-color: #c5cbd3; }
+.order-card.past .order-line1 { text-decoration: line-through; }
+.order-line1 { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 6px; }
+.order-line1 .order-time { color: #4A6CF7; }
+.order-line1 .order-group { color: #6b7684; }
+.order-line1 .order-room { color: #27ae60; }
+.order-line2 { font-size: 12px; color: #6b7684; }
+
+/* ─── СТАТИСТИКА ─── */
 .stats-summary { background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; padding: 22px; border-radius: 20px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(74,108,247,0.25); }
 .stats-summary .big { font-size: 40px; font-weight: 800; line-height: 1; }
 .stats-summary .small { font-size: 14px; opacity: 0.9; margin-top: 4px; }
@@ -172,6 +198,9 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭКРАН · ПРИВЕТСТВИЕ / СОЗДАНИЕ ПРОФИЛЯ
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="screen-welcome" class="screen active">
     <div class="welcome-box">
         <div class="logo">📓</div>
@@ -193,6 +222,9 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭКРАН · ГЛАВНЫЙ
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="screen-main" class="screen">
     <div class="profile-card" onclick="showProfileSwitcher()">
         <div class="avatar" id="avatar">?</div>
@@ -225,6 +257,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <span class="send-badge" id="unsent-count">0</span>
     </button>
 
+    <!-- РАСПИСАНИЕ (ЛИСТ 5) -->
     <div class="schedule-block" id="schedule-block">
         <div class="schedule-head" onclick="toggleScheduleBlock()">
             <span class="sched-icon">📅</span>
@@ -232,7 +265,7 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
             <span class="sched-arrow">▼</span>
         </div>
         <div class="schedule-body" id="schedule-body">
-            <div class="sched-empty">Загрузка...</div>
+            <div class="sched-empty">Нажми, чтобы загрузить</div>
         </div>
     </div>
 
@@ -268,12 +301,18 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <button class="btn-primary" onclick="forceUpdate()" style="margin-top:20px;background:white;color:#8892a0;border:2px solid #eef1f5;box-shadow:none;font-size:14px;">🔄 Обновить приложение</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭКРАН · ФОРМА (ЛИСТ 2)
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="screen-form" class="screen">
     <div class="form-header"><button class="back-btn" onclick="cancelForm()">←</button><h2 id="form-title">Заполнение</h2></div>
     <div id="form-content"></div>
     <button class="save-btn" onclick="saveRecord()">💾 Сохранить</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭКРАН · МОИ ЗАПИСИ / ИЗ ПРИКАЗОВ (ЛИСТ 2 + ЛИСТ 5)
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="screen-records" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>Мои записи</h2></div>
     <div class="tabs">
@@ -288,11 +327,17 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <div id="records-list"></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭКРАН · СТАТИСТИКА (ЛИСТ 4)
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="screen-stats" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>📊 Статистика</h2></div>
     <div id="stats-content"></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭКРАН · РЕДАКТИРОВАНИЕ ПРОФИЛЯ (ЛИСТ 3)
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="screen-edit-profile" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>✏️ Редактировать профиль</h2></div>
     <div class="card">
@@ -308,6 +353,9 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     <button class="save-btn" onclick="saveEditedProfile()">💾 Сохранить изменения</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     МОДАЛ + ТОСТ
+     ═══════════════════════════════════════════════════════════════ -->
 <div id="modal-profile" class="modal">
     <div class="modal-content">
         <h3>Профиль</h3>
@@ -319,9 +367,45 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 <div id="toast" class="toast"></div>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ОГЛАВЛЕНИЕ (ищи по этим подписям Ctrl+F)
+
+   ЛИСТ 2 · ЗАПИСИ В БЛОКНОТЕ
+     · Константы (LEVELS, PCK_LIST)
+     · IndexedDB (openDB, saveSetting, getAllRecords…)
+     · Формы: renderEventForm, renderTrainingForm, renderAssessmentForm,
+              renderMethodicalForm, renderActivityForm
+     · Динамика форм: addTeacherRole, addStudentsGroup, addDiploma
+     · Сохранение: saveRecord, editRecord, deleteRecord, compressImage
+     · Список: showLocalRecords, switchRecordsTab
+
+   ЛИСТ 3 · ПРОФИЛЬ И ОБЛАКО
+     · saveProfile, updateProfileUI, showProfileSwitcher, openEditProfile
+     · mergeWithCloud, sendToCloud, loadFromCloud, handleManualUpload
+     · getDataFile, getPhotosFolder, getStatsFolder, ensureFolder
+     · uploadToYandex, downloadJson, buildDataFile
+     · getYear, slug, buildPhotoName, forceUpdate
+
+   ЛИСТ 4 · КРИТЕРИИ И СТАТИСТИКА
+     · const CRITERIA (K1–K15)
+     · showStatistics
+
+   ЛИСТ 5 · РАСПИСАНИЕ И ПРИКАЗЫ
+     · normalizeFio ← ГЛАВНАЯ ФУНКЦИЯ СРАВНЕНИЯ ФИО
+     · renderSchedule, toggleScheduleBlock, toggleScheduleDay
+     · renderOrders, onOrdersMonthChange
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
 const PROXY_URL = 'https://notebook-proxy.relaxdev.ru/?';
+
+/* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 2 · ЗАПИСИ В БЛОКНОТЕ
+   Что тут: константы, IndexedDB, формы, сохранение, редактирование,
+            список записей.
+   Правки: сюда — когда меняешь поля форм или логику сохранения.
+   ═══════════════════════════════════════════════════════════════ */
 
 const LEVELS = [
     'образовательная организация', 'муниципальный', 'городской', 'областной',
@@ -333,147 +417,6 @@ const PCK_LIST = [
     'Материкова А.А.', 'Мурашкина С.В.', 'Трофимова А.М.', 'Усова М.Н.'
 ];
 
-const PAIR_TIMES = [
-    { num: 1, start: 8.0,  end: 9.58 },
-    { num: 2, start: 9.75, end: 11.33 },
-    { num: 3, start: 11.83, end: 13.42 },
-    { num: 4, start: 13.58, end: 15.17 },
-    { num: 5, start: 15.33, end: 16.92 },
-    { num: 6, start: 17.08, end: 18.67 },
-    { num: 7, start: 18.83, end: 20.42 }
-];
-
-/* ═══════════════════════════════════════════════════════════════
-   КРИТЕРИИ СТАТИСТИКИ (K1–K15)
-   Правь здесь: code, name, max, desc, score(records), advice(records)
-   score — функция от массива записей педагога, возвращает число
-   advice — функция, возвращает строку-подсказку
-   ═══════════════════════════════════════════════════════════════ */
-const CRITERIA = [
-    {
-        code: 'K1', name: 'Студенты — участники мероприятий', max: 8,
-        desc: 'За каждое событие, где участвуют студенты (конкурс, олимпиада, фестиваль, Абилимпикс). По 2 балла за событие, максимум 8.',
-        score: r => Math.min(8, r.filter(x => x.type === 'event' && x.hasStudents).length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'event' && x.hasStudents).length; return n >= 4 ? 'Максимум достигнут' : 'Добавь ещё ' + (4 - n) + ' событий со студентами'; }
-    },
-    {
-        code: 'K2', name: 'Победы студентов', max: 10,
-        desc: 'За каждое призовое место студентов (1–3, гран-при). По 2 балла за место, максимум 10.',
-        score: r => {
-            let n = 0;
-            for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length;
-            return Math.min(10, n * 2);
-        },
-        advice: r => {
-            let n = 0;
-            for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length;
-            return n >= 5 ? 'Максимум достигнут' : 'Зафиксируй ещё ' + (5 - n) + ' призовых мест студентов';
-        }
-    },
-    {
-        code: 'K3', name: 'Собственное участие в конкурсах', max: 8,
-        desc: 'За участие педагога в конкурсах, олимпиадах, фестивалях (роль — участник/конкурсант/спикер). 2 балла за событие.',
-        score: r => {
-            let n = 0;
-            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].includes(t.role)) n++;
-            return Math.min(8, n * 2);
-        },
-        advice: r => {
-            let n = 0;
-            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].includes(t.role)) n++;
-            return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' участий';
-        }
-    },
-    {
-        code: 'K4', name: 'Экспертная работа (жюри, судья)', max: 6,
-        desc: 'За работу в жюри, экспертом, судьёй, организатором. 2 балла за событие.',
-        score: r => {
-            let n = 0;
-            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].includes(t.role)) n++;
-            return Math.min(6, n * 2);
-        },
-        advice: r => {
-            let n = 0;
-            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].includes(t.role)) n++;
-            return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' экспертных выходов';
-        }
-    },
-    {
-        code: 'K5', name: 'Повышение квалификации (КПК)', max: 8,
-        desc: 'За каждый пройденный КПК. 2 балла за курс, максимум 8.',
-        score: r => Math.min(8, r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' КПК'; }
-    },
-    {
-        code: 'K6', name: 'Переподготовка / стажировки', max: 6,
-        desc: 'Профессиональная переподготовка, стажировки, магистратура. 3 балла за документ.',
-        score: r => Math.min(6, r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].includes(x.trainingType)).length * 3),
-        advice: r => { const n = r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].includes(x.trainingType)).length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' документа'; }
-    },
-    {
-        code: 'K7', name: 'Публикации', max: 8,
-        desc: 'Методические публикации, статьи. 2 балла за публикацию.',
-        score: r => Math.min(8, r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' публикаций'; }
-    },
-    {
-        code: 'K8', name: 'Методические разработки (УМК, программы)', max: 8,
-        desc: 'УМК, рабочие программы, дидактические материалы, электронные курсы. 2 балла за разработку.',
-        score: r => Math.min(8, r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].includes(x.methodicalType)).length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].includes(x.methodicalType)).length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' разработок'; }
-    },
-    {
-        code: 'K9', name: 'Открытые уроки и мастер-классы', max: 6,
-        desc: 'Открытые уроки и мастер-классы для коллег. 2 балла за мероприятие.',
-        score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].includes(x.activityType)).length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].includes(x.activityType)).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; }
-    },
-    {
-        code: 'K10', name: 'Взаимопосещения', max: 6,
-        desc: 'Посещение уроков коллег и посещение ваших уроков. 1 балл за посещение.',
-        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length),
-        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' посещений'; }
-    },
-    {
-        code: 'K11', name: 'Наставничество', max: 6,
-        desc: 'Работа наставником. 3 балла за программу наставничества.',
-        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length * 3),
-        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' программы'; }
-    },
-    {
-        code: 'K12', name: 'Работа с ОВЗ', max: 5,
-        desc: 'Мероприятия и контроль с участием студентов с ОВЗ. 2 балла за запись.',
-        score: r => {
-            const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length;
-            const b = r.filter(x => x.type === 'assessment' && x.ovz).length;
-            return Math.min(5, (a + b) * 2);
-        },
-        advice: r => {
-            const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length;
-            const b = r.filter(x => x.type === 'assessment' && x.ovz).length;
-            const n = a + b; return n >= 3 ? 'Максимум достигнут' : 'Отметь работу с ОВЗ ещё ' + (3 - n) + ' раз';
-        }
-    },
-    {
-        code: 'K13', name: 'Профориентация', max: 6,
-        desc: 'Профориентационные мероприятия, экскурсии, приглашение специалистов. 2 балла за мероприятие.',
-        score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType)).length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType)).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; }
-    },
-    {
-        code: 'K14', name: 'Контроль знаний', max: 6,
-        desc: 'Входной, срезовые, итоговые контроли и проектная деятельность. 2 балла за мероприятие.',
-        score: r => Math.min(6, r.filter(x => x.type === 'assessment').length * 2),
-        advice: r => { const n = r.filter(x => x.type === 'assessment').length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' контролей'; }
-    },
-    {
-        code: 'K15', name: 'Трансляция опыта (выступления, ПЦК)', max: 6,
-        desc: 'Выступления на педсовете, методсовете, ПЦК, публикации в СМИ. 1 балл за выступление.',
-        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length),
-        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' выступлений'; }
-    }
-];
-
 let profile = null;
 let currentFormType = 'event';
 let currentRecordsTab = 'my';
@@ -482,9 +425,6 @@ let teacherRolesCounter = 0;
 let editingRecordId = null;
 let db = null;
 let formPhotos = [];
-let scheduleCache = null;
-let ordersCache = null;
-let ordersMonthFilter = '__all__';
 
 function levelsSelect(id, selected) {
     return '<select id="' + id + '">' + LEVELS.map(l =>
@@ -493,323 +433,28 @@ function levelsSelect(id, selected) {
     ).join('') + '</select>';
 }
 
-function getDataFile(fio, login) { return ROOT_FOLDER + '/Входящие/' + slug(fio) + '_' + login + '_' + getYear() + '.json'; }
-function getPhotosFolder(fio, login) { return ROOT_FOLDER + '/Входящие/photos/' + slug(fio) + '_' + login; }
-function getStatsFolder(fio, login) { return ROOT_FOLDER + '/Исходящие/' + slug(fio) + '_' + login; }
-function getSchedulePath() { return ROOT_FOLDER + '/Справочники/schedule.json'; }
-function getOrdersPath() { return ROOT_FOLDER + '/Справочники/orders.json'; }
-
-/* ═══════════════════════════════════════════════════════════════
-   ГЛАВНЫЙ ФИКС: НОРМАЛИЗАЦИЯ ФИО
-   "Ватагина Анна Николаевна" → "ватагинаан"
-   "Ватагина А.Н."           → "ватагинаан"
-   "Ватагина А. Н."          → "ватагинаан"
-   "ВАТАГИНА А.Н."           → "ватагинаан"
-   ═══════════════════════════════════════════════════════════════ */
-function normalizeFio(fio) {
-    const raw = String(fio || '').trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
-    if (!raw) return '';
-    const parts = raw.split(' ');
-    if (!parts[0]) return '';
-    let res = parts[0].toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]/g, '');
-    for (let i = 1; i < parts.length; i++) {
-        const p = parts[i].replace(/\./g, '').trim();
-        if (p) res += p[0].toLowerCase().replace(/ё/g, 'е');
-    }
-    return res;
+/* ─── IndexedDB ─── */
+function openDB() {
+    return new Promise((resolve, reject) => {
+        if (db) return resolve(db);
+        const req = indexedDB.open('TeacherNotebook', 2);
+        req.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings');
+            if (!d.objectStoreNames.contains('records')) d.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(db); };
+        req.onerror = () => reject(req.error);
+    });
 }
+async function saveSetting(k, v) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('settings','readwrite'); tx.objectStore('settings').put(v,k); tx.oncomplete = r; }); }
+async function getSetting(k) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('settings','readonly'); const req = tx.objectStore('settings').get(k); req.onsuccess = () => r(req.result); }); }
+async function saveRecordToDB(rec) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').add(rec); tx.oncomplete = r; }); }
+async function getAllRecords() { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readonly'); const req = tx.objectStore('records').getAll(); req.onsuccess = () => r(req.result); }); }
+async function updateRecord(rec) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').put(rec); tx.oncomplete = r; }); }
+async function deleteRecordById(id) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; }); }
 
-function shortFio(fio) {
-    const parts = String(fio || '').trim().split(/\s+/);
-    if (parts.length < 2) return fio || '';
-    let res = parts[0];
-    for (let i = 1; i < parts.length; i++) {
-        if (parts[i]) res += ' ' + parts[i][0].toUpperCase() + '.';
-    }
-    return res;
-}
-
-async function downloadJson(diskPath) {
-    try {
-        const url = PROXY_URL + 'path=' + encodeURIComponent(diskPath) +
-                    '&token=' + encodeURIComponent(YANDEX_TOKEN);
-        const res = await Promise.race([
-            fetch(url),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000))
-        ]);
-        if (!res.ok) return null;
-        const text = await res.text();
-        try { return JSON.parse(text); } catch(e) { return null; }
-    } catch (e) { return null; }
-}
-
-async function loadScheduleCache() {
-    if (scheduleCache) return scheduleCache;
-    const data = await downloadJson(getSchedulePath());
-    scheduleCache = data || { days: [], updated: null };
-    return scheduleCache;
-}
-
-function pairIsPast(pairNum, dateIso) {
-    const info = PAIR_TIMES.find(p => p.num === pairNum);
-    if (!info) return false;
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const pairDate = new Date(dateIso + 'T00:00:00');
-    if (pairDate < today) return true;
-    if (pairDate > today) return false;
-    const nowHours = now.getHours() + now.getMinutes() / 60;
-    return nowHours >= info.end;
-}
-
-function dateRu(dateIso) {
-    try {
-        const d = new Date(dateIso + 'T00:00:00');
-        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-        const dn = ['вс','пн','вт','ср','чт','пт','сб'][d.getDay()];
-        return d.getDate() + ' ' + months[d.getMonth()] + ' (' + dn + ')';
-    } catch(e) { return dateIso; }
-}
-
-async function renderSchedule() {
-    const body = document.getElementById('schedule-body');
-    if (!body) return;
-    body.innerHTML = '<div class="sched-empty">Загрузка...</div>';
-    const data = await loadScheduleCache();
-    if (!data || !data.days || !data.days.length) {
-        body.innerHTML = '<div class="sched-empty">Расписание ещё не загружено</div>';
-        return;
-    }
-    if (!profile || !profile.fio) {
-        body.innerHTML = '<div class="sched-empty">Нет профиля</div>';
-        return;
-    }
-    const key = normalizeFio(profile.fio);
-    const todayIso = new Date().toISOString().slice(0, 10);
-
-    let html = '';
-    let found = false;
-    for (const day of data.days) {
-        const teachers = day.teachers || {};
-        // Ищем совпадение по нормализованному ключу
-        let pairs = null;
-        for (const k of Object.keys(teachers)) {
-            if (normalizeFio(k) === key) { pairs = teachers[k]; break; }
-        }
-        if (!pairs) continue;
-        found = true;
-
-        const isToday = day.date === todayIso;
-        const isTomorrow = !isToday && day.date > todayIso;
-        const dayLabel = (isToday ? 'Сегодня, ' : (isTomorrow ? 'Завтра, ' : '')) + dateRu(day.date);
-        const dayOpen = isToday ? ' open' : '';
-        const count = pairs.length;
-        const countLabel = count === 0 ? 'нет пар' : (count + ' ' + pluralPairs(count));
-
-        let pairsHtml = '';
-        if (pairs.length === 0) {
-            pairsHtml = '<div class="sched-empty">Пар нет</div>';
-        } else {
-            let nearestPair = null;
-            for (const p of pairs) { if (!pairIsPast(p.pair, day.date)) { nearestPair = p; break; } }
-            for (const p of pairs) {
-                const past = pairIsPast(p.pair, day.date);
-                const isNearest = (nearestPair === p);
-                const cls = 'pair-card' + (past ? ' past' : '') + (isNearest ? ' nearest' : '');
-                const timeStr = p.time ? p.time + ' · ' : '';
-                pairsHtml += '<div class="' + cls + '">' +
-                    '<div class="pair-title">' + p.pair + ' пара · ' + timeStr +
-                    (p.group ? p.group : '') + ' · <span class="pair-room">каб. ' + (p.room || '—') + '</span></div>' +
-                    '<div class="pair-desc">' + (p.discipline || '') + '</div>' +
-                    '</div>';
-            }
-        }
-
-        html += '<div class="sched-day' + dayOpen + '" id="sched-day-' + day.date + '">' +
-            '<div class="sched-day-head" onclick="toggleScheduleDay(\'' + day.date + '\')">' +
-                '<span>' + dayLabel + '</span>' +
-                '<span class="sched-count">' + countLabel + '</span>' +
-                '<span class="sched-arrow2">▼</span>' +
-            '</div>' +
-            '<div class="sched-day-list">' + pairsHtml + '</div>' +
-            '</div>';
-    }
-
-    if (!found) {
-        const allKeys = [];
-        for (const day of data.days) {
-            for (const k of Object.keys(day.teachers || {})) {
-                if (allKeys.indexOf(k) === -1) allKeys.push(k);
-            }
-        }
-        const sample = allKeys.slice(0, 8).join('<br>');
-        html = '<div class="sched-empty" style="text-align:left;font-size:12px;">' +
-               'Тебя нет в расписании.<br><br>' +
-               '<b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br>' +
-               '<b>Ключи из файла:</b><br>' + sample +
-               '</div>';
-    }
-    body.innerHTML = html;
-}
-
-function pluralPairs(n) {
-    const n10 = n % 10, n100 = n % 100;
-    if (n10 === 1 && n100 !== 11) return 'пара';
-    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'пары';
-    return 'пар';
-}
-
-async function toggleScheduleBlock() {
-    const block = document.getElementById('schedule-block');
-    const wasOpen = block.classList.contains('open');
-    if (wasOpen) {
-        block.classList.remove('open');
-    } else {
-        block.classList.add('open');
-        await renderSchedule();
-    }
-}
-
-function toggleScheduleDay(dateIso) {
-    const el = document.getElementById('sched-day-' + dateIso);
-    if (el) el.classList.toggle('open');
-}
-
-async function loadOrdersCache(forceReload) {
-    if (ordersCache && !forceReload) return ordersCache;
-    const data = await downloadJson(getOrdersPath());
-    ordersCache = data || { items: [], updated: null };
-    return ordersCache;
-}
-
-function orderIsPast(item) {
-    if (!item.date) return false;
-    const todayIso = new Date().toISOString().slice(0, 10);
-    return item.date < todayIso;
-}
-
-async function renderOrders() {
-    const container = document.getElementById('records-list');
-    if (!container) return;
-    container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка приказов...</p>';
-    const data = await loadOrdersCache();
-    if (!data || !data.items || !data.items.length) {
-        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Приказы ещё не выгружены в облако</p>';
-        return;
-    }
-    if (!profile || !profile.fio) {
-        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Нет профиля</p>';
-        return;
-    }
-    const key = normalizeFio(profile.fio);
-    const mine = data.items.filter(it => normalizeFio(it.teacher || '') === key);
-
-    if (!mine.length) {
-        const allTeachers = [];
-        for (const it of data.items) {
-            const t = it.teacher || '';
-            if (t && allTeachers.indexOf(t) === -1) allTeachers.push(t);
-        }
-        const sample = allTeachers.slice(0, 8).join('<br>');
-        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;font-size:12px;text-align:left;">' +
-            '<b>Тебя нет в приказах.</b><br><br>' +
-            '<b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br>' +
-            '<b>Учителя из файла:</b><br>' + sample +
-            '</p>';
-        return;
-    }
-
-    const monthsMap = new Map();
-    for (const it of mine) {
-        if (!it.date) continue;
-        const key2 = it.date.slice(0, 7);
-        if (!monthsMap.has(key2)) monthsMap.set(key2, []);
-        monthsMap.get(key2).push(it);
-    }
-    const monthKeys = Array.from(monthsMap.keys()).sort();
-
-    let html = '<div class="orders-month-bar">' +
-        '<label>Месяц:</label>' +
-        '<select id="orders-month-select" onchange="onOrdersMonthChange(this.value)">' +
-        '<option value="__all__"' + (ordersMonthFilter === '__all__' ? ' selected' : '') + '>Все</option>' +
-        monthKeys.map(mk => {
-            const label = monthLabel(mk);
-            return '<option value="' + mk + '"' + (ordersMonthFilter === mk ? ' selected' : '') + '>' + label + '</option>';
-        }).join('') +
-        '</select>' +
-        '</div>';
-
-    let list = mine.slice();
-    if (ordersMonthFilter !== '__all__') {
-        list = list.filter(it => (it.date || '').startsWith(ordersMonthFilter));
-    }
-    list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-
-    if (!list.length) {
-        html += '<p style="text-align:center;color:#8892a0;padding:20px;">Нет записей за выбранный месяц</p>';
-    } else {
-        html += list.map(it => {
-            const past = orderIsPast(it);
-            const cls = 'order-card' + (past ? ' past' : '');
-            const d = it.date ? formatDateRu(it.date) : '—';
-            const t = it.time || '';
-            const grp = it.group || '';
-            const room = it.place || '';
-            const student = it.student || '—';
-            return '<div class="' + cls + '">' +
-                '<div class="order-line1">' +
-                    '<span>' + d + '</span>' +
-                    (t ? '<span class="order-time">' + t + '</span>' : '') +
-                    (grp ? '<span class="order-group">' + grp + '</span>' : '') +
-                    (room ? '<span class="order-room">' + room + '</span>' : '') +
-                '</div>' +
-                '<div class="order-line2">' + student + '</div>' +
-                '</div>';
-        }).join('');
-    }
-    container.innerHTML = html;
-}
-
-function monthLabel(mk) {
-    try {
-        const [y, m] = mk.split('-');
-        const names = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
-        return names[parseInt(m, 10) - 1] + ' ' + y;
-    } catch(e) { return mk; }
-}
-
-function formatDateRu(iso) {
-    try {
-        const d = new Date(iso + 'T00:00:00');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        return dd + '.' + mm;
-    } catch(e) { return iso; }
-}
-
-function onOrdersMonthChange(val) {
-    ordersMonthFilter = val;
-    renderOrders();
-}
-
-function switchRecordsTab(tab) {
-    currentRecordsTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab')[tab === 'my' ? 0 : 1].classList.add('active');
-
-    const loadBtn = document.getElementById('load-cloud-btn');
-    const sendBtn = document.getElementById('send-cloud-btn');
-    if (tab === 'my') {
-        if (loadBtn) loadBtn.classList.remove('hidden');
-        if (sendBtn) sendBtn.classList.remove('hidden');
-        showLocalRecords();
-    } else {
-        if (loadBtn) loadBtn.classList.add('hidden');
-        if (sendBtn) sendBtn.classList.add('hidden');
-        renderOrders();
-    }
-}
-
+/* ─── Запуск ─── */
 window.addEventListener('DOMContentLoaded', async () => {
     const pckSelect = document.getElementById('input-pck');
     pckSelect.innerHTML = '<option value="">— выберите —</option>' +
@@ -821,7 +466,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         updateProfileUI();
         showScreen('screen-main');
         updateUnsentCount();
-        loadScheduleCache();
     } else {
         showScreen('screen-welcome');
     }
@@ -851,181 +495,7 @@ async function updateUnsentCount() {
     } catch(e) {}
 }
 
-async function saveProfile() {
-    const fio = document.getElementById('input-fio').value.trim();
-    const login = document.getElementById('input-login').value.trim();
-    const pck = document.getElementById('input-pck').value;
-    const category = document.getElementById('input-category').value;
-    const isClassTeacher = document.getElementById('input-is-class-teacher').checked;
-    const existingProfile = document.getElementById('existing-profile-check').checked;
-
-    if (!fio) { showToast('Введите ФИО'); return; }
-    if (!login || login.length < 3 || !/^[a-zA-Z0-9_.-]+$/.test(login)) { showToast('Логин: латиница, 3+ символа'); return; }
-    if (!pck) { showToast('Выберите ПЦК'); return; }
-    if (!category) { showToast('Выберите категорию'); return; }
-
-    showToast('⏳ Проверяем облако...');
-
-    let cloudData = null;
-    let downloadFailed = false;
-    try {
-        cloudData = await Promise.race([
-            downloadJson(getDataFile(fio, login)),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
-        ]);
-    } catch (e) { downloadFailed = true; }
-
-    if (cloudData && cloudData.profile) {
-        const total = (cloudData.events||[]).length + (cloudData.trainings||[]).length +
-            (cloudData.assessments||[]).length + (cloudData.methodical||[]).length +
-            (cloudData.activity||[]).length;
-        const isThisYou = confirm(
-            'В облаке найдены данные:\n\n' +
-            'ФИО: ' + (cloudData.profile.fio || '—') + '\n' +
-            'ПЦК: ' + (cloudData.profile.pck || '—') + '\n' +
-            'Категория: ' + (cloudData.profile.category || '—') + '\n' +
-            'Записей: ' + total + '\n\nЭто вы?'
-        );
-        if (!isThisYou) { showToast('Смените логин или ФИО'); return; }
-
-        profile = cloudData.profile;
-        profile.isClassTeacher = profile.isClassTeacher || false;
-        await saveSetting('profile', profile);
-        updateProfileUI();
-        showScreen('screen-main');
-        const merged = await mergeWithCloud();
-        updateUnsentCount();
-        showToast('Записей из облака: +' + merged.added);
-        return;
-    }
-
-    if (existingProfile) {
-        alert('Не удалось загрузить данные из облака. Проверьте интернет или снимите галочку «У меня уже есть профиль».');
-        return;
-    }
-
-    profile = { fio, login, pck, category, isClassTeacher, year: getYear(), createdAt: new Date().toISOString() };
-    await saveSetting('profile', profile);
-    updateProfileUI();
-    showScreen('screen-main');
-    showToast('Профиль создан');
-}
-
-function updateProfileUI() {
-    const initials = profile.fio.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
-    document.getElementById('avatar').textContent = initials || '?';
-    document.getElementById('teacher-display').textContent = profile.fio;
-    let sub = profile.category + ' • ПЦК: ' + profile.pck;
-    if (profile.isClassTeacher) sub += ' • 👨‍🏫 Классный руководитель';
-    document.getElementById('teacher-sub').textContent = sub;
-}
-
-function showProfileSwitcher() {
-    document.getElementById('modal-profile').classList.add('active');
-    document.getElementById('profiles-list').innerHTML =
-        '<div class="profile-item active"><span>' + profile.fio + '</span><span>✓</span></div>' +
-        '<div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>' +
-        '<div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>';
-}
-function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
-async function resetProfile() {
-    if (!confirm('Сбросить профиль на этом устройстве?')) return;
-    await saveSetting('profile', null);
-    profile = null; closeModal(); location.reload();
-}
-function openEditProfile() {
-    closeModal();
-    document.getElementById('edit-fio').value = profile.fio;
-    document.getElementById('edit-login').value = profile.login;
-    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' +
-        PCK_LIST.map(p => '<option value="' + p + '"' + (p === profile.pck ? ' selected' : '') + '>' + p + '</option>').join('');
-    document.getElementById('edit-category').value = profile.category;
-    document.getElementById('edit-is-class-teacher').checked = profile.isClassTeacher || false;
-    showScreen('screen-edit-profile');
-}
-async function saveEditedProfile() {
-    const newFio = document.getElementById('edit-fio').value.trim();
-    const newLogin = document.getElementById('edit-login').value.trim();
-    const newPck = document.getElementById('edit-pck').value;
-    const newCategory = document.getElementById('edit-category').value;
-    const newIsClassTeacher = document.getElementById('edit-is-class-teacher').checked;
-    if (!newFio || !newLogin || !newPck || !newCategory) { showToast('Заполните все поля'); return; }
-    if (!/^[a-zA-Z0-9_.-]+$/.test(newLogin) || newLogin.length < 3) { showToast('Логин: латиница, 3+ символа'); return; }
-    const oldFio = profile.fio;
-    const oldLogin = profile.login;
-    if (oldFio !== newFio || oldLogin !== newLogin) {
-        if (!confirm('Файлы в облаке будут переименованы. Продолжить?')) return;
-        try {
-            await fetch('https://cloud-api.yandex.net/v1/disk/resources/move?from=' +
-                encodeURIComponent(getDataFile(oldFio, oldLogin)) +
-                '&path=' + encodeURIComponent(getDataFile(newFio, newLogin)) + '&overwrite=true',
-                { method: 'POST', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
-        } catch (e) {}
-    }
-    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory, isClassTeacher: newIsClassTeacher, year: getYear(), createdAt: profile.createdAt };
-    await saveSetting('profile', profile);
-    const records = await getAllRecords();
-    for (const r of records) {
-        if (r.teacher === oldFio) { r.teacher = newFio; r.teacherLogin = newLogin; r.pck = newPck; await updateRecord(r); }
-    }
-    updateProfileUI();
-    showToast('✅ Профиль обновлён');
-    backToMain();
-}
-
-async function mergeWithCloud() {
-    if (!profile) return { added: 0, updated: 0 };
-    const data = await downloadJson(getDataFile(profile.fio, profile.login));
-    if (!data) return { added: 0, updated: 0 };
-
-    const cloudRecords = [];
-    for (const key of ['events','trainings','assessments','methodical','activity']) {
-        if (data[key] && Array.isArray(data[key])) cloudRecords.push.apply(cloudRecords, data[key]);
-    }
-
-    const localRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-    const localByKey = new Map();
-    for (const r of localRecords) {
-        const k = recordKey(r);
-        if (k) localByKey.set(k, r);
-    }
-
-    let added = 0, updated = 0;
-    for (const cloud of cloudRecords) {
-        const key = recordKey(cloud);
-        if (!key) continue;
-        const local = localByKey.get(key);
-        if (!local) {
-            cloud.teacher = profile.fio;
-            cloud.teacherLogin = profile.login;
-            cloud.pck = profile.pck;
-            cloud.sent = true; cloud.photoUploaded = true; cloud.photosUploaded = true; cloud.fromCloud = true;
-            if (!cloud.uid) cloud.uid = key;
-            await saveRecordToDB(cloud);
-            added++;
-        } else {
-            const ct = new Date(cloud.updatedAt || cloud.createdAt).getTime();
-            const lt = new Date(local.updatedAt || local.createdAt).getTime();
-            if (ct > lt) {
-                const merged = Object.assign({}, cloud, {
-                    id: local.id, teacher: profile.fio, teacherLogin: profile.login,
-                    pck: profile.pck, sent: true, photoUploaded: true, photosUploaded: true, fromCloud: true
-                });
-                if (!merged.uid) merged.uid = local.uid || key;
-                await updateRecord(merged);
-                updated++;
-            }
-        }
-    }
-    return { added, updated };
-}
-
-function recordKey(r) {
-    if (r.uid) return r.uid;
-    if (r.createdAt) return 'c:' + r.createdAt;
-    return null;
-}
-
+/* ─── Открытие форм ─── */
 function openForm(type) {
     editingRecordId = null;
     currentFormType = type;
@@ -1113,7 +583,7 @@ function renderTrainingForm() {
         '<div class="form-group"><label>Дата получения документа</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото документа</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
+    '<div class="card"><h3>Фото документа <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderAssessmentForm() {
     return '<div class="card"><h3>Контроль</h3>' +
@@ -1146,12 +616,12 @@ function renderMethodicalForm() {
         '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
         '<div class="form-group"><label>Роль</label><select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option><option value="разработчик">Разработчик</option></select></div>' +
-        '<div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="опробирован">Опробирован</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>' +
+        '<div class="form-group"><label>Статус</label><select id="f-status"><option value="разработан">Разработан</option><option value="прошёл экспертизу">Прошёл экспертизу</option><option value="утверждён">Утверждён</option></select></div>' +
         '<div class="form-group"><label>Уровень</label>' + levelsSelect('f-level') + '</div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
+    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderActivityForm() {
     return '<div class="card"><h3>Трансляция и активность</h3>' +
@@ -1171,7 +641,7 @@ function renderActivityForm() {
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>' +
-    '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
+    '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 
 function toggleCustom(selectId, groupId) {
@@ -1256,26 +726,7 @@ function addDiploma(groupId, data) {
         '</div>');
 }
 
-function openDB() {
-    return new Promise((resolve, reject) => {
-        if (db) return resolve(db);
-        const req = indexedDB.open('TeacherNotebook', 2);
-        req.onupgradeneeded = (e) => {
-            const d = e.target.result;
-            if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings');
-            if (!d.objectStoreNames.contains('records')) d.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
-        };
-        req.onsuccess = e => { db = e.target.result; resolve(db); };
-        req.onerror = () => reject(req.error);
-    });
-}
-async function saveSetting(k, v) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('settings','readwrite'); tx.objectStore('settings').put(v,k); tx.oncomplete = r; }); }
-async function getSetting(k) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('settings','readonly'); const req = tx.objectStore('settings').get(k); req.onsuccess = () => r(req.result); }); }
-async function saveRecordToDB(rec) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').add(rec); tx.oncomplete = r; }); }
-async function getAllRecords() { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readonly'); const req = tx.objectStore('records').getAll(); req.onsuccess = () => r(req.result); }); }
-async function updateRecord(rec) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').put(rec); tx.oncomplete = r; }); }
-async function deleteRecordById(id) { const d = await openDB(); return new Promise(r => { const tx = d.transaction('records','readwrite'); tx.objectStore('records').delete(id); tx.oncomplete = r; }); }
-
+/* ─── Сохранение записи ─── */
 async function saveRecord() {
     try {
         const type = currentFormType;
@@ -1316,7 +767,6 @@ async function saveRecord() {
             record.place = getVal('f-place');
             record.hasTeacher = getCheck('f-has-teacher');
             record.hasStudents = getCheck('f-has-students');
-
             if (record.hasTeacher) {
                 const rolesBlocks = document.querySelectorAll('#f-roles-container .sub-block');
                 record.teacherRoles = [];
@@ -1508,6 +958,25 @@ async function addPhotoToRecord(id) {
     input.click();
 }
 
+/* ─── Список записей ─── */
+function switchRecordsTab(tab) {
+    currentRecordsTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[tab === 'my' ? 0 : 1].classList.add('active');
+
+    const loadBtn = document.getElementById('load-cloud-btn');
+    const sendBtn = document.getElementById('send-cloud-btn');
+    if (tab === 'my') {
+        if (loadBtn) loadBtn.classList.remove('hidden');
+        if (sendBtn) sendBtn.classList.remove('hidden');
+        showLocalRecords();
+    } else {
+        if (loadBtn) loadBtn.classList.add('hidden');
+        if (sendBtn) sendBtn.classList.add('hidden');
+        renderOrders();
+    }
+}
+
 async function showLocalRecords() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
     const filtered = records.filter(r => currentRecordsTab === 'my' ? (r.source !== 'order') : (r.source === 'order'));
@@ -1557,6 +1026,191 @@ async function deleteRecord(id) {
     await deleteRecordById(id);
     showToast('🗑 Удалено');
     showLocalRecords();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 3 · ПРОФИЛЬ И ОБЛАКО
+   Что тут: вход, редактирование профиля, отправка/загрузка в облако,
+            слияние, ручная загрузка, путь к файлам.
+   ═══════════════════════════════════════════════════════════════ */
+
+function getDataFile(fio, login) { return ROOT_FOLDER + '/Входящие/' + slug(fio) + '_' + login + '_' + getYear() + '.json'; }
+function getPhotosFolder(fio, login) { return ROOT_FOLDER + '/Входящие/photos/' + slug(fio) + '_' + login; }
+function getStatsFolder(fio, login) { return ROOT_FOLDER + '/Исходящие/' + slug(fio) + '_' + login; }
+
+async function saveProfile() {
+    const fio = document.getElementById('input-fio').value.trim();
+    const login = document.getElementById('input-login').value.trim();
+    const pck = document.getElementById('input-pck').value;
+    const category = document.getElementById('input-category').value;
+    const isClassTeacher = document.getElementById('input-is-class-teacher').checked;
+    const existingProfile = document.getElementById('existing-profile-check').checked;
+
+    if (!fio) { showToast('Введите ФИО'); return; }
+    if (!login || login.length < 3 || !/^[a-zA-Z0-9_.-]+$/.test(login)) { showToast('Логин: латиница, 3+ символа'); return; }
+    if (!pck) { showToast('Выберите ПЦК'); return; }
+    if (!category) { showToast('Выберите категорию'); return; }
+
+    showToast('⏳ Проверяем облако...');
+
+    let cloudData = null;
+    let downloadFailed = false;
+    try {
+        cloudData = await Promise.race([
+            downloadJson(getDataFile(fio, login)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
+        ]);
+    } catch (e) { downloadFailed = true; }
+
+    if (cloudData && cloudData.profile) {
+        const total = (cloudData.events||[]).length + (cloudData.trainings||[]).length +
+            (cloudData.assessments||[]).length + (cloudData.methodical||[]).length +
+            (cloudData.activity||[]).length;
+        const isThisYou = confirm(
+            'В облаке найдены данные:\n\n' +
+            'ФИО: ' + (cloudData.profile.fio || '—') + '\n' +
+            'ПЦК: ' + (cloudData.profile.pck || '—') + '\n' +
+            'Категория: ' + (cloudData.profile.category || '—') + '\n' +
+            'Записей: ' + total + '\n\nЭто вы?'
+        );
+        if (!isThisYou) { showToast('Смените логин или ФИО'); return; }
+
+        profile = cloudData.profile;
+        profile.isClassTeacher = profile.isClassTeacher || false;
+        await saveSetting('profile', profile);
+        updateProfileUI();
+        showScreen('screen-main');
+        const merged = await mergeWithCloud();
+        updateUnsentCount();
+        showToast('Записей из облака: +' + merged.added);
+        return;
+    }
+
+    if (existingProfile) {
+        alert('Не удалось загрузить данные из облака. Проверьте интернет или снимите галочку «У меня уже есть профиль».');
+        return;
+    }
+
+    profile = { fio, login, pck, category, isClassTeacher, year: getYear(), createdAt: new Date().toISOString() };
+    await saveSetting('profile', profile);
+    updateProfileUI();
+    showScreen('screen-main');
+    showToast('Профиль создан');
+}
+
+function updateProfileUI() {
+    const initials = profile.fio.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+    document.getElementById('avatar').textContent = initials || '?';
+    document.getElementById('teacher-display').textContent = profile.fio;
+    let sub = profile.category + ' • ПЦК: ' + profile.pck;
+    if (profile.isClassTeacher) sub += ' • 👨‍🏫 Классный руководитель';
+    document.getElementById('teacher-sub').textContent = sub;
+}
+
+function showProfileSwitcher() {
+    document.getElementById('modal-profile').classList.add('active');
+    document.getElementById('profiles-list').innerHTML =
+        '<div class="profile-item active"><span>' + profile.fio + '</span><span>✓</span></div>' +
+        '<div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>' +
+        '<div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>';
+}
+function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
+async function resetProfile() {
+    if (!confirm('Сбросить профиль на этом устройстве?')) return;
+    await saveSetting('profile', null);
+    profile = null; closeModal(); location.reload();
+}
+function openEditProfile() {
+    closeModal();
+    document.getElementById('edit-fio').value = profile.fio;
+    document.getElementById('edit-login').value = profile.login;
+    document.getElementById('edit-pck').innerHTML = '<option value="">— выберите —</option>' +
+        PCK_LIST.map(p => '<option value="' + p + '"' + (p === profile.pck ? ' selected' : '') + '>' + p + '</option>').join('');
+    document.getElementById('edit-category').value = profile.category;
+    document.getElementById('edit-is-class-teacher').checked = profile.isClassTeacher || false;
+    showScreen('screen-edit-profile');
+}
+async function saveEditedProfile() {
+    const newFio = document.getElementById('edit-fio').value.trim();
+    const newLogin = document.getElementById('edit-login').value.trim();
+    const newPck = document.getElementById('edit-pck').value;
+    const newCategory = document.getElementById('edit-category').value;
+    const newIsClassTeacher = document.getElementById('edit-is-class-teacher').checked;
+    if (!newFio || !newLogin || !newPck || !newCategory) { showToast('Заполните все поля'); return; }
+    if (!/^[a-zA-Z0-9_.-]+$/.test(newLogin) || newLogin.length < 3) { showToast('Логин: латиница, 3+ символа'); return; }
+    const oldFio = profile.fio;
+    const oldLogin = profile.login;
+    if (oldFio !== newFio || oldLogin !== newLogin) {
+        if (!confirm('Файлы в облаке будут переименованы. Продолжить?')) return;
+        try {
+            await fetch('https://cloud-api.yandex.net/v1/disk/resources/move?from=' +
+                encodeURIComponent(getDataFile(oldFio, oldLogin)) +
+                '&path=' + encodeURIComponent(getDataFile(newFio, newLogin)) + '&overwrite=true',
+                { method: 'POST', headers: { 'Authorization': 'OAuth ' + YANDEX_TOKEN } });
+        } catch (e) {}
+    }
+    profile = { fio: newFio, login: newLogin, pck: newPck, category: newCategory, isClassTeacher: newIsClassTeacher, year: getYear(), createdAt: profile.createdAt };
+    await saveSetting('profile', profile);
+    const records = await getAllRecords();
+    for (const r of records) {
+        if (r.teacher === oldFio) { r.teacher = newFio; r.teacherLogin = newLogin; r.pck = newPck; await updateRecord(r); }
+    }
+    updateProfileUI();
+    showToast('✅ Профиль обновлён');
+    backToMain();
+}
+
+async function mergeWithCloud() {
+    if (!profile) return { added: 0, updated: 0 };
+    const data = await downloadJson(getDataFile(profile.fio, profile.login));
+    if (!data) return { added: 0, updated: 0 };
+
+    const cloudRecords = [];
+    for (const key of ['events','trainings','assessments','methodical','activity']) {
+        if (data[key] && Array.isArray(data[key])) cloudRecords.push.apply(cloudRecords, data[key]);
+    }
+
+    const localRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+    const localByKey = new Map();
+    for (const r of localRecords) {
+        const k = recordKey(r);
+        if (k) localByKey.set(k, r);
+    }
+
+    let added = 0, updated = 0;
+    for (const cloud of cloudRecords) {
+        const key = recordKey(cloud);
+        if (!key) continue;
+        const local = localByKey.get(key);
+        if (!local) {
+            cloud.teacher = profile.fio;
+            cloud.teacherLogin = profile.login;
+            cloud.pck = profile.pck;
+            cloud.sent = true; cloud.photoUploaded = true; cloud.photosUploaded = true; cloud.fromCloud = true;
+            if (!cloud.uid) cloud.uid = key;
+            await saveRecordToDB(cloud);
+            added++;
+        } else {
+            const ct = new Date(cloud.updatedAt || cloud.createdAt).getTime();
+            const lt = new Date(local.updatedAt || local.createdAt).getTime();
+            if (ct > lt) {
+                const merged = Object.assign({}, cloud, {
+                    id: local.id, teacher: profile.fio, teacherLogin: profile.login,
+                    pck: profile.pck, sent: true, photoUploaded: true, photosUploaded: true, fromCloud: true
+                });
+                if (!merged.uid) merged.uid = local.uid || key;
+                await updateRecord(merged);
+                updated++;
+            }
+        }
+    }
+    return { added, updated };
+}
+
+function recordKey(r) {
+    if (r.uid) return r.uid;
+    if (r.createdAt) return 'c:' + r.createdAt;
+    return null;
 }
 
 function handleManualUpload(event) {
@@ -1664,7 +1318,7 @@ async function sendToCloud() {
     if (mainBadge) mainBadge.style.display = 'none';
 
     try {
-        const merged = await mergeWithCloud();
+        await mergeWithCloud();
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
         if (allRecords.length === 0) {
             showToast('Нет данных для отправки');
@@ -1712,99 +1366,6 @@ async function sendToCloud() {
     if (document.getElementById('screen-records').classList.contains('active')) showLocalRecords();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   СТАТИСТИКА — сводная таблица по критериям
-   ═══════════════════════════════════════════════════════════════ */
-function critColor(score, max) {
-    if (score <= 0) return 'zero';
-    if (score >= max) return 'done';
-    return 'partial';
-}
-function critBarColor(score, max) {
-    if (score <= 0) return '#e74c3c';
-    if (score >= max) return '#27ae60';
-    return '#f39c12';
-}
-
-async function showStatistics() {
-    const btn = document.getElementById('stats-btn');
-    if (btn) btn.disabled = true;
-    showScreen('screen-stats');
-    const c = document.getElementById('stats-content');
-    c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
-
-    // Локальный расчёт по критериям
-    const myRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
-
-    let cloudStats = null;
-    try {
-        cloudStats = await downloadJson(getStatsFolder(profile.fio, profile.login) + '/statistics.json');
-    } catch(e) {}
-
-    // Считаем по каждому критерию
-    const rows = CRITERIA.map(cr => {
-        let score = 0;
-        try { score = cr.score(myRecords) || 0; } catch(e) { score = 0; }
-        if (score > cr.max) score = cr.max;
-        let advice = '';
-        try { advice = cr.advice(myRecords) || ''; } catch(e) {}
-        return { cr, score, advice };
-    });
-
-    const totalLocal = rows.reduce((s, r) => s + r.score, 0);
-    const totalMax = rows.reduce((s, r) => s + r.cr.max, 0);
-
-    const total = (cloudStats && typeof cloudStats.total === 'number') ? cloudStats.total : totalLocal;
-    const totalMaxCloud = (cloudStats && typeof cloudStats.total_max === 'number') ? cloudStats.total_max : totalMax;
-    const percent = totalMaxCloud > 0 ? Math.round(total * 100 / totalMaxCloud) : 0;
-
-    let html = '';
-
-    // Сводка сверху
-    html += '<div class="stats-summary">' +
-        '<div class="big">' + total + ' <span style="font-size:20px;font-weight:600;opacity:0.85;">/ ' + totalMaxCloud + '</span></div>' +
-        '<div class="small">' + (cloudStats ? 'По данным облака' : 'Предварительный расчёт по записям') + '</div>' +
-        '<div class="bar"><div style="width:' + percent + '%"></div></div>' +
-        '<div class="bar-label">' + percent + '% от максимума</div>' +
-        '</div>';
-
-    if (cloudStats && cloudStats.updated) {
-        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">Обновлено в облаке: ' + new Date(cloudStats.updated).toLocaleString('ru-RU') + '</p>';
-    } else {
-        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">⚠️ Расчёт предварительный. Точные баллы появятся после обработки в облаке.</p>';
-    }
-
-    html += '<h3 style="font-size:15px;font-weight:700;margin:18px 4px 10px;">Детализация по критериям</h3>';
-
-    // Сортируем: сначала "недобрал", потом "сделано"
-    rows.sort((a, b) => {
-        const ra = a.score / a.cr.max;
-        const rb = b.score / b.cr.max;
-        return ra - rb;
-    });
-
-    for (const r of rows) {
-        const cls = critColor(r.score, r.cr.max);
-        const barColor = critBarColor(r.score, r.cr.max);
-        const w = r.cr.max > 0 ? Math.round(r.score * 100 / r.cr.max) : 0;
-        const adviceCls = r.score >= r.cr.max ? 'crit-advice ok' : 'crit-advice';
-        const adviceText = r.advice || (r.score >= r.cr.max ? 'Максимум достигнут' : 'Добавь записи по этому критерию');
-        html += '<div class="crit-card ' + cls + '">' +
-            '<div class="crit-head">' +
-                '<span class="crit-code">' + r.cr.code + '</span>' +
-                '<span class="crit-name">' + r.cr.name + '</span>' +
-                '<span class="crit-score">' + r.score + ' <small>/ ' + r.cr.max + '</small></span>' +
-            '</div>' +
-            '<div class="crit-desc">' + r.cr.desc + '</div>' +
-            '<div class="crit-bar"><div style="width:' + w + '%;background:' + barColor + ';"></div></div>' +
-            '<div class="' + adviceCls + '">💡 ' + adviceText + '</div>' +
-            '</div>';
-    }
-
-    c.innerHTML = html;
-    if (btn) btn.disabled = false;
-}
-
 function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
 function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
 function buildPhotoName(record, idx, total) {
@@ -1838,6 +1399,20 @@ async function uploadBlobToYandex(diskPath, blob) {
     if (!put.ok && put.status !== 201) throw new Error('Upload ' + put.status);
 }
 
+async function downloadJson(diskPath) {
+    try {
+        const url = PROXY_URL + 'path=' + encodeURIComponent(diskPath) +
+                    '&token=' + encodeURIComponent(YANDEX_TOKEN);
+        const res = await Promise.race([
+            fetch(url),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000))
+        ]);
+        if (!res.ok) return null;
+        const text = await res.text();
+        try { return JSON.parse(text); } catch(e) { return null; }
+    } catch (e) { return null; }
+}
+
 async function buildDataFile() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
     const clean = r => { const c = Object.assign({}, r); delete c.photo; delete c.photos; delete c._photoBackup; return c; };
@@ -1869,6 +1444,540 @@ async function forceUpdate() {
     } catch (e) { alert('Ошибка: ' + e.message); }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 4 · КРИТЕРИИ И СТАТИСТИКА
+   Что тут: константа CRITERIA (K1–K15) и функция showStatistics.
+   Правки: сюда — когда меняешь правила начисления баллов.
+   ═══════════════════════════════════════════════════════════════ */
+
+const CRITERIA = [
+    {
+        code: 'K1', name: 'Студенты — участники мероприятий', max: 8,
+        desc: 'За каждое событие, где участвуют студенты (конкурс, олимпиада, фестиваль, Абилимпикс). По 2 балла за событие.',
+        score: r => Math.min(8, r.filter(x => x.type === 'event' && x.hasStudents).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'event' && x.hasStudents).length; return n >= 4 ? 'Максимум достигнут' : 'Добавь ещё ' + (4 - n) + ' событий со студентами'; }
+    },
+    {
+        code: 'K2', name: 'Победы студентов', max: 10,
+        desc: 'За каждое призовое место студентов (1–3, гран-при). По 2 балла за место.',
+        score: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length;
+            return Math.min(10, n * 2);
+        },
+        advice: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length;
+            return n >= 5 ? 'Максимум достигнут' : 'Зафиксируй ещё ' + (5 - n) + ' призовых мест студентов';
+        }
+    },
+    {
+        code: 'K3', name: 'Собственное участие в конкурсах', max: 8,
+        desc: 'За участие педагога в конкурсах, олимпиадах, фестивалях (роль — участник/конкурсант/спикер). 2 балла за событие.',
+        score: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].indexOf(t.role) !== -1) n++;
+            return Math.min(8, n * 2);
+        },
+        advice: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].indexOf(t.role) !== -1) n++;
+            return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' участий';
+        }
+    },
+    {
+        code: 'K4', name: 'Экспертная работа (жюри, судья)', max: 6,
+        desc: 'За работу в жюри, экспертом, судьёй, организатором. 2 балла за событие.',
+        score: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].indexOf(t.role) !== -1) n++;
+            return Math.min(6, n * 2);
+        },
+        advice: r => {
+            let n = 0;
+            for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].indexOf(t.role) !== -1) n++;
+            return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' экспертных выходов';
+        }
+    },
+    {
+        code: 'K5', name: 'Повышение квалификации (КПК)', max: 8,
+        desc: 'За каждый пройденный КПК. 2 балла за курс.',
+        score: r => Math.min(8, r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' КПК'; }
+    },
+    {
+        code: 'K6', name: 'Переподготовка / стажировки', max: 6,
+        desc: 'Профессиональная переподготовка, стажировки, магистратура. 3 балла за документ.',
+        score: r => Math.min(6, r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].indexOf(x.trainingType) !== -1).length * 3),
+        advice: r => { const n = r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].indexOf(x.trainingType) !== -1).length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' документа'; }
+    },
+    {
+        code: 'K7', name: 'Публикации', max: 8,
+        desc: 'Методические публикации, статьи. 2 балла за публикацию.',
+        score: r => Math.min(8, r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' публикаций'; }
+    },
+    {
+        code: 'K8', name: 'Методические разработки (УМК, программы)', max: 8,
+        desc: 'УМК, рабочие программы, дидактические материалы, электронные курсы. 2 балла за разработку.',
+        score: r => Math.min(8, r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].indexOf(x.methodicalType) !== -1).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].indexOf(x.methodicalType) !== -1).length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' разработок'; }
+    },
+    {
+        code: 'K9', name: 'Открытые уроки и мастер-классы', max: 6,
+        desc: 'Открытые уроки и мастер-классы для коллег. 2 балла за мероприятие.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].indexOf(x.activityType) !== -1).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].indexOf(x.activityType) !== -1).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; }
+    },
+    {
+        code: 'K10', name: 'Взаимопосещения', max: 6,
+        desc: 'Посещение уроков коллег и посещение ваших уроков. 1 балл за посещение.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' посещений'; }
+    },
+    {
+        code: 'K11', name: 'Наставничество', max: 6,
+        desc: 'Работа наставником. 3 балла за программу наставничества.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length * 3),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' программы'; }
+    },
+    {
+        code: 'K12', name: 'Работа с ОВЗ', max: 5,
+        desc: 'Мероприятия и контроль с участием студентов с ОВЗ. 2 балла за запись.',
+        score: r => {
+            const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length;
+            const b = r.filter(x => x.type === 'assessment' && x.ovz).length;
+            return Math.min(5, (a + b) * 2);
+        },
+        advice: r => {
+            const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length;
+            const b = r.filter(x => x.type === 'assessment' && x.ovz).length;
+            const n = a + b; return n >= 3 ? 'Максимум достигнут' : 'Отметь работу с ОВЗ ещё ' + (3 - n) + ' раз';
+        }
+    },
+    {
+        code: 'K13', name: 'Профориентация', max: 6,
+        desc: 'Профориентационные мероприятия, экскурсии, приглашение специалистов. 2 балла за мероприятие.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].indexOf(x.activityType) !== -1).length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].indexOf(x.activityType) !== -1).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; }
+    },
+    {
+        code: 'K14', name: 'Контроль знаний', max: 6,
+        desc: 'Входной, срезовые, итоговые контроли и проектная деятельность. 2 балла за мероприятие.',
+        score: r => Math.min(6, r.filter(x => x.type === 'assessment').length * 2),
+        advice: r => { const n = r.filter(x => x.type === 'assessment').length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' контролей'; }
+    },
+    {
+        code: 'K15', name: 'Трансляция опыта', max: 6,
+        desc: 'Выступления на педсовете, методсовете, ПЦК, работа в органах самоуправления. 1 балл за выступление.',
+        score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length),
+        advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' выступлений'; }
+    }
+];
+
+function critColor(score, max) {
+    if (score <= 0) return 'zero';
+    if (score >= max) return 'done';
+    return 'partial';
+}
+function critBarColor(score, max) {
+    if (score <= 0) return '#e74c3c';
+    if (score >= max) return '#27ae60';
+    return '#f39c12';
+}
+
+async function showStatistics() {
+    const btn = document.getElementById('stats-btn');
+    if (btn) btn.disabled = true;
+    showScreen('screen-stats');
+    const c = document.getElementById('stats-content');
+    c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
+
+    const myRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
+
+    let cloudStats = null;
+    try {
+        cloudStats = await downloadJson(getStatsFolder(profile.fio, profile.login) + '/statistics.json');
+    } catch(e) {}
+
+    const rows = CRITERIA.map(cr => {
+        let score = 0;
+        try { score = cr.score(myRecords) || 0; } catch(e) { score = 0; }
+        if (score > cr.max) score = cr.max;
+        let advice = '';
+        try { advice = cr.advice(myRecords) || ''; } catch(e) {}
+        return { cr, score, advice };
+    });
+
+    const totalLocal = rows.reduce((s, r) => s + r.score, 0);
+    const totalMax = rows.reduce((s, r) => s + r.cr.max, 0);
+
+    const total = (cloudStats && typeof cloudStats.total === 'number') ? cloudStats.total : totalLocal;
+    const totalMaxCloud = (cloudStats && typeof cloudStats.total_max === 'number') ? cloudStats.total_max : totalMax;
+    const percent = totalMaxCloud > 0 ? Math.round(total * 100 / totalMaxCloud) : 0;
+
+    let html = '';
+
+    html += '<div class="stats-summary">' +
+        '<div class="big">' + total + ' <span style="font-size:20px;font-weight:600;opacity:0.85;">/ ' + totalMaxCloud + '</span></div>' +
+        '<div class="small">' + (cloudStats ? 'По данным облака' : 'Предварительный расчёт по записям') + '</div>' +
+        '<div class="bar"><div style="width:' + percent + '%"></div></div>' +
+        '<div class="bar-label">' + percent + '% от максимума</div>' +
+        '</div>';
+
+    if (cloudStats && cloudStats.updated) {
+        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">Обновлено в облаке: ' + new Date(cloudStats.updated).toLocaleString('ru-RU') + '</p>';
+    } else {
+        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">⚠️ Расчёт предварительный. Точные баллы появятся после обработки в облаке.</p>';
+    }
+
+    html += '<h3 style="font-size:15px;font-weight:700;margin:18px 4px 10px;">Детализация по критериям</h3>';
+
+    // Сортируем: сначала где меньше набрано
+    rows.sort((a, b) => (a.score / a.cr.max) - (b.score / b.cr.max));
+
+    for (const r of rows) {
+        const cls = critColor(r.score, r.cr.max);
+        const barColor = critBarColor(r.score, r.cr.max);
+        const w = r.cr.max > 0 ? Math.round(r.score * 100 / r.cr.max) : 0;
+        const adviceCls = r.score >= r.cr.max ? 'crit-advice ok' : 'crit-advice';
+        const adviceText = r.advice || (r.score >= r.cr.max ? 'Максимум достигнут' : 'Добавь записи по этому критерию');
+        html += '<div class="crit-card ' + cls + '">' +
+            '<div class="crit-head">' +
+                '<span class="crit-code">' + r.cr.code + '</span>' +
+                '<span class="crit-name">' + r.cr.name + '</span>' +
+                '<span class="crit-score">' + r.score + ' <small>/ ' + r.cr.max + '</small></span>' +
+            '</div>' +
+            '<div class="crit-desc">' + r.cr.desc + '</div>' +
+            '<div class="crit-bar"><div style="width:' + w + '%;background:' + barColor + ';"></div></div>' +
+            '<div class="' + adviceCls + '">💡 ' + adviceText + '</div>' +
+            '</div>';
+    }
+
+    c.innerHTML = html;
+    if (btn) btn.disabled = false;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 5 · РАСПИСАНИЕ И ПРИКАЗЫ
+   Что тут: сравнение ФИО, загрузка расписания и приказов,
+            их отображение.
+   Главное: normalizeFio — если что-то не находится, смотри сюда.
+   ═══════════════════════════════════════════════════════════════ */
+
+const PAIR_TIMES = [
+    { num: 1, start: 8.0,  end: 9.58 },
+    { num: 2, start: 9.75, end: 11.33 },
+    { num: 3, start: 11.83, end: 13.42 },
+    { num: 4, start: 13.58, end: 15.17 },
+    { num: 5, start: 15.33, end: 16.92 },
+    { num: 6, start: 17.08, end: 18.67 },
+    { num: 7, start: 18.83, end: 20.42 }
+];
+
+let scheduleCache = null;
+let ordersCache = null;
+let ordersMonthFilter = '__all__';
+
+function getSchedulePath() { return ROOT_FOLDER + '/Справочники/schedule.json'; }
+function getOrdersPath() { return ROOT_FOLDER + '/Справочники/orders.json'; }
+
+/* ─── ГЛАВНАЯ ФУНКЦИЯ СРАВНЕНИЯ ФИО ───
+   "Ватагина Анна Николаевна" → ватагинаан
+   "Ватагина А.Н."           → ватагинаан
+   "Ватагина А. Н."          → ватагинаан
+   "ВАТАГИНА А.Н."           → ватагинаан
+   Работает для всех форматов ФИО в расписании и приказах.
+   ─────────────────────────────────────── */
+function normalizeFio(fio) {
+    const raw = String(fio || '').trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
+    if (!raw) return '';
+    const parts = raw.split(' ');
+    if (!parts[0]) return '';
+    let res = parts[0].toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]/g, '');
+    for (let i = 1; i < parts.length; i++) {
+        const p = parts[i].trim();
+        if (!p) continue;
+        if (p.indexOf('.') !== -1) {
+            const inits = p.split('.').map(x => x.trim()).filter(x => x);
+            for (const ini of inits) {
+                if (ini) res += ini[0].toLowerCase().replace(/ё/g, 'е');
+            }
+        } else {
+            res += p[0].toLowerCase().replace(/ё/g, 'е');
+        }
+    }
+    return res;
+}
+
+function shortFio(fio) {
+    const parts = String(fio || '').trim().split(/\s+/);
+    if (parts.length < 2) return fio || '';
+    let res = parts[0];
+    for (let i = 1; i < parts.length; i++) {
+        if (parts[i]) res += ' ' + parts[i][0].toUpperCase() + '.';
+    }
+    return res;
+}
+
+/* ─── РАСПИСАНИЕ ─── */
+async function loadScheduleCache() {
+    if (scheduleCache) return scheduleCache;
+    const data = await downloadJson(getSchedulePath());
+    scheduleCache = data || { days: [], updated: null };
+    return scheduleCache;
+}
+
+function pairIsPast(pairNum, dateIso) {
+    const info = PAIR_TIMES.find(p => p.num === pairNum);
+    if (!info) return false;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const pairDate = new Date(dateIso + 'T00:00:00');
+    if (pairDate < today) return true;
+    if (pairDate > today) return false;
+    const nowHours = now.getHours() + now.getMinutes() / 60;
+    return nowHours >= info.end;
+}
+
+function dateRu(dateIso) {
+    try {
+        const d = new Date(dateIso + 'T00:00:00');
+        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+        const dn = ['вс','пн','вт','ср','чт','пт','сб'][d.getDay()];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' (' + dn + ')';
+    } catch(e) { return dateIso; }
+}
+
+function pluralPairs(n) {
+    const n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return 'пара';
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'пары';
+    return 'пар';
+}
+
+async function renderSchedule() {
+    const body = document.getElementById('schedule-body');
+    if (!body) return;
+    body.innerHTML = '<div class="sched-empty">Загрузка...</div>';
+    const data = await loadScheduleCache();
+    if (!data || !data.days || !data.days.length) {
+        body.innerHTML = '<div class="sched-empty">Расписание ещё не загружено</div>';
+        return;
+    }
+    if (!profile || !profile.fio) {
+        body.innerHTML = '<div class="sched-empty">Нет профиля</div>';
+        return;
+    }
+    const key = normalizeFio(profile.fio);
+    const todayIso = new Date().toISOString().slice(0, 10);
+
+    let html = '';
+    let found = false;
+    for (const day of data.days) {
+        const teachers = day.teachers || {};
+        let pairs = null;
+        for (const k of Object.keys(teachers)) {
+            if (normalizeFio(k) === key) { pairs = teachers[k]; break; }
+        }
+        if (!pairs) continue;
+        found = true;
+
+        const isToday = day.date === todayIso;
+        const isTomorrow = !isToday && day.date > todayIso;
+        const dayLabel = (isToday ? 'Сегодня, ' : (isTomorrow ? 'Завтра, ' : '')) + dateRu(day.date);
+        const dayOpen = isToday ? ' open' : '';
+        const count = pairs.length;
+        const countLabel = count === 0 ? 'нет пар' : (count + ' ' + pluralPairs(count));
+
+        let pairsHtml = '';
+        if (pairs.length === 0) {
+            pairsHtml = '<div class="sched-empty">Пар нет</div>';
+        } else {
+            let nearestPair = null;
+            for (const p of pairs) { if (!pairIsPast(p.pair, day.date)) { nearestPair = p; break; } }
+            for (const p of pairs) {
+                const past = pairIsPast(p.pair, day.date);
+                const isNearest = (nearestPair === p);
+                const cls = 'pair-card' + (past ? ' past' : '') + (isNearest ? ' nearest' : '');
+                const timeStr = p.time ? p.time + ' · ' : '';
+                pairsHtml += '<div class="' + cls + '">' +
+                    '<div class="pair-title">' + p.pair + ' пара · ' + timeStr +
+                    (p.group ? p.group : '') + ' · <span class="pair-room">каб. ' + (p.room || '—') + '</span></div>' +
+                    '<div class="pair-desc">' + (p.discipline || '') + '</div>' +
+                    '</div>';
+            }
+        }
+
+        html += '<div class="sched-day' + dayOpen + '" id="sched-day-' + day.date + '">' +
+            '<div class="sched-day-head" onclick="toggleScheduleDay(\'' + day.date + '\')">' +
+                '<span>' + dayLabel + '</span>' +
+                '<span class="sched-count">' + countLabel + '</span>' +
+                '<span class="sched-arrow2">▼</span>' +
+            '</div>' +
+            '<div class="sched-day-list">' + pairsHtml + '</div>' +
+            '</div>';
+    }
+
+    if (!found) {
+        const allKeys = [];
+        for (const day of data.days) {
+            for (const k of Object.keys(day.teachers || {})) {
+                if (allKeys.indexOf(k) === -1) allKeys.push(k);
+            }
+        }
+        // Ищем всех, у кого первые буквы фамилии совпадают с нашими (диагностика)
+        const mySurname = key.slice(0, 5);
+        const similar = allKeys.filter(k => normalizeFio(k).indexOf(mySurname) === 0);
+        const sample = (similar.length ? similar : allKeys.slice(0, 15)).join('<br>');
+        html = '<div class="sched-empty" style="text-align:left;font-size:12px;">' +
+               'Тебя нет в расписании.<br><br>' +
+               '<b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br>' +
+               '<b>Похожие ключи из файла:</b><br>' + sample +
+               '</div>';
+    }
+    body.innerHTML = html;
+}
+
+async function toggleScheduleBlock() {
+    const block = document.getElementById('schedule-block');
+    const wasOpen = block.classList.contains('open');
+    if (wasOpen) {
+        block.classList.remove('open');
+    } else {
+        block.classList.add('open');
+        await renderSchedule();
+    }
+}
+
+function toggleScheduleDay(dateIso) {
+    const el = document.getElementById('sched-day-' + dateIso);
+    if (el) el.classList.toggle('open');
+}
+
+/* ─── ПРИКАЗЫ ─── */
+async function loadOrdersCache(forceReload) {
+    if (ordersCache && !forceReload) return ordersCache;
+    const data = await downloadJson(getOrdersPath());
+    ordersCache = data || { items: [], updated: null };
+    return ordersCache;
+}
+
+function orderIsPast(item) {
+    if (!item.date) return false;
+    const todayIso = new Date().toISOString().slice(0, 10);
+    return item.date < todayIso;
+}
+
+function monthLabel(mk) {
+    try {
+        const parts = mk.split('-');
+        const y = parts[0];
+        const m = parseInt(parts[1], 10);
+        const names = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+        return names[m - 1] + ' ' + y;
+    } catch(e) { return mk; }
+}
+
+function formatDateRu(iso) {
+    try {
+        const d = new Date(iso + 'T00:00:00');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        return dd + '.' + mm;
+    } catch(e) { return iso; }
+}
+
+function onOrdersMonthChange(val) {
+    ordersMonthFilter = val;
+    renderOrders();
+}
+
+async function renderOrders() {
+    const container = document.getElementById('records-list');
+    if (!container) return;
+    container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка приказов...</p>';
+    const data = await loadOrdersCache();
+    if (!data || !data.items || !data.items.length) {
+        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Приказы ещё не выгружены в облако</p>';
+        return;
+    }
+    if (!profile || !profile.fio) {
+        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Нет профиля</p>';
+        return;
+    }
+    const key = normalizeFio(profile.fio);
+    const mine = data.items.filter(it => normalizeFio(it.teacher || '') === key);
+
+    if (!mine.length) {
+        const allTeachers = [];
+        for (const it of data.items) {
+            const t = it.teacher || '';
+            if (t && allTeachers.indexOf(t) === -1) allTeachers.push(t);
+        }
+        const mySurname = key.slice(0, 5);
+        const similar = allTeachers.filter(t => normalizeFio(t).indexOf(mySurname) === 0);
+        const sample = (similar.length ? similar : allTeachers.slice(0, 15)).join('<br>');
+        container.innerHTML = '<p style="color:#8892a0;padding:20px;font-size:12px;text-align:left;">' +
+            '<b>Тебя нет в приказах.</b><br><br>' +
+            '<b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br>' +
+            '<b>Похожие из файла:</b><br>' + sample +
+            '</p>';
+        return;
+    }
+
+    const monthsMap = new Map();
+    for (const it of mine) {
+        if (!it.date) continue;
+        const key2 = it.date.slice(0, 7);
+        if (!monthsMap.has(key2)) monthsMap.set(key2, []);
+        monthsMap.get(key2).push(it);
+    }
+    const monthKeys = Array.from(monthsMap.keys()).sort();
+
+    let html = '<div class="orders-month-bar">' +
+        '<label>Месяц:</label>' +
+        '<select id="orders-month-select" onchange="onOrdersMonthChange(this.value)">' +
+        '<option value="__all__"' + (ordersMonthFilter === '__all__' ? ' selected' : '') + '>Все</option>' +
+        monthKeys.map(mk => {
+            const label = monthLabel(mk);
+            return '<option value="' + mk + '"' + (ordersMonthFilter === mk ? ' selected' : '') + '>' + label + '</option>';
+        }).join('') +
+        '</select>' +
+        '</div>';
+
+    let list = mine.slice();
+    if (ordersMonthFilter !== '__all__') {
+        list = list.filter(it => (it.date || '').startsWith(ordersMonthFilter));
+    }
+    list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+    if (!list.length) {
+        html += '<p style="text-align:center;color:#8892a0;padding:20px;">Нет записей за выбранный месяц</p>';
+    } else {
+        html += list.map(it => {
+            const past = orderIsPast(it);
+            const cls = 'order-card' + (past ? ' past' : '');
+            const d = it.date ? formatDateRu(it.date) : '—';
+            const t = it.time || '';
+            const grp = it.group || '';
+            const room = it.place || '';
+            const student = it.student || '—';
+            return '<div class="' + cls + '">' +
+                '<div class="order-line1">' +
+                    '<span>' + d + '</span>' +
+                    (t ? '<span class="order-time">' + t + '</span>' : '') +
+                    (grp ? '<span class="order-group">' + grp + '</span>' : '') +
+                    (room ? '<span class="order-room">' + room + '</span>' : '') +
+                '</div>' +
+                '<div class="order-line2">' + student + '</div>' +
+                '</div>';
+        }).join('');
+    }
+    container.innerHTML = html;
+}
+
+/* ─── Тост ─── */
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
