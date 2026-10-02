@@ -184,17 +184,22 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         </div>
     </div>
 
-    <div class="quick-actions">
-        <button class="quick-btn" onclick="showLocalRecords()">
-            <span class="quick-icon">📋</span>
-            <span class="quick-label">Мои записи</span>
-        </button>
-        <button class="quick-btn" onclick="showStatistics()" id="stats-btn">
-            <span class="quick-icon">📊</span>
-            <span class="quick-label">Статистика</span>
-        </button>
-    </div>
-
+   <div class="quick-actions">
+    <button class="quick-btn" onclick="showLocalRecords()">
+        <div class="quick-icon">📋</div>
+        <div class="quick-text">
+            <div class="quick-label">Мои записи</div>
+            <div class="quick-sub">События и приказы</div>
+        </div>
+    </button>
+    <button class="quick-btn" onclick="showStatistics()" id="stats-btn">
+        <div class="quick-icon">📊</div>
+        <div class="quick-text">
+            <div class="quick-label">Статистика</div>
+            <div class="quick-sub">Баллы и отчёты</div>
+        </div>
+    </button>
+</div>
     <h1>📓 Блокнот педагога</h1>
     <p class="subtitle">Выберите раздел</p>
 
