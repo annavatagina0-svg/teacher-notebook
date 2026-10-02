@@ -470,11 +470,20 @@ async function renderSchedule() {
     }
 
     if (!found) {
-        html = '<div class="sched-empty">Ты не найдена в расписании</div>';
+    // Диагностика: покажем наш ключ и ключи из файла
+    const allKeys = [];
+    for (const day of data.days) {
+        for (const k of Object.keys(day.teachers || {})) {
+            if (allKeys.indexOf(k) === -1) allKeys.push(k);
+        }
     }
-    body.innerHTML = html;
+    const sample = allKeys.slice(0, 5).join('<br>');
+    html = '<div class="sched-empty">' +
+           'Тебя нет в расписании.<br><br>' +
+           '<b>Твой ключ:</b><br>' + key + '<br><br>' +
+           '<b>Примеры ключей из файла:</b><br>' + sample +
+           '</div>';
 }
-
 function pluralPairs(n) {
     const n10 = n % 10, n100 = n % 100;
     if (n10 === 1 && n100 !== 11) return 'пара';
@@ -529,9 +538,19 @@ async function renderOrders() {
     const mine = data.items.filter(it => shortFio(it.teacher || '') === key);
 
     if (!mine.length) {
-        container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">В приказах тебя нет</p>';
-        return;
+    const allTeachers = [];
+    for (const it of data.items) {
+        const t = it.teacher || '';
+        if (t && allTeachers.indexOf(t) === -1) allTeachers.push(t);
     }
+    const sample = allTeachers.slice(0, 5).join('<br>');
+    container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;font-size:14px;">' +
+        'Тебя нет в приказах.<br><br>' +
+        '<b>Твой ключ:</b><br>' + key + '<br><br>' +
+        '<b>Учителя из файла:</b><br>' + sample +
+        '</p>';
+    return;
+}
 
     // Группируем по месяцам
     const monthsMap = new Map(); // '2026-10' → [items]
