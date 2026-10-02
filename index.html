@@ -130,8 +130,21 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
             <div class="profile-hint" id="teacher-sub">—</div>
         </div>
     </div>
+
+    <div class="quick-actions">
+        <button class="quick-btn" onclick="showLocalRecords()">
+            <span class="quick-icon">📋</span>
+            <span class="quick-label">Мои записи</span>
+        </button>
+        <button class="quick-btn" onclick="showStatistics()" id="stats-btn">
+            <span class="quick-icon">📊</span>
+            <span class="quick-label">Статистика</span>
+        </button>
+    </div>
+
     <h1>📓 Блокнот педагога</h1>
     <p class="subtitle">Выберите раздел</p>
+
     <button class="menu-btn" onclick="openForm('event')">
         <span class="menu-icon">🏆</span>
         <div class="menu-text"><div class="menu-title">События</div><div class="menu-sub">Конкурсы, олимпиады, фестивали, Абилимпикс</div></div>
@@ -157,11 +170,8 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
         <div class="menu-text"><div class="menu-title">Трансляция и активность</div><div class="menu-sub">Уроки, выступления, выходы, профориентация</div></div>
         <span class="menu-arrow">→</span>
     </button>
-    <div class="row" style="margin-top:20px;">
-        <button class="btn" onclick="showLocalRecords()">📋 Мои записи</button>
-    </div>
-    <button class="btn-primary" onclick="showStatistics()" id="stats-btn" style="margin-top:10px;background:white;color:#4A6CF7;border:2px solid #e6ecff;box-shadow:none;">📊 Обновить статистику</button>
-    <button class="btn-primary" onclick="forceUpdate()" style="margin-top:10px;background:white;color:#8892a0;border:2px solid #eef1f5;box-shadow:none;font-size:14px;">🔄 Обновить приложение</button>
+
+    <button class="btn-primary" onclick="forceUpdate()" style="margin-top:20px;background:white;color:#8892a0;border:2px solid #eef1f5;box-shadow:none;font-size:14px;">🔄 Обновить приложение</button>
 </div>
 
 <div id="screen-form" class="screen">
