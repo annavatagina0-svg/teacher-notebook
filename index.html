@@ -1197,60 +1197,74 @@ async function loadFromCloud() {
 }
 
 // ═══ ОТПРАВКА В ОБЛАКО ═══
+// ═══ ОТПРАВКА В ОБЛАКО ═══
 async function sendToCloud() {
     const btn = document.getElementById('send-cloud-btn');
     const mainBtn = document.getElementById('main-send-btn');
+    const mainIcon = document.getElementById('main-send-icon');
+    const mainText = document.getElementById('main-send-text');
+    const mainBadge = document.getElementById('unsent-count');
+
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка...'; }
     if (mainBtn) { mainBtn.disabled = true; }
+    if (mainIcon) mainIcon.textContent = '⏳';
+    if (mainText) mainText.textContent = 'Отправляем...';
+    if (mainBadge) mainBadge.style.display = 'none';
+
     try {
         const merged = await mergeWithCloud();
         const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+
         if (allRecords.length === 0) {
             showToast('Нет данных для отправки');
-            if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
-            if (mainBtn) { mainBtn.disabled = false; }
-            return;
-        }
+        } else {
+            await ensureFolder(ROOT_FOLDER);
+            await ensureFolder(ROOT_FOLDER + '/Входящие');
+            await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
+            await ensureFolder(getPhotosFolder(profile.fio, profile.login));
 
-        await ensureFolder(ROOT_FOLDER);
-        await ensureFolder(ROOT_FOLDER + '/Входящие');
-        await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
-        await ensureFolder(getPhotosFolder(profile.fio, profile.login));
-
-        for (const record of allRecords) {
-            if (!record.photos) record.photos = record.photo ? [record.photo] : [];
-            if (record.photos.length && !record.photosUploaded) {
-                try {
-                    const filenames = [];
-                    for (let i = 0; i < record.photos.length; i++) {
-                        const filename = buildPhotoName(record, i, record.photos.length);
-                        const blob = await (await fetch(record.photos[i])).blob();
-                        await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
-                        filenames.push(filename);
-                    }
-                    record.photoFilenames = filenames;
-                    record.photosUploaded = true;
-                    delete record.photo;
-                    delete record.photos;
-                    await updateRecord(record);
-                } catch (e) { console.error('photo upload error', e); }
+            for (const record of allRecords) {
+                if (!record.photos) record.photos = record.photo ? [record.photo] : [];
+                if (record.photos.length && !record.photosUploaded) {
+                    try {
+                        const filenames = [];
+                        for (let i = 0; i < record.photos.length; i++) {
+                            const filename = buildPhotoName(record, i, record.photos.length);
+                            const blob = await (await fetch(record.photos[i])).blob();
+                            await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
+                            filenames.push(filename);
+                        }
+                        record.photoFilenames = filenames;
+                        record.photosUploaded = true;
+                        delete record.photo;
+                        delete record.photos;
+                        await updateRecord(record);
+                    } catch (e) { console.error('photo upload error', e); }
+                }
             }
+
+            const data = await buildDataFile();
+            const dataFile = getDataFile(profile.fio, profile.login);
+            await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
+
+            for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
+            showToast('✅ Отправлено: ' + allRecords.length + ' (из облака: +' + merged.added + ')');
         }
-
-        const data = await buildDataFile();
-        const dataFile = getDataFile(profile.fio, profile.login);
-        await uploadToYandex(dataFile, JSON.stringify(data, null, 2));
-
-        for (const r of allRecords) { if (!r.sent) { r.sent = true; await updateRecord(r); } }
-        showToast('✅ Отправлено: ' + allRecords.length + ' (из облака: +' + merged.added + ')');
-        updateUnsentCount();
-        showLocalRecords();
     } catch (e) {
         console.error(e);
         alert('Ошибка: ' + e.message);
     }
+
+    // Восстановление кнопок — выполняется в любом случае
     if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в облако'; }
     if (mainBtn) { mainBtn.disabled = false; }
+    if (mainIcon) mainIcon.textContent = '📤';
+    if (mainText) mainText.textContent = 'Отправить в облако';
+    if (mainBadge) mainBadge.style.display = '';
+    updateUnsentCount();
+    if (document.getElementById('screen-records').classList.contains('active')) {
+        showLocalRecords();
+    }
 }
 
 // ═══ СТАТИСТИКА ═══
