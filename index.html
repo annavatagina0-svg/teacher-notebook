@@ -1740,30 +1740,20 @@ function pluralPairs(n) {
     return 'пар';
 }
 
+/* ─── Смена режима поиска (перерисовывает целиком) ─── */
 function setSearchMode(mode) {
     scheduleSearchMode = mode;
-    if (mode === 'teacher') scheduleSearchQuery = '';
-    else scheduleSearchQuery = '';
-    // обновляем инпут
-    const inp = document.getElementById('sched-search-input');
-    if (inp) {
-        inp.placeholder = mode === 'teacher' ? 'Фамилия (ваша или другого преподавателя)' :
-                          mode === 'group' ? 'Например: АЭ-11' : 'Например: 305';
-        inp.value = scheduleSearchQuery;
-    }
-    // перерисовать табы
-    document.querySelectorAll('.search-tab').forEach((t, i) => {
-        const modes = ['teacher','group','room'];
-        t.classList.toggle('active', modes[i] === mode);
-    });
+    scheduleSearchQuery = '';
     renderSchedule();
 }
 
+/* ─── Ввод в поле поиска (перерисовывает ТОЛЬКО список дней) ─── */
 function onSearchInput(val) {
     scheduleSearchQuery = val;
-    renderSchedule();
+    renderScheduleListOnly(scheduleCache);
 }
 
+/* ─── Полная отрисовка: шапка с поиском + контейнер для дней ─── */
 async function renderSchedule() {
     const body = document.getElementById('schedule-body');
     if (!body) return;
@@ -1778,40 +1768,39 @@ async function renderSchedule() {
         return;
     }
 
-    const todayIso = new Date().toISOString().slice(0, 10);
-
-    // HTML поиска
-    let searchHtml = '<div class="search-tabs">' +
+    let searchHtml = '<div id="sched-search-shell">';
+    searchHtml += '<div class="search-tabs">' +
         '<div class="search-tab ' + (scheduleSearchMode==='teacher' ? 'active' : '') + '" onclick="setSearchMode(\'teacher\')">👤 Преподаватель</div>' +
         '<div class="search-tab ' + (scheduleSearchMode==='group' ? 'active' : '') + '" onclick="setSearchMode(\'group\')">👥 Группа</div>' +
         '<div class="search-tab ' + (scheduleSearchMode==='room' ? 'active' : '') + '" onclick="setSearchMode(\'room\')">🚪 Кабинет</div>' +
         '</div>';
-    if (scheduleSearchMode !== 'teacher') {
-        const ph = scheduleSearchMode === 'group' ? 'Например: АЭ-11' : 'Например: 305';
-        searchHtml += '<div class="search-input-wrap"><input type="text" id="sched-search-input" placeholder="' + ph + '" value="' + (scheduleSearchQuery || '') + '" oninput="onSearchInput(this.value)"></div>';
-    } else {
-        // для преподавателя — тоже покажем поле (можно искать другого)
-        searchHtml += '<div class="search-input-wrap"><input type="text" id="sched-search-input" placeholder="Фамилия (по умолчанию — ваша)" value="' + (scheduleSearchQuery || '') + '" oninput="onSearchInput(this.value)"></div>';
-    }
+    const ph = scheduleSearchMode === 'group' ? 'Например: АЭ-11' :
+               scheduleSearchMode === 'room' ? 'Например: 305' :
+               'Фамилия (по умолчанию — ваша)';
+    searchHtml += '<div class="search-input-wrap">' +
+        '<input type="text" id="sched-search-input" placeholder="' + ph + '" value="' + (scheduleSearchQuery || '') + '" oninput="onSearchInput(this.value)">' +
+        '</div>';
+    searchHtml += '</div>';
 
-    // Логика поиска
-    let query = scheduleSearchQuery.trim();
+    body.innerHTML = searchHtml + '<div id="sched-days-list"></div>';
+    renderScheduleListOnly(data);
+}
+
+/* ─── Отрисовка только списка дней (инпут не трогается) ─── */
+function renderScheduleListOnly(data) {
+    const container = document.getElementById('sched-days-list');
+    if (!container) return;
+    if (!data) data = scheduleCache;
+    if (!data || !data.days) { container.innerHTML = ''; return; }
+
+    const todayIso = new Date().toISOString().slice(0, 10);
+
+    let query = (scheduleSearchQuery || '').trim();
     if (scheduleSearchMode === 'teacher' && !query) query = profile.fio;
-    if (scheduleSearchMode === 'teacher') {
-        // сравнение по фамилии, начинающейся с запроса
-        // если запрос пустой — берём весь профиль
-    }
     const nq = scheduleSearchMode === 'teacher' ? normalizeFio(query) :
-               scheduleSearchMode === 'group' ? query.toLowerCase().replace(/\s+/g,'') :
                query.toLowerCase().replace(/\s+/g,'');
 
-    // Для преподавателя — сравнение по префиксу
-    const matchesTeacher = (teacherKey) => {
-        const nk = normalizeFio(teacherKey);
-        return nk.indexOf(nq) === 0 || nk === nq;
-    };
-
-    let html = searchHtml;
+    let html = '';
     let found = false;
 
     for (const day of data.days) {
@@ -1823,12 +1812,13 @@ async function renderSchedule() {
                 let match = false;
                 if (scheduleSearchMode === 'teacher') {
                     if (!nq) continue;
-                    match = matchesTeacher(tKey);
+                    const nk = normalizeFio(tKey);
+                    match = nk.indexOf(nq) === 0 || nk === nq;
                 } else if (scheduleSearchMode === 'group') {
-                    if (!nq) { match = false; }
+                    if (!nq) match = false;
                     else match = (p.group || '').toLowerCase().replace(/\s+/g,'').indexOf(nq) !== -1;
                 } else {
-                    if (!nq) { match = false; }
+                    if (!nq) match = false;
                     else match = (p.room || '').toLowerCase().replace(/\s+/g,'').indexOf(nq) !== -1;
                 }
                 if (match) pairs.push({ pair: p, teacher: tKey });
@@ -1876,12 +1866,12 @@ async function renderSchedule() {
 
     if (!found) {
         if (!nq && scheduleSearchMode !== 'teacher') {
-            html += '<div class="sched-empty">Введите ' + (scheduleSearchMode==='group'?'группу':'кабинет') + '</div>';
+            html = '<div class="sched-empty">Введите ' + (scheduleSearchMode==='group'?'группу':'кабинет') + '</div>';
         } else {
-            html += '<div class="sched-empty">Ничего не найдено</div>';
+            html = '<div class="sched-empty">Ничего не найдено</div>';
         }
     }
-    body.innerHTML = html;
+    container.innerHTML = html;
 }
 
 async function toggleScheduleBlock() {
@@ -2007,6 +1997,7 @@ async function renderOrders() {
     container.innerHTML = html;
 }
 
+    
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 6 · МЕРОПРИЯТИЯ (CSV)
    Файл: Справочники/events.csv
