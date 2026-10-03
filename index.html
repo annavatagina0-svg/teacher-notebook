@@ -751,7 +751,7 @@ function renderMethodicalForm() {
 }
 function renderActivityForm() {
     return '<div class="card"><h3>Трансляция и активность</h3>' +
-        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')">' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="onActivityTypeChange()">' +
             '<option value="открытый урок">Открытый урок</option><option value="мастер-класс">Мастер-класс</option>' +
             '<option value="выступление на педсовете">Выступление на педсовете</option><option value="выступление на методсовете">Выступление на методсовете</option>' +
             '<option value="выступление на ПЦК">Выступление на ПЦК</option><option value="взаимопосещение (свой)">Взаимопосещение — я посетил</option>' +
@@ -759,7 +759,12 @@ function renderActivityForm() {
             '<option value="наставничество">Наставничество</option><option value="органы самоуправления">Работа в органах самоуправления</option>' +
             '<option value="кино/театр/выставка">Кино / Театр / Выставка</option><option value="экскурсия">Экскурсия</option>' +
             '<option value="приглашение специалиста">Приглашение специалиста</option><option value="профориентация">Профориентация</option>' +
-            '<option value="работа с ОВЗ">Работа с ОВЗ</option><option value="другое">Другое</option>' +
+            '<option value="работа с ОВЗ">Работа с ОВЗ</option><option value="неделя ПЦК">Неделя ПЦК</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group hidden" id="f-ict-group"><label class="toggle"><input type="checkbox" id="f-ict"> Открытый урок с использованием ИКТ</label></div>' +
+        '<div class="form-group hidden" id="f-role-pck-group"><label>Роль в неделе ПЦК</label><select id="f-role-pck">' +
+            '<option value="участник">Участник (разовые поручения)</option>' +
+            '<option value="организатор">Организатор мероприятия</option>' +
         '</select></div>' +
         '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Название / тема *</label><input type="text" id="f-name"></div>' +
@@ -769,7 +774,15 @@ function renderActivityForm() {
     '</div>' +
     '<div class="card"><h3>Фото <span style="font-size:11px;color:#8892a0;font-weight:400;">(можно несколько)</span></h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
-
+function onActivityTypeChange() {
+    const v = document.getElementById('f-type').value;
+    const ictGroup = document.getElementById('f-ict-group');
+    const roleGroup = document.getElementById('f-role-pck-group');
+    if (ictGroup) ictGroup.classList.toggle('hidden', v !== 'открытый урок');
+    if (roleGroup) roleGroup.classList.toggle('hidden', v !== 'неделя ПЦК');
+    toggleCustom('f-type', 'f-type-custom-group');
+}
+   
 function toggleCustom(selectId, groupId) {
     const sel = document.getElementById(selectId);
     const grp = document.getElementById(groupId);
@@ -933,11 +946,13 @@ async function saveRecord() {
             record.level = getVal('f-level');
             if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         } else if (type === 'activity') {
-            record.activityType = getVal('f-type');
-            if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
-            record.level = getVal('f-level');
-            if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
-        }
+    record.activityType = getVal('f-type');
+    if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
+    record.level = getVal('f-level');
+    if (record.activityType === 'открытый урок') record.withICT = getCheck('f-ict');
+    if (record.activityType === 'неделя ПЦК') record.rolePCK = getVal('f-role-pck') || 'участник';
+    if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
+}
         if (editingRecordId) {
             record.sent = false; record.fromCloud = false;
             await updateRecord(record);
@@ -1020,10 +1035,16 @@ async function editRecord(id) {
             if (rec.methodicalType === 'другое') { set('f-type-custom', rec.methodicalTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
             set('f-role', rec.role); set('f-status', rec.status); set('f-level', rec.level);
         } else if (rec.type === 'activity') {
-            set('f-type', rec.activityType);
-            if (rec.activityType === 'другое') { set('f-type-custom', rec.activityTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
-            set('f-level', rec.level);
-        }
+    set('f-type', rec.activityType);
+    if (rec.activityType === 'другое') { set('f-type-custom', rec.activityTypeCustom); document.getElementById('f-type-custom-group').classList.remove('hidden'); }
+    set('f-level', rec.level);
+    onActivityTypeChange();
+    if (rec.activityType === 'открытый урок') setC('f-ict', rec.withICT);
+    if (rec.activityType === 'неделя ПЦК') {
+        const rp = document.getElementById('f-role-pck');
+        if (rp) rp.value = rec.rolePCK || 'участник';
+    }
+}
     }, 50);
     showScreen('screen-form');
 }
@@ -1095,9 +1116,13 @@ async function showLocalRecords() {
                 title = icon + ' ' + r.name; const t = r.methodicalType === 'другое' && r.methodicalTypeCustom ? r.methodicalTypeCustom : r.methodicalType;
                 body = '<p>' + [t, r.role, r.status, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             } else if (r.type === 'activity') {
-                title = icon + ' ' + r.name; const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
-                body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
-            }
+    title = icon + ' ' + r.name; const t = r.activityType === 'другое' && r.activityTypeCustom ? r.activityTypeCustom : r.activityType;
+    const extraTags = [];
+    if (r.withICT) extraTags.push('<span class="tag" style="background:#e0f2fe;color:#0369a1;">💻 с ИКТ</span>');
+    if (r.rolePCK === 'организатор') extraTags.push('<span class="tag" style="background:#e8f8ee;color:#1e8449;">🎯 организатор</span>');
+    if (r.rolePCK === 'участник') extraTags.push('<span class="tag" style="background:#f0f3f7;color:#6b7684;">👤 участник</span>');
+    body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + extraTags.join('') + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
+}
             let cls = 'record';
             if (r.fromCloud) cls += ' cloud'; else if (!r.sent) cls += ' unsent';
             return '<div class="' + cls + '"><div class="record-header"><h3>' + title + '</h3><div class="record-actions">' + photoBtn + editBtn + delBtn + '</div></div>' + body + '</div>';
