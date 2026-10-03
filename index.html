@@ -1637,133 +1637,142 @@ const CRITERIA = [
         advice: s => s >= 4 ? 'Максимум достигнут' : 'Довести долю «4» и «5» выше 81%'
     },
     {
-        code: 5, name: 'Участие обучающихся в олимпиадах, конкурсах', max: 8, type: 'auto',
-        desc: 'База — за сам факт участия. Бонус — за победы и призёров.',
-        addTo: { form: 'event', label: 'События' },
-        scale: [
-            { p: '3 б', t: 'участие на уровне ОО или муниципальном' },
-            { p: '5 б', t: 'участие на регионе/всероссе (кроме интернет)' },
-            { p: '+1 б', t: 'победа на уровне ОО' },
-            { p: '+2 б', t: 'победа на муниципальном уровне' },
-            { p: '+3 б', t: 'победа на регионе/всероссе' }
-        ],
-        calc: r => {
-            const events = r.filter(x => x.type === 'event' && x.hasStudents);
-            if (!events.length) return 0;
-            const lvls = events.map(e => (e.level || '').toLowerCase());
-            const hasHigh = lvls.some(l => ['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(l));
-            const hasMid = lvls.some(l => ['муниципальный','городской','областной'].includes(l));
-            const hasOO = lvls.some(l => l === 'образовательная организация');
-            let base = 0;
-            if (hasHigh) base = 5;
-            else if (hasMid || hasOO) base = 3;
-            let bonus = 0;
-            let pOO = false, pMid = false, pHigh = false;
-            for (const e of events) for (const g of (e.studentsGroups || [])) for (const d of (g.diplomas || [])) {
-                if (!d.place) continue;
+    code: 5, name: 'Участие обучающихся в олимпиадах, конкурсах', max: 8, type: 'auto',
+    desc: 'База — за сам факт участия. Бонус — за победы и призёров.',
+    addTo: { form: 'event', label: 'События' },
+    scale: [
+        { p: '3 б', t: 'участие на уровне ОО или муниципальном (городском)' },
+        { p: '5 б', t: 'участие на областном/регионе/всероссе (кроме интернет)' },
+        { p: '+1 б', t: 'победа на уровне ОО' },
+        { p: '+2 б', t: 'победа на муниципальном (городском) уровне' },
+        { p: '+3 б', t: 'победа на областном/регионе/всероссе' }
+    ],
+    calc: r => {
+        const events = r.filter(x => x.type === 'event' && x.hasStudents);
+        if (!events.length) return 0;
+        const HIGH = ['областной','региональный','межрегиональный','всероссийский','федеральный','международный'];
+        const MID = ['муниципальный','городской'];
+        const lvls = events.map(e => (e.level || '').toLowerCase());
+        const hasHigh = lvls.some(l => HIGH.includes(l));
+        const hasMid = lvls.some(l => MID.includes(l));
+        const hasOO = lvls.some(l => l === 'образовательная организация');
+        let base = 0;
+        if (hasHigh) base = 5;
+        else if (hasMid || hasOO) base = 3;
+        let bonus = 0;
+        let pOO = false, pMid = false, pHigh = false;
+        for (const e of events) for (const g of (e.studentsGroups || [])) for (const d of (g.diplomas || [])) {
+            if (!d.place) continue;
+            const lv = (e.level || '').toLowerCase();
+            if (HIGH.includes(lv)) pHigh = true;
+            else if (MID.includes(lv)) pMid = true;
+            else pOO = true;
+        }
+        if (pOO) bonus += 1;
+        if (pMid) bonus += 2;
+        if (pHigh) bonus += 3;
+        return Math.min(8, base + bonus);
+    },
+    details: r => {
+        const events = r.filter(x => x.type === 'event' && x.hasStudents);
+        if (!events.length) return [{ kind: 'absent', desc: 'Нет событий с участием студентов', score: '' }];
+        const HIGH = ['областной','региональный','межрегиональный','всероссийский','федеральный','международный'];
+        const MID = ['муниципальный','городской'];
+        const rows = [];
+        const lvls = events.map(e => (e.level || '').toLowerCase());
+        const hasHigh = lvls.some(l => HIGH.includes(l));
+        const hasMid = lvls.some(l => MID.includes(l));
+        const hasOO = lvls.some(l => l === 'образовательная организация');
+        if (hasHigh) rows.push({ kind: 'base', desc: 'Есть участие на областном/регионе/всероссе', score: '5' });
+        else if (hasMid || hasOO) rows.push({ kind: 'base', desc: 'Участие на муниципальном (городском)/ОО', score: '3' });
+        else rows.push({ kind: 'absent', desc: 'Нет участия студентов', score: '' });
+        let pOO = false, pMid = false, pHigh = false;
+        for (const e of events) for (const g of (e.studentsGroups || [])) for (const d of (g.diplomas || [])) {
+            if (!d.place) continue;
+            const lv = (e.level || '').toLowerCase();
+            if (HIGH.includes(lv)) pHigh = true;
+            else if (MID.includes(lv)) pMid = true;
+            else pOO = true;
+        }
+        if (pOO) rows.push({ kind: 'bonus', desc: 'Победы на уровне ОО', score: '+1' });
+        else rows.push({ kind: 'absent', desc: 'Победы на уровне ОО', score: '' });
+        if (pMid) rows.push({ kind: 'bonus', desc: 'Победы на муниципальном (городском)', score: '+2' });
+        else rows.push({ kind: 'absent', desc: 'Победы на муниципальном (городском)', score: '' });
+        if (pHigh) rows.push({ kind: 'bonus', desc: 'Победы на областном/регионе/всероссе', score: '+3' });
+        else rows.push({ kind: 'absent', desc: 'Победы на областном/регионе/всероссе', score: '' });
+        return rows;
+    },
+    advice: s => s >= 8 ? 'Максимум достигнут' : 'Добавьте победы студентов на областном/регионе/всероссе'
+},
+   {
+    code: 6, name: 'Участие педагога в конкурсах профмастерства', max: 7, type: 'auto',
+    desc: 'База — за участие. Бонус — за победы.',
+    addTo: { form: 'event', label: 'События' },
+    scale: [
+        { p: '2 б', t: 'участие на уровне ОО или интернет-конкурс' },
+        { p: '4 б', t: 'участие на муниципальном (городском)/областном/регионе/всероссе' },
+        { p: '+1 б', t: 'победа на уровне ОО' },
+        { p: '+2 б', t: 'победа на муниципальном (городском)' },
+        { p: '+3 б', t: 'победа на областном/регионе/всероссе' }
+    ],
+    calc: r => {
+        const events = r.filter(x => x.type === 'event' && x.teacherRoles && x.teacherRoles.some(t => t.role === 'участник/конкурсант'));
+        if (!events.length) return 0;
+        const HIGH = ['областной','региональный','межрегиональный','всероссийский','федеральный','международный'];
+        const MID = ['муниципальный','городской'];
+        const lvls = events.map(e => (e.level || '').toLowerCase());
+        const hasHigh = lvls.some(l => HIGH.includes(l) || MID.includes(l));
+        let base = 0;
+        if (hasHigh) base = 4;
+        else if (lvls.some(l => l === 'образовательная организация')) base = 2;
+        let bonus = 0;
+        let pOO = false, pMid = false, pHigh = false;
+        for (const e of events) for (const t of (e.teacherRoles || [])) {
+            if (t.role !== 'участник/конкурсант') continue;
+            if (t.result === 'диплом победителя' || t.place) {
                 const lv = (e.level || '').toLowerCase();
-                if (['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(lv)) pHigh = true;
-                else if (['муниципальный','городской','областной'].includes(lv)) pMid = true;
+                if (HIGH.includes(lv)) pHigh = true;
+                else if (MID.includes(lv)) pMid = true;
                 else pOO = true;
             }
-            if (pOO) bonus += 1;
-            if (pMid) bonus += 2;
-            if (pHigh) bonus += 3;
-            return Math.min(8, base + bonus);
-        },
-        details: r => {
-            const events = r.filter(x => x.type === 'event' && x.hasStudents);
-            if (!events.length) return [{ kind: 'absent', desc: 'Нет событий с участием студентов', score: '' }];
-            const rows = [];
-            const lvls = events.map(e => (e.level || '').toLowerCase());
-            const hasHigh = lvls.some(l => ['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(l));
-            const hasMid = lvls.some(l => ['муниципальный','городской','областной'].includes(l));
-            const hasOO = lvls.some(l => l === 'образовательная организация');
-            if (hasHigh) rows.push({ kind: 'base', desc: 'Есть участие на регионе/всероссе', score: '5' });
-            else if (hasMid || hasOO) rows.push({ kind: 'base', desc: 'Участие на муниципальном/ОО', score: '3' });
-            else rows.push({ kind: 'absent', desc: 'Нет участия студентов', score: '' });
-            let pOO = false, pMid = false, pHigh = false;
-            for (const e of events) for (const g of (e.studentsGroups || [])) for (const d of (g.diplomas || [])) {
-                if (!d.place) continue;
+        }
+        if (pOO) bonus += 1;
+        if (pMid) bonus += 2;
+        if (pHigh) bonus += 3;
+        return Math.min(7, base + bonus);
+    },
+    details: r => {
+        const events = r.filter(x => x.type === 'event' && x.teacherRoles);
+        if (!events.length) return [{ kind: 'absent', desc: 'Нет событий с вашим участием', score: '' }];
+        const HIGH = ['областной','региональный','межрегиональный','всероссийский','федеральный','международный'];
+        const MID = ['муниципальный','городской'];
+        const rows = [];
+        const lvls = events.map(e => (e.level || '').toLowerCase());
+        const hasHigh = lvls.some(l => HIGH.includes(l) || MID.includes(l));
+        const hasOO = lvls.some(l => l === 'образовательная организация');
+        if (hasHigh) rows.push({ kind: 'base', desc: 'Участие на муниципальном (городском)/областном/регионе', score: '4' });
+        else if (hasOO) rows.push({ kind: 'base', desc: 'Участие на уровне ОО / интернет', score: '2' });
+        else rows.push({ kind: 'absent', desc: 'Нет вашего участия в конкурсах', score: '' });
+        let pOO = false, pMid = false, pHigh = false;
+        for (const e of events) for (const t of (e.teacherRoles || [])) {
+            if (t.role !== 'участник/конкурсант') continue;
+            if (t.result === 'диплом победителя' || t.place) {
                 const lv = (e.level || '').toLowerCase();
-                if (['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(lv)) pHigh = true;
-                else if (['муниципальный','городской','областной'].includes(lv)) pMid = true;
+                if (HIGH.includes(lv)) pHigh = true;
+                else if (MID.includes(lv)) pMid = true;
                 else pOO = true;
             }
-            if (pOO) rows.push({ kind: 'bonus', desc: 'Победы на уровне ОО', score: '+1' });
-            else rows.push({ kind: 'absent', desc: 'Победы на уровне ОО', score: '' });
-            if (pMid) rows.push({ kind: 'bonus', desc: 'Победы на муниципальном', score: '+2' });
-            else rows.push({ kind: 'absent', desc: 'Победы на муниципальном', score: '' });
-            if (pHigh) rows.push({ kind: 'bonus', desc: 'Победы на регионе/всероссе', score: '+3' });
-            else rows.push({ kind: 'absent', desc: 'Победы на регионе/всероссе', score: '' });
-            return rows;
-        },
-        advice: s => s >= 8 ? 'Максимум достигнут' : 'Добавьте победы студентов на регионе/всероссе'
+        }
+        if (pOO) rows.push({ kind: 'bonus', desc: 'Победы на уровне ОО', score: '+1' });
+        else rows.push({ kind: 'absent', desc: 'Победы на уровне ОО', score: '' });
+        if (pMid) rows.push({ kind: 'bonus', desc: 'Победы на муниципальном (городском)', score: '+2' });
+        else rows.push({ kind: 'absent', desc: 'Победы на муниципальном (городском)', score: '' });
+        if (pHigh) rows.push({ kind: 'bonus', desc: 'Победы на областном/регионе/всероссе', score: '+3' });
+        else rows.push({ kind: 'absent', desc: 'Победы на областном/регионе/всероссе', score: '' });
+        return rows;
     },
-    {
-        code: 6, name: 'Участие педагога в конкурсах профмастерства', max: 7, type: 'auto',
-        desc: 'База — за участие. Бонус — за победы.',
-        addTo: { form: 'event', label: 'События' },
-        scale: [
-            { p: '2 б', t: 'участие на уровне ОО или интернет-конкурс' },
-            { p: '4 б', t: 'участие на муниципальном/регионе/всероссе' },
-            { p: '+1 б', t: 'победа на уровне ОО' },
-            { p: '+2 б', t: 'победа на муниципальном' },
-            { p: '+3 б', t: 'победа на регионе/всероссе' }
-        ],
-        calc: r => {
-            const events = r.filter(x => x.type === 'event' && x.teacherRoles && x.teacherRoles.some(t => t.role === 'участник/конкурсант'));
-            if (!events.length) return 0;
-            const lvls = events.map(e => (e.level || '').toLowerCase());
-            const hasHigh = lvls.some(l => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes(l));
-            let base = 0;
-            if (hasHigh) base = 4;
-            else if (lvls.some(l => l === 'образовательная организация')) base = 2;
-            let bonus = 0;
-            let pOO = false, pMid = false, pHigh = false;
-            for (const e of events) for (const t of (e.teacherRoles || [])) {
-                if (t.result === 'диплом победителя' || t.place) {
-                    const lv = (e.level || '').toLowerCase();
-                    if (['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(lv)) pHigh = true;
-                    else if (['муниципальный','городской','областной'].includes(lv)) pMid = true;
-                    else pOO = true;
-                }
-            }
-            if (pOO) bonus += 1;
-            if (pMid) bonus += 2;
-            if (pHigh) bonus += 3;
-            return Math.min(7, base + bonus);
-        },
-        details: r => {
-            const events = r.filter(x => x.type === 'event' && x.teacherRoles);
-            if (!events.length) return [{ kind: 'absent', desc: 'Нет событий с вашим участием', score: '' }];
-            const rows = [];
-            const lvls = events.map(e => (e.level || '').toLowerCase());
-            const hasHigh = lvls.some(l => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes(l));
-            const hasOO = lvls.some(l => l === 'образовательная организация');
-            if (hasHigh) rows.push({ kind: 'base', desc: 'Участие на муниципальном/регионе', score: '4' });
-            else if (hasOO) rows.push({ kind: 'base', desc: 'Участие на уровне ОО / интернет', score: '2' });
-            else rows.push({ kind: 'absent', desc: 'Нет вашего участия в конкурсах', score: '' });
-            let pOO = false, pMid = false, pHigh = false;
-            for (const e of events) for (const t of (e.teacherRoles || [])) {
-                if (t.role !== 'участник/конкурсант') continue;
-                if (t.result === 'диплом победителя' || t.place) {
-                    const lv = (e.level || '').toLowerCase();
-                    if (['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(lv)) pHigh = true;
-                    else if (['муниципальный','городской','областной'].includes(lv)) pMid = true;
-                    else pOO = true;
-                }
-            }
-            if (pOO) rows.push({ kind: 'bonus', desc: 'Победы на уровне ОО', score: '+1' });
-            else rows.push({ kind: 'absent', desc: 'Победы на уровне ОО', score: '' });
-            if (pMid) rows.push({ kind: 'bonus', desc: 'Победы на муниципальном', score: '+2' });
-            else rows.push({ kind: 'absent', desc: 'Победы на муниципальном', score: '' });
-            if (pHigh) rows.push({ kind: 'bonus', desc: 'Победы на регионе/всероссе', score: '+3' });
-            else rows.push({ kind: 'absent', desc: 'Победы на регионе/всероссе', score: '' });
-            return rows;
-        },
-        advice: s => s >= 7 ? 'Максимум достигнут' : 'Примите участие в конкурсе на регионе/муниципальном'
-    },
+    advice: s => s >= 7 ? 'Максимум достигнут' : 'Примите участие в конкурсе на областном/регионе или муниципальном'
+},        
     {
         code: 7, name: 'Освоение дополнительных профессиональных программ', max: 5, type: 'auto',
         desc: 'База — за КПК от 16 часов. Бонус — за переподготовку или ПК от 180 часов.',
