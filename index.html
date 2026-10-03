@@ -1665,14 +1665,16 @@ async function showStatistics() {
    Главное: normalizeFio — сравнение ФИО.
    ═══════════════════════════════════════════════════════════════ */
 
+/* Расписание пар: время берём отсюда, а не из JSON.
+   У 6 и 7 пары время в разных корпусах разное — не показываем. */
 const PAIR_TIMES = [
-    { num: 1, start: 8.0,  end: 9.58 },
-    { num: 2, start: 9.75, end: 11.33 },
-    { num: 3, start: 11.83, end: 13.42 },
-    { num: 4, start: 13.58, end: 15.17 },
-    { num: 5, start: 15.33, end: 16.92 },
-    { num: 6, start: 17.08, end: 18.67 },
-    { num: 7, start: 18.83, end: 20.42 }
+    { num: 1, display: '8:30–9:50',   start: 8.5,     end: 9.8333 },
+    { num: 2, display: '10:10–11:40', start: 10.1667, end: 11.6667 },
+    { num: 3, display: '12:10–13:40', start: 12.1667, end: 13.6667 },
+    { num: 4, display: '13:50–15:20', start: 13.8333, end: 15.3333 },
+    { num: 5, display: '15:30–17:00', start: 15.5,    end: 17.0 },
+    { num: 6, display: '',            start: 17.0,    end: 18.8333 },
+    { num: 7, display: '',            start: 18.8333, end: 20.0 }
 ];
 
 let scheduleCache = null;
@@ -1775,7 +1777,7 @@ async function renderSchedule() {
         '<div class="search-tab ' + (scheduleSearchMode==='room' ? 'active' : '') + '" onclick="setSearchMode(\'room\')">🚪 Кабинет</div>' +
         '</div>';
     const ph = scheduleSearchMode === 'group' ? 'Например: АЭ-11' :
-               scheduleSearchMode === 'room' ? 'Например: 305' :
+               scheduleSearchMode === 'room' ? 'Например: 1.305' :
                'Фамилия (по умолчанию — ваша)';
     searchHtml += '<div class="search-input-wrap">' +
         '<input type="text" id="sched-search-input" placeholder="' + ph + '" value="' + (scheduleSearchQuery || '') + '" oninput="onSearchInput(this.value)">' +
@@ -1844,7 +1846,9 @@ function renderScheduleListOnly(data) {
             const past = pairIsPast(p.pair, day.date);
             const isNearest = (nearestPair === item);
             const cls = 'pair-card' + (past ? ' past' : '') + (isNearest ? ' nearest' : '');
-            const timeStr = p.time ? p.time + ' · ' : '';
+            // Время из своей таблицы, не из JSON
+            const info = PAIR_TIMES.find(pt => pt.num === p.pair);
+            const timeStr = (info && info.display) ? info.display + ' · ' : '';
             let teacherLine = '';
             if (scheduleSearchMode !== 'teacher') teacherLine = ' · <span class="pair-teacher">' + item.teacher + '</span>';
             pairsHtml += '<div class="' + cls + '">' +
@@ -1997,6 +2001,8 @@ async function renderOrders() {
     container.innerHTML = html;
 }
 
+
+            
     
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 6 · МЕРОПРИЯТИЯ (CSV)
