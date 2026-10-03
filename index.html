@@ -1888,42 +1888,49 @@ const CRITERIA = [
         advice: s => s >= 7 ? 'Максимум достигнут' : 'Разработайте и утвердите 2–3 УМК как автор'
     },
     {
-        code: 11, name: 'Транслирование опыта практических результатов', max: 12, type: 'auto',
-        desc: 'База — открытый урок/мастер-класс. Бонусы за уровень выступлений. Суммируется.',
-        addTo: { form: 'activity', label: 'Трансляция и активность' },
-        scale: [
-            { p: '2 б', t: 'проведение мастер-класса / внеклассного мероприятия' },
-            { p: '5 б', t: 'проведение открытого урока с ИКТ по ФГОС' },
-            { p: '+1 б', t: 'выступление на заседании ПЦК' },
-            { p: '+2 б', t: 'выступление на педсовете / методсовете, публикация' },
-            { p: '+4 б', t: 'выступление на муниципальном / региональном / всероссийском уровне' }
-        ],
-        calc: r => {
-            const acts = r.filter(x => x.type === 'activity');
-            let s = 0;
-            if (acts.some(x => x.activityType === 'открытый урок')) s += 5;
-            else if (acts.some(x => x.activityType === 'мастер-класс')) s += 2;
-            if (acts.some(x => x.activityType === 'выступление на ПЦК')) s += 1;
-            if (acts.some(x => ['выступление на педсовете','выступление на методсовете','публикация'].includes(x.activityType))) s += 2;
-            if (acts.some(x => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes((x.level || '').toLowerCase()))) s += 4;
-            return Math.min(12, s);
-        },
-        details: r => {
-            const acts = r.filter(x => x.type === 'activity');
-            const rows = [];
-            if (acts.some(x => x.activityType === 'открытый урок')) rows.push({ kind: 'base', desc: 'Открытый урок с ИКТ', score: '5' });
-            else if (acts.some(x => x.activityType === 'мастер-класс')) rows.push({ kind: 'base', desc: 'Мастер-класс', score: '2' });
-            else rows.push({ kind: 'absent', desc: 'Открытых уроков / мастер-классов нет', score: '' });
-            if (acts.some(x => x.activityType === 'выступление на ПЦК')) rows.push({ kind: 'bonus', desc: 'Выступление на ПЦК', score: '+1' });
-            else rows.push({ kind: 'absent', desc: 'Выступление на ПЦК', score: '' });
-            if (acts.some(x => ['выступление на педсовете','выступление на методсовете','публикация'].includes(x.activityType))) rows.push({ kind: 'bonus', desc: 'Педсовет / методсовет / публикация', score: '+2' });
-            else rows.push({ kind: 'absent', desc: 'Педсовет / методсовет / публикация', score: '' });
-            if (acts.some(x => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes((x.level || '').toLowerCase()))) rows.push({ kind: 'bonus', desc: 'Выступление на муниципальном / регионе', score: '+4' });
-            else rows.push({ kind: 'absent', desc: 'Выступление на муниципальном / регионе', score: '' });
-            return rows;
-        },
-        advice: s => s >= 12 ? 'Максимум достигнут' : 'Добавьте открытый урок и выступление на региональном уровне'
+    code: 11, name: 'Транслирование опыта практических результатов', max: 12, type: 'auto',
+    desc: 'База — открытый урок (с ИКТ 5 б., без ИКТ 2 б.) или мастер-класс. Бонусы за уровень выступлений.',
+    addTo: { form: 'activity', label: 'Трансляция и активность' },
+    scale: [
+        { p: '2 б', t: 'открытый урок без ИКТ, либо мастер-класс' },
+        { p: '5 б', t: 'открытый урок с использованием ИКТ' },
+        { p: '+1 б', t: 'выступление на заседании ПЦК' },
+        { p: '+2 б', t: 'выступление на педсовете / методсовете, публикация' },
+        { p: '+4 б', t: 'выступление на муниципальном / региональном / всероссийском уровне' }
+    ],
+    calc: r => {
+        const acts = r.filter(x => x.type === 'activity');
+        const hasLessonICT = acts.some(x => x.activityType === 'открытый урок' && x.withICT);
+        const hasLesson = acts.some(x => x.activityType === 'открытый урок');
+        const hasMK = acts.some(x => x.activityType === 'мастер-класс');
+        let s = 0;
+        if (hasLessonICT) s += 5;
+        else if (hasLesson || hasMK) s += 2;
+        if (acts.some(x => x.activityType === 'выступление на ПЦК')) s += 1;
+        if (acts.some(x => ['выступление на педсовете','выступление на методсовете','публикация'].includes(x.activityType))) s += 2;
+        if (acts.some(x => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes((x.level || '').toLowerCase()))) s += 4;
+        return Math.min(12, s);
     },
+    details: r => {
+        const acts = r.filter(x => x.type === 'activity');
+        const rows = [];
+        const hasLessonICT = acts.some(x => x.activityType === 'открытый урок' && x.withICT);
+        const hasLesson = acts.some(x => x.activityType === 'открытый урок');
+        const hasMK = acts.some(x => x.activityType === 'мастер-класс');
+        if (hasLessonICT) rows.push({ kind: 'base', desc: 'Открытый урок с ИКТ', score: '5' });
+        else if (hasLesson) rows.push({ kind: 'base', desc: 'Открытый урок без ИКТ', score: '2' });
+        else if (hasMK) rows.push({ kind: 'base', desc: 'Мастер-класс', score: '2' });
+        else rows.push({ kind: 'absent', desc: 'Открытых уроков / мастер-классов нет', score: '' });
+        if (acts.some(x => x.activityType === 'выступление на ПЦК')) rows.push({ kind: 'bonus', desc: 'Выступление на ПЦК', score: '+1' });
+        else rows.push({ kind: 'absent', desc: 'Выступление на ПЦК', score: '' });
+        if (acts.some(x => ['выступление на педсовете','выступление на методсовете','публикация'].includes(x.activityType))) rows.push({ kind: 'bonus', desc: 'Педсовет / методсовет / публикация', score: '+2' });
+        else rows.push({ kind: 'absent', desc: 'Педсовет / методсовет / публикация', score: '' });
+        if (acts.some(x => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes((x.level || '').toLowerCase()))) rows.push({ kind: 'bonus', desc: 'Выступление на муниципальном / регионе', score: '+4' });
+        else rows.push({ kind: 'absent', desc: 'Выступление на муниципальном / регионе', score: '' });
+        return rows;
+    },
+    advice: s => s >= 12 ? 'Максимум достигнут' : 'Добавьте открытый урок с ИКТ и выступление на региональном уровне'
+},
     {
         code: 12, name: 'Вовлечённость обучающихся в проектную деятельность', max: 5, type: 'auto',
         desc: 'Доля студентов, занятых в проектах, от общего числа в группе.',
@@ -1967,37 +1974,53 @@ const CRITERIA = [
         advice: s => s >= 5 ? 'Максимум достигнут' : 'Увеличьте охват студентов проектной работой'
     },
     {
-        code: 13, name: 'Участие в работе методобъединений, неделя ПЦК', max: 8, type: 'auto',
-        desc: 'Сумма по видам участия.',
-        addTo: { form: 'activity', label: 'Трансляция и активность' },
-        scale: [
-            { p: '+2 б', t: 'активное участие в работе методобъединений (руководитель групп, разработчик)' },
-            { p: '+2 б', t: 'руководство ПЦК / методическим объединением' },
-            { p: '+1 б', t: 'участие в проведении недели ПЦК' },
-            { p: '+2 б', t: 'провёл и организовал мероприятие недели ПЦК' },
-            { p: '+4 б', t: '2 и более мероприятия в рамках недели ПЦК' }
-        ],
-        calc: r => {
-            const acts = r.filter(x => x.type === 'activity');
-            let s = 0;
-            if (typeof isPredsedatel === 'function' && profile && isPredsedatel()) s += 2;
-            if (acts.some(x => ['выступление на методсовете','выступление на ПЦК','выступление на педсовете'].includes(x.activityType))) s += 2;
-            return Math.min(8, s);
-        },
-        details: r => {
-            const rows = [];
-            if (typeof isPredsedatel === 'function' && profile && isPredsedatel())
-                rows.push({ kind: 'bonus', desc: 'Руководство ПЦК', score: '+2' });
-            else rows.push({ kind: 'absent', desc: 'Руководство ПЦК', score: '' });
-            if (r.some(x => x.type === 'activity' && ['выступление на методсовете','выступление на ПЦК','выступление на педсовете'].includes(x.activityType)))
-                rows.push({ kind: 'bonus', desc: 'Активное участие в методобъединениях', score: '+2' });
-            else rows.push({ kind: 'absent', desc: 'Выступления на методобъединениях', score: '' });
-            rows.push({ kind: 'absent', desc: 'Участие в неделе ПЦК', score: '' });
-            rows.push({ kind: 'absent', desc: 'Проведение мероприятия недели ПЦК', score: '' });
-            return rows;
-        },
-        advice: s => s >= 8 ? 'Максимум достигнут' : 'Проведите мероприятия в рамках недели ПЦК'
+    code: 13, name: 'Участие в работе методобъединений, неделя ПЦК', max: 8, type: 'auto',
+    desc: 'База — за методобъединения и руководство ПЦК. Бонус — за неделю ПЦК.',
+    addTo: { form: 'activity', label: 'Трансляция и активность' },
+    scale: [
+        { p: '+1 б', t: 'разовое участие в методобъединении (разовые поручения)' },
+        { p: '+2 б', t: 'активное участие в методобъединениях (2+ выступления)' },
+        { p: '+2 б', t: 'руководство ПЦК / методическим объединением' },
+        { p: '+1 б', t: 'участие в неделе ПЦК (разовые поручения)' },
+        { p: '+2 б', t: 'организовал мероприятие недели ПЦК' },
+        { p: '+4 б', t: 'организовал 2 и более мероприятия недели ПЦК' }
+    ],
+    calc: r => {
+        const acts = r.filter(x => x.type === 'activity');
+        let s = 0;
+        const methodSpeeches = acts.filter(x => ['выступление на методсовете','выступление на ПЦК','выступление на педсовете'].includes(x.activityType));
+        if (methodSpeeches.length >= 2) s += 2;
+        else if (methodSpeeches.length === 1) s += 1;
+        if (typeof isPredsedatel === 'function' && profile && isPredsedatel()) s += 2;
+        const weekEvents = acts.filter(x => x.activityType === 'неделя ПЦК');
+        const organizers = weekEvents.filter(x => x.rolePCK === 'организатор');
+        const participants = weekEvents.filter(x => x.rolePCK === 'участник');
+        if (organizers.length >= 2) s += 4;
+        else if (organizers.length === 1) s += 2;
+        else if (participants.length >= 1) s += 1;
+        return Math.min(8, s);
     },
+    details: r => {
+        const acts = r.filter(x => x.type === 'activity');
+        const rows = [];
+        const methodSpeeches = acts.filter(x => ['выступление на методсовете','выступление на ПЦК','выступление на педсовете'].includes(x.activityType));
+        if (methodSpeeches.length >= 2) rows.push({ kind: 'base', desc: 'Активное участие в методобъединениях (' + methodSpeeches.length + ' выступл.)', score: '+2' });
+        else if (methodSpeeches.length === 1) rows.push({ kind: 'base', desc: 'Разовое участие в методобъединениях', score: '+1' });
+        else rows.push({ kind: 'absent', desc: 'Выступления на методобъединениях', score: '' });
+        if (typeof isPredsedatel === 'function' && profile && isPredsedatel())
+            rows.push({ kind: 'bonus', desc: 'Руководство ПЦК', score: '+2' });
+        else rows.push({ kind: 'absent', desc: 'Руководство ПЦК', score: '' });
+        const weekEvents = acts.filter(x => x.activityType === 'неделя ПЦК');
+        const organizers = weekEvents.filter(x => x.rolePCK === 'организатор');
+        const participants = weekEvents.filter(x => x.rolePCK === 'участник');
+        if (organizers.length >= 2) rows.push({ kind: 'bonus', desc: 'Организовал ' + organizers.length + ' мероприятия недели ПЦК', score: '+4' });
+        else if (organizers.length === 1) rows.push({ kind: 'bonus', desc: 'Организовал мероприятие недели ПЦК', score: '+2' });
+        else if (participants.length >= 1) rows.push({ kind: 'bonus', desc: 'Участие в неделе ПЦК', score: '+1' });
+        else rows.push({ kind: 'absent', desc: 'Участие в неделе ПЦК', score: '' });
+        return rows;
+    },
+    advice: s => s >= 8 ? 'Максимум достигнут' : 'Проведите мероприятия в рамках недели ПЦК'
+},
     {
         code: 14, name: 'Участие в ФП «Профессионалитет»', max: 14, type: 'auto',
         desc: 'Сумма за 4 вида деятельности. Только для записей с галочкой «Профессионалитет».',
