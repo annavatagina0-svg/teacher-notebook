@@ -220,20 +220,41 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
 .stats-summary .bar { margin-top: 14px; height: 8px; background: rgba(255,255,255,0.25); border-radius: 4px; overflow: hidden; }
 .stats-summary .bar > div { height: 100%; background: white; border-radius: 4px; transition: width 0.5s; }
 .stats-summary .bar-label { font-size: 12px; opacity: 0.85; margin-top: 6px; text-align: right; }
-.crit-card { background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #c5cbd3; }
+.stats-report-btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 14px; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; border: none; box-shadow: 0 4px 16px rgba(74,108,247,0.3); }
+.stats-report-btn:active { transform: scale(0.98); }
+
+.crit-card { background: white; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border-left: 4px solid #c5cbd3; }
 .crit-card.done { border-left-color: #27ae60; }
 .crit-card.partial { border-left-color: #f39c12; }
 .crit-card.zero { border-left-color: #e74c3c; }
-.crit-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
-.crit-code { font-size: 11px; font-weight: 700; color: #4A6CF7; background: #eef2ff; padding: 2px 8px; border-radius: 8px; flex-shrink: 0; }
-.crit-name { font-size: 14px; font-weight: 600; color: #2c3e50; flex: 1; }
-.crit-score { font-size: 15px; font-weight: 800; color: #4A6CF7; flex-shrink: 0; }
-.crit-score small { font-size: 12px; color: #8892a0; font-weight: 500; }
-.crit-desc { font-size: 12px; color: #6b7684; line-height: 1.5; margin-bottom: 8px; }
-.crit-advice { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: #fff8e6; color: #92400e; line-height: 1.4; }
+.crit-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+.crit-head-num { width: 32px; height: 32px; border-radius: 10px; background: #eef2ff; color: #4A6CF7; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.crit-card.done .crit-head-num { background: #e8f8ee; color: #27ae60; }
+.crit-card.partial .crit-head-num { background: #fff4e6; color: #d97706; }
+.crit-card.zero .crit-head-num { background: #fde2e2; color: #c0392b; }
+.crit-head-name { flex: 1; font-size: 14px; font-weight: 600; color: #2c3e50; line-height: 1.3; }
+.crit-head-score { font-size: 15px; font-weight: 800; color: #4A6CF7; flex-shrink: 0; }
+.crit-head-score small { font-size: 12px; color: #8892a0; font-weight: 500; }
+.crit-head-arrow { color: #c5cbd3; font-size: 12px; transition: transform 0.2s; flex-shrink: 0; }
+.crit-card.open .crit-head-arrow { transform: rotate(180deg); }
+.crit-body { display: none; padding: 0 16px 16px; }
+.crit-card.open .crit-body { display: block; }
+.crit-desc { font-size: 12px; color: #6b7684; line-height: 1.5; margin-bottom: 12px; }
+.crit-bar { height: 8px; background: #eef2ff; border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+.crit-bar > div { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.crit-calc { background: #fafbfe; border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #eef2ff; }
+.crit-calc-title { font-size: 11px; font-weight: 700; color: #4A6CF7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.crit-calc-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 12px; color: #2c3e50; border-bottom: 1px dashed #e6ecff; }
+.crit-calc-row:last-child { border-bottom: none; }
+.crit-calc-row .row-desc { flex: 1; color: #6b7684; line-height: 1.4; }
+.crit-calc-row .row-score { font-weight: 700; color: #4A6CF7; flex-shrink: 0; }
+.crit-advice { font-size: 12px; padding: 10px 12px; border-radius: 8px; background: #fff8e6; color: #92400e; line-height: 1.5; }
 .crit-advice.ok { background: #e8f8ee; color: #1e8449; }
-.crit-bar { height: 6px; background: #eef2ff; border-radius: 3px; overflow: hidden; margin: 8px 0; }
-.crit-bar > div { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.crit-manual { margin-bottom: 12px; }
+.crit-manual label { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #fafbfe; border: 1.5px solid #e6ecff; border-radius: 10px; cursor: pointer; font-size: 13px; margin-bottom: 6px; font-weight: 500; color: #2c3e50; }
+.crit-manual label:last-child { margin-bottom: 0; }
+.crit-manual label:has(input:checked) { background: #eef2ff; border-color: #4A6CF7; color: #4A6CF7; }
+.crit-manual input { width: auto; margin: 0; }
 </style>
 </head>
 <body>
@@ -1526,73 +1547,378 @@ async function forceUpdate() {
 
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 4 · КРИТЕРИИ И СТАТИСТИКА
+   15 критериев из таблицы аттестации. Максимум = 100 баллов.
+   Типы: 'auto' — считаем из записей; 'radio' — ручной выбор.
    ═══════════════════════════════════════════════════════════════ */
 
+let manualScores = {};
+
 const CRITERIA = [
-    { code: 'K1', name: 'Студенты — участники мероприятий', max: 8,
-      desc: 'За каждое событие, где участвуют студенты. 2 балла за событие.',
-      score: r => Math.min(8, r.filter(x => x.type === 'event' && x.hasStudents).length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'event' && x.hasStudents).length; return n >= 4 ? 'Максимум достигнут' : 'Добавь ещё ' + (4 - n) + ' событий со студентами'; } },
-    { code: 'K2', name: 'Победы студентов', max: 10,
-      desc: 'За каждое призовое место студентов. 2 балла за место.',
-      score: r => { let n = 0; for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length; return Math.min(10, n * 2); },
-      advice: r => { let n = 0; for (const rec of r) if (rec.type === 'event' && rec.studentsGroups) for (const g of rec.studentsGroups) n += (g.diplomas || []).length; return n >= 5 ? 'Максимум достигнут' : 'Зафиксируй ещё ' + (5 - n) + ' призовых мест'; } },
-    { code: 'K3', name: 'Собственное участие в конкурсах', max: 8,
-      desc: 'Участие педагога в конкурсах, олимпиадах, фестивалях. 2 балла за событие.',
-      score: r => { let n = 0; for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].indexOf(t.role) !== -1) n++; return Math.min(8, n * 2); },
-      advice: r => { let n = 0; for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['участник/конкурсант','спикер/выступающий'].indexOf(t.role) !== -1) n++; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' участий'; } },
-    { code: 'K4', name: 'Экспертная работа', max: 6,
-      desc: 'Работа в жюри, экспертом, судьёй, организатором. 2 балла за событие.',
-      score: r => { let n = 0; for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].indexOf(t.role) !== -1) n++; return Math.min(6, n * 2); },
-      advice: r => { let n = 0; for (const rec of r) if (rec.type === 'event' && rec.teacherRoles) for (const t of rec.teacherRoles) if (['жюри','эксперт/судья','организатор','рабочая группа'].indexOf(t.role) !== -1) n++; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' экспертных выходов'; } },
-    { code: 'K5', name: 'Повышение квалификации (КПК)', max: 8,
-      desc: 'За каждый пройденный КПК. 2 балла за курс.',
-      score: r => Math.min(8, r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'training' && x.trainingType === 'КПК').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' КПК'; } },
-    { code: 'K6', name: 'Переподготовка / стажировки', max: 6,
-      desc: 'Переподготовка, стажировки, магистратура. 3 балла за документ.',
-      score: r => Math.min(6, r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].indexOf(x.trainingType) !== -1).length * 3),
-      advice: r => { const n = r.filter(x => x.type === 'training' && ['стажировка','переподготовка','высшее образование','магистратура'].indexOf(x.trainingType) !== -1).length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' документа'; } },
-    { code: 'K7', name: 'Публикации', max: 8,
-      desc: 'Методические публикации, статьи. 2 балла за публикацию.',
-      score: r => Math.min(8, r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'methodical' && x.methodicalType === 'публикация').length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' публикаций'; } },
-    { code: 'K8', name: 'Методические разработки', max: 8,
-      desc: 'УМК, программы, дидактические материалы, курсы. 2 балла за разработку.',
-      score: r => Math.min(8, r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].indexOf(x.methodicalType) !== -1).length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'methodical' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].indexOf(x.methodicalType) !== -1).length; return n >= 4 ? 'Максимум достигнут' : 'Нужно ещё ' + (4 - n) + ' разработок'; } },
-    { code: 'K9', name: 'Открытые уроки и мастер-классы', max: 6,
-      desc: 'Открытые уроки и мастер-классы. 2 балла за мероприятие.',
-      score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].indexOf(x.activityType) !== -1).length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'activity' && ['открытый урок','мастер-класс'].indexOf(x.activityType) !== -1).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; } },
-    { code: 'K10', name: 'Взаимопосещения', max: 6,
-      desc: 'Посещение уроков коллег и ваших. 1 балл за посещение.',
-      score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length),
-      advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && x.activityType.indexOf('взаимопосещение') === 0).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' посещений'; } },
-    { code: 'K11', name: 'Наставничество', max: 6,
-      desc: 'Работа наставником. 3 балла за программу.',
-      score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length * 3),
-      advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType === 'наставничество').length; return n >= 2 ? 'Максимум достигнут' : 'Нужно ещё ' + (2 - n) + ' программы'; } },
-    { code: 'K12', name: 'Работа с ОВЗ', max: 5,
-      desc: 'Мероприятия и контроль с участием студентов с ОВЗ. 2 балла за запись.',
-      score: r => { const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length; const b = r.filter(x => x.type === 'assessment' && x.ovz).length; return Math.min(5, (a + b) * 2); },
-      advice: r => { const a = r.filter(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ').length; const b = r.filter(x => x.type === 'assessment' && x.ovz).length; const n = a + b; return n >= 3 ? 'Максимум достигнут' : 'Отметь работу с ОВЗ ещё ' + (3 - n) + ' раз'; } },
-    { code: 'K13', name: 'Профориентация', max: 6,
-      desc: 'Профориентация, экскурсии, приглашение специалистов. 2 балла за мероприятие.',
-      score: r => Math.min(6, r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].indexOf(x.activityType) !== -1).length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].indexOf(x.activityType) !== -1).length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' мероприятий'; } },
-    { code: 'K14', name: 'Контроль знаний', max: 6,
-      desc: 'Входной, срезовые, итоговые контроли и проекты. 2 балла.',
-      score: r => Math.min(6, r.filter(x => x.type === 'assessment').length * 2),
-      advice: r => { const n = r.filter(x => x.type === 'assessment').length; return n >= 3 ? 'Максимум достигнут' : 'Нужно ещё ' + (3 - n) + ' контролей'; } },
-    { code: 'K15', name: 'Трансляция опыта', max: 6,
-      desc: 'Выступления на педсовете, методсовете, ПЦК. 1 балл за выступление.',
-      score: r => Math.min(6, r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length),
-      advice: r => { const n = r.filter(x => x.type === 'activity' && x.activityType && (x.activityType.indexOf('выступление') === 0 || x.activityType === 'органы самоуправления')).length; return n >= 6 ? 'Максимум достигнут' : 'Нужно ещё ' + (6 - n) + ' выступлений'; } }
+    {
+        code: 1, name: 'Отсутствие нарушений законодательства', max: 2, type: 'radio',
+        manualKey: 'crit1',
+        desc: 'По итогам проверочных мероприятий.',
+        options: [
+            { v: 0, label: '0 — наличие нарушений законодательства' },
+            { v: 2, label: '2 — отсутствие нарушений законодательства' }
+        ],
+        advice: s => s >= 2 ? 'Максимум достигнут' : 'Устранить нарушения по итогам проверок'
+    },
+    {
+        code: 2, name: 'Исполнительская дисциплина', max: 4, type: 'radio',
+        manualKey: 'crit2',
+        desc: 'Отсутствие замечаний руководителя по срокам и содержанию отчётов, документов.',
+        options: [
+            { v: 0, label: '0 — наличие замечаний руководителя' },
+            { v: 2, label: '2 — незначительные замечания' },
+            { v: 4, label: '4 — отсутствие замечаний' }
+        ],
+        advice: s => s >= 4 ? 'Максимум достигнут' : 'Устранить замечания по отчётности'
+    },
+    {
+        code: 3, name: 'Качественные результаты освоения программ', max: 4, type: 'auto',
+        desc: 'Доля обучающихся на «4» и «5» по итогам учебного года. 0 — до 30%; 2 — 31–50%; 4 — 51–100%.',
+        calc: r => {
+            const list = r.filter(x => x.type === 'assessment' && x.taken > 0);
+            if (!list.length) return 0;
+            let taken = 0, good = 0;
+            list.forEach(x => { taken += x.taken; good += (x.count5 || 0) + (x.count4 || 0); });
+            const pct = taken ? good * 100 / taken : 0;
+            if (pct >= 51) return 4;
+            if (pct >= 31) return 2;
+            return 0;
+        },
+        details: r => {
+            const list = r.filter(x => x.type === 'assessment' && x.taken > 0);
+            if (!list.length) return [{ desc: 'Нет данных контроля. Внесите оценки 5/4/3/2.', score: '0' }];
+            const rows = [];
+            let taken = 0, good = 0;
+            list.forEach(x => {
+                const g = (x.count5 || 0) + (x.count4 || 0);
+                taken += x.taken; good += g;
+                rows.push({ desc: (x.subject || '—') + ' (' + (x.group || '—') + '): ' + g + ' из ' + x.taken + ' на «4» и «5»', score: '' });
+            });
+            const pct = taken ? Math.round(good * 100 / taken) : 0;
+            rows.push({ desc: 'Итого по всем контролям', score: pct + '%' });
+            return rows;
+        },
+        advice: (s, r) => {
+            if (s >= 4) return 'Максимум достигнут';
+            const list = r.filter(x => x.type === 'assessment' && x.taken > 0);
+            if (!list.length) return 'Внесите данные контроля знаний';
+            if (s >= 2) return 'Довести качество знаний до 51%';
+            return 'Повысить качество знаний до 31% и выше';
+        }
+    },
+    {
+        code: 4, name: 'Динамика индивидуальных достижений', max: 4, type: 'auto',
+        desc: 'Доля обучающихся на «4» и «5» по контролям. 0 — нет; 1 — до 30%; 2 — 31–50%; 3 — 51–80%; 4 — свыше 81%.',
+        calc: r => {
+            const list = r.filter(x => x.type === 'assessment' && x.taken > 0);
+            if (!list.length) return 0;
+            let taken = 0, good = 0;
+            list.forEach(x => { taken += x.taken; good += (x.count5 || 0) + (x.count4 || 0); });
+            const pct = taken ? good * 100 / taken : 0;
+            if (pct > 81) return 4;
+            if (pct >= 51) return 3;
+            if (pct >= 31) return 2;
+            if (pct > 0) return 1;
+            return 0;
+        },
+        details: r => {
+            const list = r.filter(x => x.type === 'assessment' && x.taken > 0);
+            if (!list.length) return [{ desc: 'Нет данных контроля', score: '0' }];
+            let taken = 0, good = 0;
+            list.forEach(x => { taken += x.taken; good += (x.count5 || 0) + (x.count4 || 0); });
+            const pct = taken ? Math.round(good * 100 / taken) : 0;
+            return [{ desc: 'Средняя доля «4» и «5» по всем контролям', score: pct + '%' }];
+        },
+        advice: s => s >= 4 ? 'Максимум достигнут' : 'Довести долю «4» и «5» выше 81%'
+    },
+    {
+        code: 5, name: 'Участие обучающихся в олимпиадах, конкурсах', max: 8, type: 'auto',
+        desc: '3 — ОО/муниципальный; 5 — регион/всеросс (кроме интернет); +1 победа на ОО; +2 победа на муниципальном; +3 победа на регионе.',
+        calc: r => {
+            const events = r.filter(x => x.type === 'event' && x.hasStudents);
+            if (!events.length) return 0;
+            const lvls = events.map(e => (e.level || '').toLowerCase());
+            const hasHigh = lvls.some(l => ['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(l));
+            const hasMid = lvls.some(l => ['муниципальный','городской','областной'].includes(l));
+            let base = 0;
+            if (hasHigh) base = 5;
+            else if (hasMid || lvls.some(l => l === 'образовательная организация')) base = 3;
+            let bonus = 0;
+            for (const e of events) {
+                for (const g of (e.studentsGroups || [])) {
+                    for (const d of (g.diplomas || [])) {
+                        if (!d.place) continue;
+                        const lv = (e.level || '').toLowerCase();
+                        if (['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(lv)) bonus = Math.max(bonus, 3);
+                        else if (['муниципальный','городской'].includes(lv)) bonus = Math.max(bonus, 2);
+                        else bonus = Math.max(bonus, 1);
+                    }
+                }
+            }
+            return Math.min(8, base + bonus);
+        },
+        details: r => {
+            const events = r.filter(x => x.type === 'event' && x.hasStudents);
+            if (!events.length) return [{ desc: 'Нет событий с участием студентов', score: '0' }];
+            const rows = [];
+            for (const e of events) {
+                const diplomas = [];
+                for (const g of (e.studentsGroups || [])) for (const d of (g.diplomas || [])) if (d.place) diplomas.push(d.place);
+                rows.push({ desc: (e.name || '—') + ' · ' + (e.level || '—') + (diplomas.length ? ' · 🏅 ' + diplomas.join(', ') : ''), score: '' });
+            }
+            return rows;
+        },
+        advice: s => s >= 8 ? 'Максимум достигнут' : 'Добавьте победы студентов на региональном/всероссийском уровне'
+    },
+    {
+        code: 6, name: 'Участие педагога в конкурсах профмастерства', max: 7, type: 'auto',
+        desc: '2 — ОО/интернет; 4 — муниципальный/регион; +1 победа на ОО; +2 на муниципальном; +3 на регионе.',
+        calc: r => {
+            const events = r.filter(x => x.type === 'event' && x.teacherRoles && x.teacherRoles.some(t => t.role === 'участник/конкурсант'));
+            if (!events.length) return 0;
+            const lvls = events.map(e => (e.level || '').toLowerCase());
+            const hasHigh = lvls.some(l => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes(l));
+            let base = 0;
+            if (hasHigh) base = 4;
+            else if (lvls.some(l => l === 'образовательная организация')) base = 2;
+            let bonus = 0;
+            for (const e of events) {
+                for (const t of (e.teacherRoles || [])) {
+                    if (t.result === 'диплом победителя' || t.place) {
+                        const lv = (e.level || '').toLowerCase();
+                        if (['региональный','межрегиональный','всероссийский','федеральный','международный'].includes(lv)) bonus = Math.max(bonus, 3);
+                        else if (['муниципальный','городской','областной'].includes(lv)) bonus = Math.max(bonus, 2);
+                        else bonus = Math.max(bonus, 1);
+                    }
+                }
+            }
+            return Math.min(7, base + bonus);
+        },
+        details: r => {
+            const events = r.filter(x => x.type === 'event' && x.teacherRoles);
+            if (!events.length) return [{ desc: 'Нет событий с вашим участием', score: '0' }];
+            const rows = [];
+            for (const e of events) {
+                for (const t of (e.teacherRoles || [])) {
+                    if (t.role === 'участник/конкурсант') {
+                        rows.push({ desc: (e.name || '—') + ' · ' + (e.level || '—') + (t.place ? ' · 🏅 ' + t.place : (t.result ? ' · ' + t.result : '')), score: '' });
+                    }
+                }
+            }
+            return rows.length ? rows : [{ desc: 'Нет записей об участии в конкурсах', score: '0' }];
+        },
+        advice: s => s >= 7 ? 'Максимум достигнут' : 'Примите участие в конкурсе на регионе/муниципальном уровне'
+    },
+    {
+        code: 7, name: 'Освоение дополнительных профессиональных программ', max: 5, type: 'auto',
+        desc: '2 — 1 КПК 16ч; 4 — 2+ КПК 16ч; +1 — переподготовка или ПК ≥180ч.',
+        calc: r => {
+            const t = r.filter(x => x.type === 'training');
+            if (!t.length) return 0;
+            const short16 = t.filter(x => { const h = parseInt(x.hours) || 0; return h >= 16 && h < 180; }).length;
+            const big = t.filter(x => x.trainingType === 'переподготовка' || (parseInt(x.hours) || 0) >= 180).length;
+            let s = 0;
+            if (short16 >= 2 || big >= 1) s = 4;
+            else if (short16 === 1) s = 2;
+            if (big >= 1) s = Math.min(5, s + 1);
+            return s;
+        },
+        details: r => {
+            const t = r.filter(x => x.type === 'training');
+            if (!t.length) return [{ desc: 'Нет записей об обучении', score: '0' }];
+            return t.map(x => ({
+                desc: (x.name || '—') + ' · ' + (x.trainingType || '—') + (x.hours ? ' · ' + x.hours + ' ч.' : '') + (x.date ? ' · ' + x.date : ''),
+                score: ''
+            }));
+        },
+        advice: s => s >= 5 ? 'Максимум достигнут' : (s >= 4 ? 'Добавьте переподготовку или ПК ≥180ч' : 'Пройдите 2+ КПК или переподготовку')
+    },
+    {
+        code: 8, name: 'Сохранение контингента в течение года', max: 6, type: 'radio',
+        manualKey: 'crit8',
+        desc: 'Учитываются отчисления по неуважительной причине в ваших группах.',
+        options: [
+            { v: 0, label: '0 — есть отчисленные по неуважительной причине' },
+            { v: 6, label: '6 — отчисленных нет' }
+        ],
+        advice: s => s >= 6 ? 'Максимум достигнут' : 'Работа по сохранению контингента'
+    },
+    {
+        code: 9, name: 'Профессионально-общественная деятельность', max: 8, type: 'auto',
+        desc: '2 — жюри/эксперты/судьи/оргкомитеты; 2 — профориентация; 2 — органы самоуправления; 2 — наставничество.',
+        calc: r => {
+            let s = 0;
+            if (r.some(x => x.type === 'event' && x.teacherRoles && x.teacherRoles.some(t => ['жюри','эксперт/судья','организатор','рабочая группа'].includes(t.role)))) s += 2;
+            if (r.some(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType))) s += 2;
+            if (r.some(x => x.type === 'activity' && x.activityType === 'органы самоуправления')) s += 2;
+            if (r.some(x => x.type === 'activity' && x.activityType === 'наставничество')) s += 2;
+            return Math.min(8, s);
+        },
+        details: r => {
+            const rows = [];
+            if (r.some(x => x.type === 'event' && x.teacherRoles && x.teacherRoles.some(t => ['жюри','эксперт/судья','организатор','рабочая группа'].includes(t.role)))) rows.push({ desc: 'Жюри / эксперт / организатор', score: '+2' });
+            if (r.some(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType))) rows.push({ desc: 'Профориентация, экскурсии', score: '+2' });
+            if (r.some(x => x.type === 'activity' && x.activityType === 'органы самоуправления')) rows.push({ desc: 'Органы самоуправления', score: '+2' });
+            if (r.some(x => x.type === 'activity' && x.activityType === 'наставничество')) rows.push({ desc: 'Наставничество', score: '+2' });
+            return rows.length ? rows : [{ desc: 'Нет записей по общественной деятельности', score: '0' }];
+        },
+        advice: s => s >= 8 ? 'Максимум достигнут' : 'Добавьте записи по недостающим видам деятельности'
+    },
+    {
+        code: 10, name: 'Разработка программно-методического сопровождения', max: 7, type: 'auto',
+        desc: '1 — соавтор; 2 — автор; +2 — 2 УМК утверждённых; +5 — 3+ УМК.',
+        calc: r => {
+            const m = r.filter(x => x.type === 'methodical');
+            const umk = m.filter(x => x.methodicalType === 'УМК' && x.status === 'утверждён').length;
+            const own = m.filter(x => x.role === 'автор' && ['УМК','рабочая программа','дидактические материалы','электронный курс','видеолекция'].includes(x.methodicalType)).length;
+            const co = m.filter(x => x.role === 'соавтор' && ['УМК','рабочая программа','дидактические материалы'].includes(x.methodicalType)).length;
+            let base = 0;
+            if (own > 0) base = 2;
+            else if (co > 0) base = 1;
+            let bonus = 0;
+            if (umk >= 3) bonus = 5;
+            else if (umk >= 2) bonus = 2;
+            return Math.min(7, base + bonus);
+        },
+        details: r => {
+            const m = r.filter(x => x.type === 'methodical');
+            if (!m.length) return [{ desc: 'Нет методических разработок', score: '0' }];
+            return m.map(x => ({
+                desc: (x.name || '—') + ' · ' + (x.methodicalType || '—') + ' · ' + (x.role || '—') + (x.status ? ' · ' + x.status : ''),
+                score: ''
+            }));
+        },
+        advice: s => s >= 7 ? 'Максимум достигнут' : 'Разработайте и утвердите 2–3 УМК как автор'
+    },
+    {
+        code: 11, name: 'Транслирование опыта практических результатов', max: 12, type: 'auto',
+        desc: '2 — открытый урок без ИКТ; 5 — открытый урок с ИКТ; +1 ПЦК; +2 методсовет/педсовет/публикации; +4 муниципальный/регион.',
+        calc: r => {
+            const acts = r.filter(x => x.type === 'activity');
+            let s = 0;
+            if (acts.some(x => x.activityType === 'открытый урок')) s += 5;
+            else if (acts.some(x => x.activityType === 'мастер-класс')) s += 2;
+            if (acts.some(x => x.activityType === 'выступление на ПЦК')) s += 1;
+            if (acts.some(x => ['выступление на педсовете','выступление на методсовете','публикация'].includes(x.activityType))) s += 2;
+            if (acts.some(x => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes((x.level || '').toLowerCase()))) s += 4;
+            return Math.min(12, s);
+        },
+        details: r => {
+            const acts = r.filter(x => x.type === 'activity');
+            const rows = [];
+            if (acts.some(x => x.activityType === 'открытый урок')) rows.push({ desc: 'Открытый урок с ИКТ', score: '+5' });
+            else if (acts.some(x => x.activityType === 'мастер-класс')) rows.push({ desc: 'Мастер-класс', score: '+2' });
+            if (acts.some(x => x.activityType === 'выступление на ПЦК')) rows.push({ desc: 'Выступление на ПЦК', score: '+1' });
+            if (acts.some(x => ['выступление на педсовете','выступление на методсовете','публикация'].includes(x.activityType))) rows.push({ desc: 'Педсовет / методсовет / публикация', score: '+2' });
+            if (acts.some(x => ['муниципальный','городской','областной','региональный','межрегиональный','всероссийский','федеральный','международный'].includes((x.level || '').toLowerCase()))) rows.push({ desc: 'Выступление на муниципальном / региональном уровне', score: '+4' });
+            return rows.length ? rows : [{ desc: 'Нет записей о трансляции опыта', score: '0' }];
+        },
+        advice: s => s >= 12 ? 'Максимум достигнут' : 'Добавьте открытый урок и выступление на региональном уровне'
+    },
+    {
+        code: 12, name: 'Вовлечённость обучающихся в проектную деятельность', max: 5, type: 'auto',
+        desc: 'Доля участвующих в проектах. 0 — до 10%; 2 — 11–30%; 3 — 31–50%; 5 — 50–100%.',
+        calc: r => {
+            const proj = r.filter(x => x.type === 'assessment' && x.assessmentType === 'проектная деятельность');
+            if (!proj.length) return 0;
+            let total = 0, involve = 0;
+            proj.forEach(x => { total += parseInt(x.total) || 0; involve += parseInt(x.project) || 0; });
+            if (!total) return 0;
+            const pct = involve * 100 / total;
+            if (pct >= 50) return 5;
+            if (pct >= 31) return 3;
+            if (pct >= 11) return 2;
+            return 0;
+        },
+        details: r => {
+            const proj = r.filter(x => x.type === 'assessment' && x.assessmentType === 'проектная деятельность');
+            if (!proj.length) return [{ desc: 'Нет проектной деятельности', score: '0' }];
+            return proj.map(x => ({
+                desc: (x.subject || '—') + ' (' + (x.group || '—') + '): ' + (x.project || 0) + ' из ' + (x.total || 0),
+                score: ''
+            }));
+        },
+        advice: s => s >= 5 ? 'Максимум достигнут' : 'Увеличьте охват студентов проектной работой'
+    },
+    {
+        code: 13, name: 'Участие в работе методобъединений, неделя ПЦК', max: 8, type: 'auto',
+        desc: '2 — активное участие в методобъединениях; 2 — руководство ПЦК; +1 участие в неделе ПЦК; +2 провёл мероприятие; +4 — 2+ мероприятия.',
+        calc: r => {
+            const acts = r.filter(x => x.type === 'activity');
+            let s = 0;
+            if (typeof isPckChair === 'function' && profile && isPckChair(profile)) s += 2;
+            if (acts.some(x => ['выступление на методсовете','выступление на ПЦК','выступление на педсовете'].includes(x.activityType))) s += 2;
+            return Math.min(8, s);
+        },
+        details: r => {
+            const rows = [];
+            if (typeof isPckChair === 'function' && profile && isPckChair(profile)) rows.push({ desc: 'Руководство ПЦК', score: '+2' });
+            if (r.some(x => x.type === 'activity' && ['выступление на методсовете','выступление на ПЦК','выступление на педсовете'].includes(x.activityType))) rows.push({ desc: 'Активное участие в методобъединениях', score: '+2' });
+            return rows.length ? rows : [{ desc: 'Нет участия в методобъединениях', score: '0' }];
+        },
+        advice: s => s >= 8 ? 'Максимум достигнут' : 'Проведите мероприятия в рамках недели ПЦК'
+    },
+    {
+        code: 14, name: 'Участие в ФП «Профессионалитет»', max: 14, type: 'auto',
+        desc: '6 — разработка УМК; 4 — обучение по программам ФП; 2 — профориентация; 2 — трансляция опыта.',
+        calc: r => {
+            const prof = r.filter(x => x.prof);
+            if (!prof.length) return 0;
+            let s = 0;
+            if (prof.some(x => x.type === 'methodical' && x.methodicalType === 'УМК')) s += 6;
+            if (prof.some(x => x.type === 'training')) s += 4;
+            if (prof.some(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType))) s += 2;
+            if (prof.some(x => x.type === 'activity' && ['выступление на педсовете','выступление на методсовете','выступление на ПЦК','публикация'].includes(x.activityType))) s += 2;
+            return Math.min(14, s);
+        },
+        details: r => {
+            const prof = r.filter(x => x.prof);
+            if (!prof.length) return [{ desc: 'Нет записей с отметкой «Профессионалитет»', score: '0' }];
+            const rows = [];
+            if (prof.some(x => x.type === 'methodical' && x.methodicalType === 'УМК')) rows.push({ desc: 'Разработка УМК', score: '+6' });
+            if (prof.some(x => x.type === 'training')) rows.push({ desc: 'Обучение по программам ФП', score: '+4' });
+            if (prof.some(x => x.type === 'activity' && ['профориентация','экскурсия','приглашение специалиста'].includes(x.activityType))) rows.push({ desc: 'Профориентация', score: '+2' });
+            if (prof.some(x => x.type === 'activity' && ['выступление на педсовете','выступление на методсовете','выступление на ПЦК','публикация'].includes(x.activityType))) rows.push({ desc: 'Трансляция опыта', score: '+2' });
+            return rows.length ? rows : [{ desc: 'Отметьте записи галочкой «Профессионалитет»', score: '0' }];
+        },
+        advice: s => s >= 14 ? 'Максимум достигнут' : 'Добавьте УМК и обучение в рамках ФП'
+    },
+    {
+        code: 15, name: 'Организация работы с лицами ОВЗ и инвалидностью', max: 6, type: 'auto',
+        desc: '1 — обучение в группе с ОВЗ; 2 — дистанционное обучение ОВЗ; 3 — конкурсы профмастерства для ОВЗ.',
+        calc: r => {
+            let s = 0;
+            if (r.some(x => x.type === 'assessment' && x.ovz)) s = Math.max(s, 1);
+            if (r.some(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ')) s = Math.max(s, 3);
+            return Math.min(6, s);
+        },
+        details: r => {
+            const rows = [];
+            if (r.some(x => x.type === 'assessment' && x.ovz)) rows.push({ desc: 'Обучение в группе с ОВЗ', score: '+1' });
+            if (r.some(x => x.type === 'activity' && x.activityType === 'работа с ОВЗ')) rows.push({ desc: 'Конкурсы/мероприятия для ОВЗ', score: '+3' });
+            return rows.length ? rows : [{ desc: 'Нет записей о работе с ОВЗ', score: '0' }];
+        },
+        advice: s => s >= 6 ? 'Максимум достигнут' : 'Добавьте мероприятия и конкурсы для ОВЗ'
+    }
 ];
 
-function critColor(score, max) { if (score <= 0) return 'zero'; if (score >= max) return 'done'; return 'partial'; }
-function critBarColor(score, max) { if (score <= 0) return '#e74c3c'; if (score >= max) return '#27ae60'; return '#f39c12'; }
+function critColor(s, m) { if (s <= 0) return 'zero'; if (s >= m) return 'done'; return 'partial'; }
+function critBarColor(s, m) { if (s <= 0) return '#e74c3c'; if (s >= m) return '#27ae60'; return '#f39c12'; }
+
+async function loadManualScores() {
+    const s = await getSetting('manualScores');
+    manualScores = s || {};
+}
+async function saveManualScores() { await saveSetting('manualScores', manualScores); }
+
+function scoreCrit(cr, records) {
+    if (cr.type === 'radio') return manualScores[cr.manualKey] || 0;
+    try { return Math.min(cr.max, cr.calc(records) || 0); } catch(e) { return 0; }
+}
 
 async function showStatistics() {
     const btn = document.getElementById('stats-btn');
@@ -1601,18 +1927,19 @@ async function showStatistics() {
     const c = document.getElementById('stats-content');
     c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
 
+    await loadManualScores();
     const myRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
 
     let cloudStats = null;
     try { cloudStats = await downloadJson(getStatsFolder(profile.fio, profile.login) + '/statistics.json'); } catch(e) {}
 
     const rows = CRITERIA.map(cr => {
-        let score = 0;
-        try { score = cr.score(myRecords) || 0; } catch(e) { score = 0; }
-        if (score > cr.max) score = cr.max;
+        const score = scoreCrit(cr, myRecords);
+        let details = [];
+        try { details = cr.details ? cr.details(myRecords) : []; } catch(e) {}
         let advice = '';
-        try { advice = cr.advice(myRecords) || ''; } catch(e) {}
-        return { cr, score, advice };
+        try { advice = cr.advice ? (cr.advice(score, myRecords) || '') : ''; } catch(e) {}
+        return { cr, score, details, advice };
     });
 
     const totalLocal = rows.reduce((s, r) => s + r.score, 0);
@@ -1624,40 +1951,89 @@ async function showStatistics() {
     let html = '';
     html += '<div class="stats-summary">' +
         '<div class="big">' + total + ' <span style="font-size:20px;font-weight:600;opacity:0.85;">/ ' + totalMaxCloud + '</span></div>' +
-        '<div class="small">' + (cloudStats ? 'По данным облака' : 'Предварительный расчёт') + '</div>' +
+        '<div class="small">' + (cloudStats ? 'По данным облака' : 'Текущий расчёт по вашим записям') + '</div>' +
         '<div class="bar"><div style="width:' + percent + '%"></div></div>' +
         '<div class="bar-label">' + percent + '% от максимума</div>' +
         '</div>';
 
+    html += '<button class="stats-report-btn" onclick="buildReport()">📄 Сформировать отчёт</button>';
+
     if (cloudStats && cloudStats.updated) {
         html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">Обновлено в облаке: ' + new Date(cloudStats.updated).toLocaleString('ru-RU') + '</p>';
-    } else {
-        html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">⚠️ Расчёт предварительный.</p>';
     }
 
-    html += '<h3 style="font-size:15px;font-weight:700;margin:18px 4px 10px;">Детализация по критериям</h3>';
+    html += '<h3 style="font-size:15px;font-weight:700;margin:18px 4px 10px;">Критерии</h3>';
+    for (const r of rows) html += renderCritCard(r);
 
-    rows.sort((a, b) => (a.score / a.cr.max) - (b.score / b.cr.max));
-
-    for (const r of rows) {
-        const cls = critColor(r.score, r.cr.max);
-        const barColor = critBarColor(r.score, r.cr.max);
-        const w = r.cr.max > 0 ? Math.round(r.score * 100 / r.cr.max) : 0;
-        const adviceCls = r.score >= r.cr.max ? 'crit-advice ok' : 'crit-advice';
-        const adviceText = r.advice || (r.score >= r.cr.max ? 'Максимум достигнут' : 'Добавь записи');
-        html += '<div class="crit-card ' + cls + '">' +
-            '<div class="crit-head">' +
-                '<span class="crit-code">' + r.cr.code + '</span>' +
-                '<span class="crit-name">' + r.cr.name + '</span>' +
-                '<span class="crit-score">' + r.score + ' <small>/ ' + r.cr.max + '</small></span>' +
-            '</div>' +
-            '<div class="crit-desc">' + r.cr.desc + '</div>' +
-            '<div class="crit-bar"><div style="width:' + w + '%;background:' + barColor + ';"></div></div>' +
-            '<div class="' + adviceCls + '">💡 ' + adviceText + '</div>' +
-            '</div>';
-    }
     c.innerHTML = html;
     if (btn) btn.disabled = false;
+}
+
+function renderCritCard(r) {
+    const cr = r.cr;
+    const cls = critColor(r.score, cr.max);
+    const barColor = critBarColor(r.score, cr.max);
+    const w = cr.max > 0 ? Math.round(r.score * 100 / cr.max) : 0;
+
+    let radioHtml = '';
+    if (cr.type === 'radio') {
+        radioHtml = '<div class="crit-manual">';
+        for (const opt of cr.options) {
+            const checked = (manualScores[cr.manualKey] || 0) === opt.v ? ' checked' : '';
+            radioHtml += '<label><input type="radio" name="' + cr.manualKey + '" value="' + opt.v + '"' + checked +
+                ' onchange="setManualScore(\'' + cr.manualKey + '\',' + opt.v + ')"> ' + opt.label + '</label>';
+        }
+        radioHtml += '</div>';
+    }
+
+    let detailsHtml = '';
+    if (r.details && r.details.length) {
+        detailsHtml = '<div class="crit-calc"><div class="crit-calc-title">Расчёт</div>' +
+            r.details.map(d => '<div class="crit-calc-row"><span class="row-desc">' + d.desc + '</span>' +
+                (d.score !== '' && d.score != null ? '<span class="row-score">' + d.score + '</span>' : '') + '</div>').join('') +
+            '</div>';
+    }
+
+    const adviceCls = r.score >= cr.max ? 'crit-advice ok' : 'crit-advice';
+    const adviceText = r.advice || (r.score >= cr.max ? 'Максимум достигнут' : '');
+
+    return '<div class="crit-card ' + cls + '" data-code="' + cr.code + '">' +
+        '<div class="crit-head" onclick="toggleCritCard(' + cr.code + ')">' +
+            '<div class="crit-head-num">' + cr.code + '</div>' +
+            '<div class="crit-head-name">' + cr.name + '</div>' +
+            '<div class="crit-head-score">' + r.score + ' <small>/ ' + cr.max + '</small></div>' +
+            '<div class="crit-head-arrow">▼</div>' +
+        '</div>' +
+        '<div class="crit-body">' +
+            '<div class="crit-desc">' + cr.desc + '</div>' +
+            '<div class="crit-bar"><div style="width:' + w + '%;background:' + barColor + ';"></div></div>' +
+            radioHtml +
+            detailsHtml +
+            (adviceText ? '<div class="' + adviceCls + '">💡 ' + adviceText + '</div>' : '') +
+        '</div>' +
+        '</div>';
+}
+
+function toggleCritCard(code) {
+    const card = document.querySelector('.crit-card[data-code="' + code + '"]');
+    if (card) card.classList.toggle('open');
+}
+
+async function setManualScore(key, value) {
+    manualScores[key] = value;
+    await saveManualScores();
+    // Сохраняем открытые карточки
+    const openedCodes = [];
+    document.querySelectorAll('.crit-card.open').forEach(cc => openedCodes.push(cc.dataset.code));
+    await showStatistics();
+    for (const code of openedCodes) {
+        const card = document.querySelector('.crit-card[data-code="' + code + '"]');
+        if (card) card.classList.add('open');
+    }
+}
+
+function buildReport() {
+    alert('Функция формирования отчёта в разработке.\n\nСкоро: экспорт в формате Word/PDF по стандартной форме аттестации (как только пришлёшь образец).');
 }
 
 /* ═══════════════════════════════════════════════════════════════
