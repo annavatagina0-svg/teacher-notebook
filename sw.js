@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-notebook-v38';
+const CACHE_NAME = 'teacher-notebook-v39';
 const FILES_TO_CACHE = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (e) => {
