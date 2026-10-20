@@ -1556,7 +1556,6 @@ let scheduleSearchQuery = '';
 function getSchedulePath() { return ROOT_FOLDER + '/Справочники/schedule.json'; }
 function getOrdersPath() { return ROOT_FOLDER + '/Справочники/orders.json'; }
 
-// 🔧 Локальная дата «сегодня» в формате YYYY-MM-DD (НЕ UTC!)
 function getTodayIso() {
     const d = new Date();
     const y = d.getFullYear();
@@ -1585,7 +1584,7 @@ function normalizeFio(fio) {
 async function loadScheduleCache(forceReload) {
     if (scheduleCache && !forceReload) return scheduleCache;
     const data = await downloadJson(getSchedulePath());
-    if (data) scheduleCache = data;   // кэшируем только успех, не пустоту
+    if (data) scheduleCache = data;
     return data;
 }
 
@@ -1635,25 +1634,58 @@ function monthShortLabel(mk) {
 }
 
 function renderHoursBanner(hoursStats) {
-    if (!hoursStats || !hoursStats.by_teacher || !profile) return '';
+    if (!profile) return '';
+
+    const refreshBtn = isAuthor()
+        ? '<button onclick="triggerFullScheduleRecalc()" title="Полный пересчёт часов" ' +
+          'style="margin-left:auto;background:white;border:1.5px solid #d9e2ff;color:#4A6CF7;' +
+          'border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;font-family:inherit;' +
+          'flex-shrink:0;">🔄</button>'
+        : '';
+
+    const baseStyle = 'display:flex;align-items:center;gap:10px;' +
+        'background:linear-gradient(135deg,#eef2ff,#f8faff);' +
+        'border:1.5px solid #d9e2ff;border-radius:12px;padding:10px 14px;margin-bottom:10px;';
+
+    // Если hours_stats ещё не рассчитан
+    if (!hoursStats || !hoursStats.by_teacher) {
+        if (!isAuthor()) return '';
+        return '<div style="' + baseStyle + '">' +
+            '<div style="font-size:13px;color:#2c3e50;flex:1;">📊 Часы ещё не рассчитаны</div>' +
+            refreshBtn + '</div>';
+    }
+
     const key = normalizeFio(profile.fio);
     const me = hoursStats.by_teacher[key];
-    if (!me || !me.pairs) return '';
+
+    if (!me || !me.pairs) {
+        if (!isAuthor()) return '';
+        return '<div style="' + baseStyle + '">' +
+            '<div style="font-size:13px;color:#2c3e50;flex:1;">📊 По вашему ФИО пар не найдено</div>' +
+            refreshBtn + '</div>';
+    }
+
     const totalHours = me.pairs * 2;
     let monthsHtml = '';
     if (me.by_month) {
         const months = Object.keys(me.by_month).sort();
         if (months.length > 1) {
-            monthsHtml = '<div style="font-size:11px;color:#8892a0;margin-top:3px;">' +
+            monthsHtml = '<div style="font-size:11px;color:#8892a0;margin-top:4px;">' +
                 months.map(mk => monthShortLabel(mk) + ': ' + (me.by_month[mk] * 2) + ' ч').join(' · ') +
                 '</div>';
         }
     }
-    return '<div style="background:linear-gradient(135deg,#eef2ff,#f8faff);border:1.5px solid #d9e2ff;border-radius:12px;padding:10px 14px;margin-bottom:10px;">' +
-        '<div style="font-size:13px;color:#2c3e50;">📊 <b>' + totalHours + ' ч</b> ' +
-        '<span style="color:#8892a0;font-size:11px;">(' + me.pairs + ' ' + pluralPairs(me.pairs) + ' с 1 сентября)</span></div>' +
-        monthsHtml +
-        '</div>';
+
+    const periodTo = hoursStats.period_to ? ' · ' + formatDateRu(hoursStats.period_to) : '';
+
+    return '<div style="' + baseStyle + 'flex-direction:column;align-items:stretch;">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<div style="font-size:13px;color:#2c3e50;flex:1;">' +
+                '📊 <b>' + totalHours + ' ч</b> ' +
+                '<span style="color:#8892a0;font-size:11px;">(' + me.pairs + ' ' + pluralPairs(me.pairs) +
+                ' с 1 сентября' + periodTo + ')</span>' +
+            '</div>' + refreshBtn +
+        '</div>' + monthsHtml + '</div>';
 }
 
 // ─── Рендер ───
@@ -1677,14 +1709,17 @@ async function renderSchedule() {
             '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Повторить</button></div>';
         return;
     }
+
+    let html = '';
+    html += renderHoursBanner(data.hours_stats);
+
     if (!data.days || !data.days.length) {
-        body.innerHTML = '<div class="sched-empty">Расписание на ближайшие дни не опубликовано.' +
+        html += '<div class="sched-empty">Расписание на ближайшие дни не опубликовано.' +
             '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Проверить</button></div>';
+        body.innerHTML = html;
         return;
     }
 
-    let html = '';
-    if (data.hours_stats) html += renderHoursBanner(data.hours_stats);
     html += '<div id="sched-search-shell"><div class="search-tabs">' +
         '<div class="search-tab ' + (scheduleSearchMode==='teacher' ? 'active' : '') + '" onclick="setSearchMode(\'teacher\')">👤 Преподаватель</div>' +
         '<div class="search-tab ' + (scheduleSearchMode==='group' ? 'active' : '') + '" onclick="setSearchMode(\'group\')">👥 Группа</div>' +
@@ -1704,7 +1739,7 @@ function renderScheduleListOnly(data) {
     if (!container) return;
     if (!data) data = scheduleCache;
     if (!data || !data.days) { container.innerHTML = ''; return; }
-    const todayIso = getTodayIso();   // 🔧 локальная дата, не UTC
+    const todayIso = getTodayIso();
     let query = (scheduleSearchQuery || '').trim();
     if (scheduleSearchMode === 'teacher' && !query) query = profile.fio;
     const nq = scheduleSearchMode === 'teacher' ? normalizeFio(query) : query.toLowerCase().replace(/\s+/g,'');
@@ -1790,7 +1825,7 @@ async function loadOrdersCache(forceReload) {
 }
 function orderIsPast(item) {
     if (!item.date) return false;
-    return item.date < getTodayIso();   // 🔧 локальная дата
+    return item.date < getTodayIso();
 }
 function monthLabel(mk) {
     try {
@@ -1843,321 +1878,7 @@ async function renderOrders() {
             (it.time ? '<span class="order-time">' + it.time + '</span>' : '') +
             (it.group ? '<span class="order-group">' + it.group + '</span>' : '') +
             (it.place ? '<span class="order-room">' + it.place + '</span>' : '') +
-            '</div><div class="order-line2">' + (it.student || '—') + '</div></div>';
-    }).join('');
-    container.innerHTML = html;
-}
-   
-/* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 5 · РАСПИСАНИЕ И ПРИКАЗЫ
-   ═══════════════════════════════════════════════════════════════ */
-
-const PAIR_TIMES = [
-    { num: 1, display: '8:30–9:50',   start: 8.5,     end: 9.8333 },
-    { num: 2, display: '10:10–11:40', start: 10.1667, end: 11.6667 },
-    { num: 3, display: '12:10–13:40', start: 12.1667, end: 13.6667 },
-    { num: 4, display: '13:50–15:20', start: 13.8333, end: 15.3333 },
-    { num: 5, display: '15:30–17:00', start: 15.5,    end: 17.0 },
-    { num: 6, display: '',            start: 17.0,    end: 18.8333 },
-    { num: 7, display: '',            start: 18.8333, end: 20.0 }
-];
-let scheduleCache = null;
-let ordersCache = null;
-let ordersMonthFilter = '__all__';
-let scheduleSearchMode = 'teacher';
-let scheduleSearchQuery = '';
-
-function getSchedulePath() { return ROOT_FOLDER + '/Справочники/schedule.json'; }
-function getOrdersPath() { return ROOT_FOLDER + '/Справочники/orders.json'; }
-
-// 🔧 Локальная дата «сегодня» в формате YYYY-MM-DD (НЕ UTC!)
-function getTodayIso() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + day;
-}
-
-function normalizeFio(fio) {
-    const raw = String(fio || '').trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
-    if (!raw) return '';
-    const parts = raw.split(' ');
-    if (!parts[0]) return '';
-    let res = parts[0].toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]/g, '');
-    for (let i = 1; i < parts.length; i++) {
-        const p = parts[i].trim();
-        if (!p) continue;
-        if (p.indexOf('.') !== -1) {
-            const inits = p.split('.').map(x => x.trim()).filter(x => x);
-            for (const ini of inits) if (ini) res += ini[0].toLowerCase().replace(/ё/g, 'е');
-        } else res += p[0].toLowerCase().replace(/ё/g, 'е');
-    }
-    return res;
-}
-
-async function loadScheduleCache(forceReload) {
-    if (scheduleCache && !forceReload) return scheduleCache;
-    const data = await downloadJson(getSchedulePath());
-    if (data) scheduleCache = data;   // кэшируем только успех, не пустоту
-    return data;
-}
-
-async function retrySchedule() {
-    scheduleCache = null;
-    const block = document.getElementById('schedule-block');
-    if (block && !block.classList.contains('open')) block.classList.add('open');
-    await renderSchedule();
-}
-
-function pairIsPast(pairNum, dateIso) {
-    const info = PAIR_TIMES.find(p => p.num === pairNum);
-    if (!info) return false;
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const pairDate = new Date(dateIso + 'T00:00:00');
-    if (pairDate < today) return true;
-    if (pairDate > today) return false;
-    const nowHours = now.getHours() + now.getMinutes() / 60;
-    return nowHours >= info.end;
-}
-function dateRu(dateIso) {
-    try {
-        const d = new Date(dateIso + 'T00:00:00');
-        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-        const dn = ['вс','пн','вт','ср','чт','пт','сб'][d.getDay()];
-        return d.getDate() + ' ' + months[d.getMonth()] + ' (' + dn + ')';
-    } catch(e) { return dateIso; }
-}
-function pluralPairs(n) {
-    const n10 = n % 10, n100 = n % 100;
-    if (n10 === 1 && n100 !== 11) return 'пара';
-    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'пары';
-    return 'пар';
-}
-function setSearchMode(mode) { scheduleSearchMode = mode; scheduleSearchQuery = ''; renderSchedule(); }
-function onSearchInput(val) { scheduleSearchQuery = val; renderScheduleListOnly(scheduleCache); }
-
-// ─── Баннер «Выдано часов» ───
-
-function monthShortLabel(mk) {
-    const names = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-    try {
-        const m = parseInt(String(mk).split('-')[1], 10);
-        return names[m - 1] || mk;
-    } catch (e) { return mk; }
-}
-
-function renderHoursBanner(hoursStats) {
-    if (!hoursStats || !hoursStats.by_teacher || !profile) return '';
-    const key = normalizeFio(profile.fio);
-    const me = hoursStats.by_teacher[key];
-    if (!me || !me.pairs) return '';
-    const totalHours = me.pairs * 2;
-    let monthsHtml = '';
-    if (me.by_month) {
-        const months = Object.keys(me.by_month).sort();
-        if (months.length > 1) {
-            monthsHtml = '<div style="font-size:11px;color:#8892a0;margin-top:3px;">' +
-                months.map(mk => monthShortLabel(mk) + ': ' + (me.by_month[mk] * 2) + ' ч').join(' · ') +
-                '</div>';
-        }
-    }
-    return '<div style="background:linear-gradient(135deg,#eef2ff,#f8faff);border:1.5px solid #d9e2ff;border-radius:12px;padding:10px 14px;margin-bottom:10px;">' +
-        '<div style="font-size:13px;color:#2c3e50;">📊 <b>' + totalHours + ' ч</b> ' +
-        '<span style="color:#8892a0;font-size:11px;">(' + me.pairs + ' ' + pluralPairs(me.pairs) + ' с 1 сентября)</span></div>' +
-        monthsHtml +
-        '</div>';
-}
-
-// ─── Рендер ───
-
-async function renderSchedule() {
-    const body = document.getElementById('schedule-body');
-    if (!body) return;
-    body.innerHTML = '<div class="sched-empty">Загрузка...</div>';
-
-    if (!profile || !profile.fio) {
-        body.innerHTML = '<div class="sched-empty">Нет профиля</div>';
-        return;
-    }
-
-    let data = null;
-    try { data = await loadScheduleCache(); }
-    catch (e) { console.warn('schedule load error:', e); }
-
-    if (!data) {
-        body.innerHTML = '<div class="sched-empty">Не удалось загрузить расписание.' +
-            '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Повторить</button></div>';
-        return;
-    }
-    if (!data.days || !data.days.length) {
-        body.innerHTML = '<div class="sched-empty">Расписание на ближайшие дни не опубликовано.' +
-            '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Проверить</button></div>';
-        return;
-    }
-
-    let html = '';
-    if (data.hours_stats) html += renderHoursBanner(data.hours_stats);
-    html += '<div id="sched-search-shell"><div class="search-tabs">' +
-        '<div class="search-tab ' + (scheduleSearchMode==='teacher' ? 'active' : '') + '" onclick="setSearchMode(\'teacher\')">👤 Преподаватель</div>' +
-        '<div class="search-tab ' + (scheduleSearchMode==='group' ? 'active' : '') + '" onclick="setSearchMode(\'group\')">👥 Группа</div>' +
-        '<div class="search-tab ' + (scheduleSearchMode==='room' ? 'active' : '') + '" onclick="setSearchMode(\'room\')">🚪 Кабинет</div>' +
-        '</div>';
-    const ph = scheduleSearchMode === 'group' ? 'Например: АЭ-11' :
-               scheduleSearchMode === 'room' ? 'Например: 1.305' :
-               'Фамилия (по умолчанию — ваша)';
-    html += '<div class="search-input-wrap"><input type="text" id="sched-search-input" placeholder="' + ph + '" value="' + (scheduleSearchQuery || '') + '" oninput="onSearchInput(this.value)"></div></div>';
-    html += '<div id="sched-days-list"></div>';
-    body.innerHTML = html;
-    renderScheduleListOnly(data);
-}
-
-function renderScheduleListOnly(data) {
-    const container = document.getElementById('sched-days-list');
-    if (!container) return;
-    if (!data) data = scheduleCache;
-    if (!data || !data.days) { container.innerHTML = ''; return; }
-    const todayIso = getTodayIso();   // 🔧 локальная дата, не UTC
-    let query = (scheduleSearchQuery || '').trim();
-    if (scheduleSearchMode === 'teacher' && !query) query = profile.fio;
-    const nq = scheduleSearchMode === 'teacher' ? normalizeFio(query) : query.toLowerCase().replace(/\s+/g,'');
-    let html = '';
-    let found = false;
-    for (const day of data.days) {
-        const teachers = day.teachers || {};
-        const pairs = [];
-        for (const tKey of Object.keys(teachers)) {
-            const tPairs = teachers[tKey] || [];
-            for (const p of tPairs) {
-                let match = false;
-                if (scheduleSearchMode === 'teacher') {
-                    if (!nq) continue;
-                    const nk = normalizeFio(tKey);
-                    match = nk.indexOf(nq) === 0 || nk === nq;
-                } else if (scheduleSearchMode === 'group') {
-                    if (!nq) match = false;
-                    else match = (p.group || '').toLowerCase().replace(/\s+/g,'').indexOf(nq) !== -1;
-                } else {
-                    if (!nq) match = false;
-                    else match = (p.room || '').toLowerCase().replace(/\s+/g,'').indexOf(nq) !== -1;
-                }
-                if (match) pairs.push({ pair: p, teacher: tKey });
-            }
-        }
-        if (!pairs.length) continue;
-        found = true;
-        pairs.sort((a, b) => (a.pair.pair || 0) - (b.pair.pair || 0));
-        const isToday = day.date === todayIso;
-        const isTomorrow = !isToday && day.date > todayIso;
-        const dayLabel = (isToday ? 'Сегодня, ' : (isTomorrow ? 'Завтра, ' : '')) + dateRu(day.date);
-        const dayOpen = isToday ? ' open' : '';
-        const count = pairs.length;
-        const countLabel = count === 0 ? 'нет пар' : (count + ' ' + pluralPairs(count));
-        let pairsHtml = '';
-        let nearestPair = null;
-        for (const item of pairs) if (!pairIsPast(item.pair.pair, day.date)) { nearestPair = item; break; }
-        for (const item of pairs) {
-            const p = item.pair;
-            const past = pairIsPast(p.pair, day.date);
-            const isNearest = (nearestPair === item);
-            const cls = 'pair-card' + (past ? ' past' : '') + (isNearest ? ' nearest' : '');
-            const info = PAIR_TIMES.find(pt => pt.num === p.pair);
-            const timeStr = (info && info.display) ? info.display + ' · ' : '';
-            let teacherLine = '';
-            if (scheduleSearchMode !== 'teacher') teacherLine = ' · <span class="pair-teacher">' + item.teacher + '</span>';
-            pairsHtml += '<div class="' + cls + '"><div class="pair-title">' + p.pair + ' пара · ' + timeStr +
-                (p.group ? p.group : '') + ' · <span class="pair-room">каб. ' + (p.room || '—') + '</span>' + teacherLine + '</div>' +
-                '<div class="pair-desc">' + (p.discipline || '') + '</div></div>';
-        }
-        html += '<div class="sched-day' + dayOpen + '" id="sched-day-' + day.date + '">' +
-            '<div class="sched-day-head" onclick="toggleScheduleDay(\'' + day.date + '\')">' +
-                '<span>' + dayLabel + '</span>' +
-                '<span class="sched-count">' + countLabel + '</span>' +
-                '<span class="sched-arrow2">▼</span>' +
-            '</div><div class="sched-day-list">' + pairsHtml + '</div></div>';
-    }
-    if (!found) {
-        if (!nq && scheduleSearchMode !== 'teacher') html = '<div class="sched-empty">Введите ' + (scheduleSearchMode==='group'?'группу':'кабинет') + '</div>';
-        else html = '<div class="sched-empty">Ничего не найдено</div>';
-    }
-    container.innerHTML = html;
-}
-
-async function toggleScheduleBlock() {
-    const block = document.getElementById('schedule-block');
-    if (block.classList.contains('open')) block.classList.remove('open');
-    else { block.classList.add('open'); await renderSchedule(); }
-}
-function toggleScheduleDay(dateIso) {
-    const el = document.getElementById('sched-day-' + dateIso);
-    if (el) el.classList.toggle('open');
-}
-
-// ─── Приказы ───
-
-async function loadOrdersCache(forceReload) {
-    if (ordersCache && !forceReload) return ordersCache;
-    const data = await downloadJson(getOrdersPath());
-    ordersCache = data || { items: [], updated: null };
-    return ordersCache;
-}
-function orderIsPast(item) {
-    if (!item.date) return false;
-    return item.date < getTodayIso();   // 🔧 локальная дата
-}
-function monthLabel(mk) {
-    try {
-        const parts = mk.split('-');
-        const names = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
-        return names[parseInt(parts[1],10) - 1] + ' ' + parts[0];
-    } catch(e) { return mk; }
-}
-function formatDateRu(iso) {
-    try { const d = new Date(iso + 'T00:00:00'); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0'); }
-    catch(e) { return iso; }
-}
-function onOrdersMonthChange(val) { ordersMonthFilter = val; renderOrders(); }
-
-async function renderOrders() {
-    const container = document.getElementById('records-list');
-    if (!container) return;
-    container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка приказов...</p>';
-    const data = await loadOrdersCache();
-    if (!data || !data.items || !data.items.length) { container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Приказы ещё не выгружены в облако</p>'; return; }
-    if (!profile || !profile.fio) { container.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Нет профиля</p>'; return; }
-    const key = normalizeFio(profile.fio);
-    const mine = data.items.filter(it => normalizeFio(it.teacher || '') === key);
-    if (!mine.length) {
-        const allTeachers = [];
-        for (const it of data.items) { const t = it.teacher || ''; if (t && allTeachers.indexOf(t) === -1) allTeachers.push(t); }
-        const mySurname = key.slice(0, 5);
-        const similar = allTeachers.filter(t => normalizeFio(t).indexOf(mySurname) === 0);
-        const sample = (similar.length ? similar : allTeachers.slice(0, 15)).join('<br>');
-        container.innerHTML = '<p style="color:#8892a0;padding:20px;font-size:12px;text-align:left;"><b>Тебя нет в приказах.</b><br><br><b>Твой ключ:</b><br>' + key + ' <span style="color:#8892a0;">(' + profile.fio + ')</span><br><br><b>Похожие из файла:</b><br>' + sample + '</p>';
-        return;
-    }
-    const monthsMap = new Map();
-    for (const it of mine) { if (!it.date) continue; const key2 = it.date.slice(0, 7); if (!monthsMap.has(key2)) monthsMap.set(key2, []); monthsMap.get(key2).push(it); }
-    const monthKeys = Array.from(monthsMap.keys()).sort();
-    let html = '<div class="orders-month-bar"><label>Месяц:</label><select id="orders-month-select" onchange="onOrdersMonthChange(this.value)">' +
-        '<option value="__all__"' + (ordersMonthFilter === '__all__' ? ' selected' : '') + '>Все</option>' +
-        monthKeys.map(mk => '<option value="' + mk + '"' + (ordersMonthFilter === mk ? ' selected' : '') + '>' + monthLabel(mk) + '</option>').join('') +
-        '</select></div>';
-    let list = mine.slice();
-    if (ordersMonthFilter !== '__all__') list = list.filter(it => (it.date || '').startsWith(ordersMonthFilter));
-    list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-    if (!list.length) html += '<p style="text-align:center;color:#8892a0;padding:20px;">Нет записей за выбранный месяц</p>';
-    else html += list.map(it => {
-        const past = orderIsPast(it);
-        const cls = 'order-card' + (past ? ' past' : '');
-        const d = it.date ? formatDateRu(it.date) : '—';
-        return '<div class="' + cls + '"><div class="order-line1">' +
-            '<span>' + d + '</span>' +
-            (it.time ? '<span class="order-time">' + it.time + '</span>' : '') +
-            (it.group ? '<span class="order-group">' + it.group + '</span>' : '') +
-            (it.place ? '<span class="order-room">' + it.place + '</span>' : '') +
-            '</div><div class="order-line2">' + (it.student || '—') + '</div></div>';
+            '</div><div class="order-line2">' + (item.student || it.student || '—') + '</div></div>';
     }).join('');
     container.innerHTML = html;
 }
@@ -2359,6 +2080,42 @@ async function triggerAnalysis() {
         else { const errText = await res.text(); alert('Ошибка ' + res.status + ':\n' + errText); }
     } catch (e) { alert('Ошибка: ' + e.message); }
     finally { if (btn) btn.disabled = false; }
+}
+
+// 🔄 Полный пересчёт часов по расписанию (обход всех папок: Сентябрь, Октябрь, …)
+async function triggerFullScheduleRecalc() {
+    if (!isAuthor()) return;
+    if (!confirm('Полный пересчёт часов по расписанию?\n\nБудут обойдены все папки (корень + Сентябрь + Октябрь + …).\nНеизменённые файлы будут взяты из кэша — это быстро.')) return;
+
+    let token = localStorage.getItem('github_analyze_token');
+    if (!token) {
+        token = prompt('Введите GitHub Personal Access Token.\n\nСоздайте: https://github.com/settings/tokens\nScope: workflow\n\nСохранится только на этом устройстве.');
+        if (!token) return;
+        localStorage.setItem('github_analyze_token', token);
+    }
+
+    showToast('⏳ Запускаю полный пересчёт...');
+    try {
+        const res = await fetch('https://api.github.com/repos/annavatagina0-svg/notebook-parsers/actions/workflows/parse_schedule.yml/dispatches', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ref: 'main', inputs: { full_recalc: 'true' } })
+        });
+        if (res.status === 204) {
+            showToast('✅ Пересчёт запущен. Через 1–3 минуты обновите «Расписание».');
+        } else if (res.status === 401) {
+            localStorage.removeItem('github_analyze_token');
+            alert('Токен недействителен. Создайте новый.');
+        } else {
+            const errText = await res.text();
+            alert('Ошибка ' + res.status + ':\n' + errText);
+        }
+    } catch (e) { alert('Ошибка: ' + e.message); }
 }
 
 /* ─── Тост ─── */
