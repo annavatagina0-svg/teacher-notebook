@@ -1633,7 +1633,18 @@ function monthShortLabel(mk) {
     } catch (e) { return mk; }
 }
 
-function renderHoursBanner(hoursStats) {
+function fmtUpdated(iso) {
+    try {
+        const d = new Date(iso);
+        const day = String(d.getDate()).padStart(2, '0');
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        return day + '.' + mo + ' ' + h + ':' + mi;
+    } catch (e) { return ''; }
+}
+
+function renderHoursBanner(hoursStats, updatedIso) {
     if (!profile) return '';
 
     const refreshBtn = isAuthor()
@@ -1643,16 +1654,19 @@ function renderHoursBanner(hoursStats) {
           'flex-shrink:0;">🔄</button>'
         : '';
 
-    const baseStyle = 'display:flex;align-items:center;gap:10px;' +
+    const updatedLabel = updatedIso
+        ? '<span style="color:#8892a0;font-size:10px;margin-left:auto;">обновлено ' + fmtUpdated(updatedIso) + '</span>'
+        : '';
+
+    const baseStyle = 'display:flex;align-items:center;gap:8px;' +
         'background:linear-gradient(135deg,#eef2ff,#f8faff);' +
         'border:1.5px solid #d9e2ff;border-radius:12px;padding:10px 14px;margin-bottom:10px;';
 
-    // Если hours_stats ещё не рассчитан
     if (!hoursStats || !hoursStats.by_teacher) {
         if (!isAuthor()) return '';
         return '<div style="' + baseStyle + '">' +
-            '<div style="font-size:13px;color:#2c3e50;flex:1;">📊 Часы ещё не рассчитаны</div>' +
-            refreshBtn + '</div>';
+            '<div style="font-size:13px;color:#2c3e50;">📊 Часы ещё не рассчитаны</div>' +
+            updatedLabel + refreshBtn + '</div>';
     }
 
     const key = normalizeFio(profile.fio);
@@ -1661,8 +1675,8 @@ function renderHoursBanner(hoursStats) {
     if (!me || !me.pairs) {
         if (!isAuthor()) return '';
         return '<div style="' + baseStyle + '">' +
-            '<div style="font-size:13px;color:#2c3e50;flex:1;">📊 По вашему ФИО пар не найдено</div>' +
-            refreshBtn + '</div>';
+            '<div style="font-size:13px;color:#2c3e50;">📊 По вашему ФИО пар не найдено</div>' +
+            updatedLabel + refreshBtn + '</div>';
     }
 
     const totalHours = me.pairs * 2;
@@ -1676,15 +1690,13 @@ function renderHoursBanner(hoursStats) {
         }
     }
 
-    const periodTo = hoursStats.period_to ? ' · ' + formatDateRu(hoursStats.period_to) : '';
-
     return '<div style="' + baseStyle + 'flex-direction:column;align-items:stretch;">' +
-        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
             '<div style="font-size:13px;color:#2c3e50;flex:1;">' +
                 '📊 <b>' + totalHours + ' ч</b> ' +
                 '<span style="color:#8892a0;font-size:11px;">(' + me.pairs + ' ' + pluralPairs(me.pairs) +
-                ' с 1 сентября' + periodTo + ')</span>' +
-            '</div>' + refreshBtn +
+                ' с 1 сентября)</span>' +
+            '</div>' + updatedLabel + refreshBtn +
         '</div>' + monthsHtml + '</div>';
 }
 
@@ -1705,17 +1717,22 @@ async function renderSchedule() {
     catch (e) { console.warn('schedule load error:', e); }
 
     if (!data) {
-        body.innerHTML = '<div class="sched-empty">Не удалось загрузить расписание.' +
+        body.innerHTML = '<div class="sched-empty">Не удалось загрузить расписание.<br>' +
+            '<span style="font-size:11px;">Проверьте соединение или прокси</span>' +
             '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Повторить</button></div>';
         return;
     }
 
     let html = '';
-    html += renderHoursBanner(data.hours_stats);
+    html += renderHoursBanner(data.hours_stats, data.updated);
 
     if (!data.days || !data.days.length) {
-        html += '<div class="sched-empty">Расписание на ближайшие дни не опубликовано.' +
-            '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Проверить</button></div>';
+        const upd = data.updated ? fmtUpdated(data.updated) : '—';
+        html += '<div class="sched-empty">' +
+            'Расписание на ближайшие дни не опубликовано.<br>' +
+            '<span style="font-size:11px;">Данные от ' + upd + '</span>' +
+            '<button class="event-create-btn" style="margin-top:10px;" onclick="retrySchedule()">↻ Проверить</button>' +
+            '</div>';
         body.innerHTML = html;
         return;
     }
@@ -1878,7 +1895,7 @@ async function renderOrders() {
             (it.time ? '<span class="order-time">' + it.time + '</span>' : '') +
             (it.group ? '<span class="order-group">' + it.group + '</span>' : '') +
             (it.place ? '<span class="order-room">' + it.place + '</span>' : '') +
-            '</div><div class="order-line2">' + (item.student || it.student || '—') + '</div></div>';
+            '</div><div class="order-line2">' + (it.student || '—') + '</div></div>';
     }).join('');
     container.innerHTML = html;
 }
