@@ -2117,8 +2117,7 @@ async function renderMyStats(c) {
     
     // Новая кнопка скачивания Word-отчета
     const reportUrl = PROXY_URL + 'path=' + encodeURIComponent(getStatsFolder(profile.fio, profile.login) + '/Общий_отчет.docx') + '&token=' + encodeURIComponent(YANDEX_TOKEN);
-    html += '<a href="' + reportUrl + '" target="_blank" style="display:block;text-align:center;text-decoration:none;width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:14px;background:linear-gradient(135deg,#4A6CF7,#6B8AFF);color:white;box-shadow:0 4px 16px rgba(74,108,247,0.3);">📄 Скачать общий отчёт (Word)</a>';
-
+html += '<a href="' + reportUrl + '" download="Общий_отчет.docx" target="_blank" style="display:block;text-align:center;text-decoration:none;width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:14px;background:linear-gradient(135deg,#4A6CF7,#6B8AFF);color:white;box-shadow:0 4px 16px rgba(74,108,247,0.3);">📄 Скачать общий отчёт (Word)</a>';
     if (cloudStats && cloudStats.updated) {
         html += '<p style="font-size:11px;color:#8892a0;text-align:center;margin-bottom:12px;">Обновлено в облаке: ' + new Date(cloudStats.updated).toLocaleString('ru-RU') + '</p>';
     }
@@ -2314,8 +2313,10 @@ const PAIR_TIMES = [
     { num: 3, display: '12:10–13:40', start: 12.1667, end: 13.6667 },
     { num: 4, display: '13:50–15:20', start: 13.8333, end: 15.3333 },
     { num: 5, display: '15:30–17:00', start: 15.5,    end: 17.0 },
-    { num: 6, display: '',            start: 17.0,    end: 18.8333 },
-    { num: 7, display: '',            start: 18.8333, end: 20.0 }
+    { num: 6, display: '17:10–18:40', start: 17.1667, end: 18.6667 },
+    { num: 7, display: '18:50–20:20', start: 18.8333, end: 20.3333 },
+    { num: 8, display: '20:30–22:00', start: 20.5,    end: 22.0 },
+    { num: 9, display: '22:10–23:40', start: 22.1667, end: 23.6667 }
 ];
 let scheduleCache = null;
 let ordersCache = null;
