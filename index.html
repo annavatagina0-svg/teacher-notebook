@@ -88,6 +88,33 @@ textarea { min-height: 50px; resize: vertical; }
 .tab { flex: 1; padding: 8px; text-align: center; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 12px; color: #8892a0; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
 .tab.active { background: #4A6CF7; color: white; }
 
+/* Модалка (исправлено: display: none) */
+.modal { display: none !important; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal.active { display: flex !important; }
+.modal-content { background: white; padding: 20px; border-radius: 16px; width: 100%; max-width: 400px; }
+.profile-item { padding: 10px 12px; border-radius: 8px; background: #fafbfe; margin-bottom: 6px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
+.btn-cancel { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #f0f3f7; color: #6b7684; font-weight: 600; margin-top: 10px; cursor: pointer; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2c3e50; color: white; padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 2000; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* Расписание */
+.dropdown-block { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.03); margin-bottom: 8px; overflow: hidden; }
+.dropdown-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; font-size: 14px; font-weight: 700; }
+.dropdown-head .dd-icon { font-size: 18px; }
+.dropdown-head .dd-arrow { margin-left: auto; font-size: 12px; color: #8892a0; transition: transform 0.25s; }
+.dropdown-block.open .dropdown-head .dd-arrow { transform: rotate(180deg); }
+.dropdown-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; padding: 0 12px; }
+.dropdown-block.open .dropdown-body { max-height: 70vh; overflow-y: auto; padding: 0 12px 10px; }
+.sched-day { border-top: 1px solid #eef2ff; padding: 6px 0; }
+.sched-day-head { display: flex; align-items: center; gap: 6px; padding: 6px; cursor: pointer; font-weight: 600; font-size: 12px; color: #4A6CF7; }
+.sched-day-head .sched-count { background: #eef2ff; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
+.sched-day-list { display: none; padding: 4px 0; }
+.sched-day.open .sched-day-list { display: block; }
+.pair-card { background: #fafbfe; border-left: 3px solid #4A6CF7; border-radius: 6px; padding: 6px 8px; margin: 4px 0; font-size: 12px; }
+.pair-title { font-weight: 600; font-size: 12px; color: #2c3e50; }
+.pair-desc { font-size: 11px; color: #6b7684; }
+.sched-empty { text-align: center; color: #8892a0; font-size: 12px; padding: 12px; }
+
 /* Статистика */
 .stats-summary { background: #4A6CF7; color: white; padding: 16px; border-radius: 14px; margin-bottom: 10px; }
 .stats-summary .big { font-size: 32px; font-weight: 800; }
@@ -128,6 +155,11 @@ textarea { min-height: 50px; resize: vertical; }
 .pck-teacher .pck-body { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e6ecff; }
 .pck-teacher.open .pck-body { display: block; }
 .pck-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #f0f3f7; font-size: 11px; }
+
+/* Таблицы портфолио */
+.portfolio-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; background: white; border-radius: 8px; overflow: hidden; }
+.portfolio-table th, .portfolio-table td { border: 1px solid #e6ecff; padding: 6px; text-align: left; }
+.portfolio-table th { background: #eef2ff; color: #4A6CF7; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -169,14 +201,14 @@ textarea { min-height: 50px; resize: vertical; }
     </div>
 
     <!-- РАСПИСАНИЕ -->
-    <div class="dropdown-block" id="schedule-block" style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03); margin-bottom:8px; overflow:hidden;">
-        <div class="dropdown-head" onclick="toggleScheduleBlock()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer; font-size:14px; font-weight:700;">
-            <span class="dd-icon" style="font-size:18px;">📅</span>
+    <div class="dropdown-block" id="schedule-block">
+        <div class="dropdown-head" onclick="toggleScheduleBlock()">
+            <span class="dd-icon">📅</span>
             <span>Расписание</span>
-            <span class="dd-arrow" style="margin-left:auto; font-size:12px; color:#8892a0;">▼</span>
+            <span class="dd-arrow">▼</span>
         </div>
-        <div class="dropdown-body" id="schedule-body" style="max-height:0; overflow:hidden; padding:0 12px; transition:0.3s;">
-            <div class="sched-empty" style="text-align:center; color:#8892a0; font-size:12px; padding:12px;">Нажми, чтобы загрузить</div>
+        <div class="dropdown-body" id="schedule-body">
+            <div class="sched-empty">Нажми, чтобы загрузить</div>
         </div>
     </div>
 
@@ -280,7 +312,7 @@ textarea { min-height: 50px; resize: vertical; }
     <div class="modal-content">
         <h3>Профиль</h3>
         <div id="profiles-list"></div>
-        <div class="modal-buttons"><button class="btn-cancel" onclick="closeModal()">Отмена</button></div>
+        <button class="btn-cancel" onclick="closeModal()">Отмена</button>
     </div>
 </div>
 
@@ -310,7 +342,6 @@ let db = null;
 let formPhotos = [];
 let pendingPrefill = null;
 let statsActiveTab = 'my';
-let currentQualsYear = '';
 
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 3 · БАЗА ДАННЫХ И ОБЩИЕ ФУНКЦИИ
@@ -367,7 +398,7 @@ async function updateUnsentCount() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 4 · ФОРМЫ И ЗАПИСИ (ПОЛНОСТЬЮ ВОССТАНОВЛЕНЫ)
+   ЛИСТ 4 · ФОРМЫ И ЗАПИСИ
    ═══════════════════════════════════════════════════════════════ */
 function openForm(type) {
     editingRecordId = null;
@@ -554,7 +585,6 @@ async function editRecord(id) {
     const all = await getAllRecords();
     const rec = all.find(r => r.id === id);
     if (!rec) return;
-    // 48-часовое ограничение убрано, можно редактировать всегда
     editingRecordId = id; currentFormType = rec.type;
     document.getElementById('form-title').textContent = '✏️ Редактирование';
     renderForm(rec.type);
@@ -695,7 +725,7 @@ async function buildDataFile() { const records = (await getAllRecords()).filter(
 async function forceUpdate() { if (!confirm('Обновить?')) return; if ('serviceWorker' in navigator) { const regs = await navigator.serviceWorker.getRegistrations(); for (const r of regs) await r.unregister(); } if ('caches' in window) { const keys = await caches.keys(); for (const k of keys) await caches.delete(k); } location.reload(); }
 
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 6 · СТАТИСТИКА И ПОРТФОЛИО
+   ЛИСТ 6 · СТАТИСТИКА И ПОРТФОЛИО (ПОСТОЯННЫЙ ВИД)
    ═══════════════════════════════════════════════════════════════ */
 function normalizeFio(fio) {
     const raw = String(fio || '').trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
@@ -741,41 +771,106 @@ async function renderStatsContent() {
     if (statsActiveTab === 'my') return renderMyStats(c);
     if (statsActiveTab === 'pck') return renderPckStats(c);
     if (statsActiveTab === 'general') return renderGeneralStats(c);
-    if (statsActiveTab === 'portfolio') return renderQualifications(c);
+    if (statsActiveTab === 'portfolio') return renderPortfolio(c);
 }
 
-// --- ПОРТФОЛИО ---
-async function renderQualifications(c) {
+// --- ПОРТФОЛИО (ТАБЛИЦЫ) ---
+async function renderPortfolio(c) {
     c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;">Загрузка...</p>';
     try {
-        const data = await downloadJson(ROOT_FOLDER + '/Справочники/qualifications.json');
-        if (!data || !data.items) { c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;">Нет данных.</p>'; return; }
-        const key = normalizeFio(profile.fio); const myItems = data.items.filter(i => normalizeFio(i.fio) === key);
-        if (!myItems.length) { c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;">Нет записей.</p>'; return; }
+        const records = (await getAllRecords()).filter(r => r.teacher === profile.fio);
         
-        const years = [...new Set(myItems.map(i => i.date.substring(0, 4)))].sort().reverse();
-        if (!currentQualsYear || !years.includes(currentQualsYear)) currentQualsYear = years[0];
+        let html = '';
         
-        let yearTabs = '';
-        if (years.length > 1) yearTabs = '<div class="stats-tabs" style="margin-bottom:10px;">' + years.map(y => '<div class="stats-tab ' + (currentQualsYear === y ? 'active' : '') + '" onclick="switchQualsYear(\'' + y + '\')">' + y + '</div>').join('') + '</div>';
-        
-        const displayItems = myItems.filter(i => i.date.startsWith(currentQualsYear)).sort((a, b) => b.date.localeCompare(a.date));
-        let html = yearTabs + '<div class="card"><h3>' + currentQualsYear + ' год</h3>';
-        for (const item of displayItems) html += '<div style="border-bottom:1px dashed #e6ecff; padding:6px 0; font-size:12px;"><b>' + (item.name || item.type) + '</b><br>' + formatDateRu(item.date) + ' • ' + (item.hours || '—') + ' ч.</div>';
-        html += '</div>'; c.innerHTML = html;
+        // 1. КПК
+        const trainings = records.filter(r => r.type === 'training');
+        if (trainings.length) {
+            html += '<div class="card"><h3>КПК и обучение</h3><table class="portfolio-table"><tr><th>Название</th><th>Часы</th><th>Дата</th></tr>';
+            trainings.forEach(t => html += `<tr><td>${t.name||'—'}</td><td>${t.hours||'—'}</td><td>${t.date||'—'}</td></tr>`);
+            html += '</table></div>';
+        }
+
+        // 2. Конкурсы преподавателя
+        const tEvents = records.filter(r => r.type === 'event' && r.hasTeacher);
+        if (tEvents.length) {
+            html += '<div class="card"><h3>Конкурсы преподавателя</h3><table class="portfolio-table"><tr><th>Мероприятие</th><th>Уровень</th><th>Результат</th></tr>';
+            tEvents.forEach(e => {
+                const res = (e.teacherRoles||[]).map(r => r.result || r.place).filter(Boolean).join(', ') || '—';
+                html += `<tr><td>${e.name||'—'}</td><td>${e.level||'—'}</td><td>${res}</td></tr>`;
+            });
+            html += '</table></div>';
+        }
+
+        // 3. Конкурсы студентов
+        const sEvents = records.filter(r => r.type === 'event' && r.hasStudents);
+        if (sEvents.length) {
+            html += '<div class="card"><h3>Конкурсы студентов</h3><table class="portfolio-table"><tr><th>Мероприятие</th><th>Уровень</th><th>Победители</th></tr>';
+            sEvents.forEach(e => {
+                const winners = (e.studentsGroups||[]).flatMap(g => (g.diplomas||[]).map(d => d.winner)).filter(Boolean).join(', ') || '—';
+                html += `<tr><td>${e.name||'—'}</td><td>${e.level||'—'}</td><td>${winners}</td></tr>`;
+            });
+            html += '</table></div>';
+        }
+
+        // 4. Методическая работа
+        const methodical = records.filter(r => r.type === 'methodical');
+        if (methodical.length) {
+            html += '<div class="card"><h3>Методическая работа</h3><table class="portfolio-table"><tr><th>Название</th><th>Тип</th><th>Статус</th></tr>';
+            methodical.forEach(m => html += `<tr><td>${m.name||'—'}</td><td>${m.methodicalType||'—'}</td><td>${m.status||'—'}</td></tr>`);
+            html += '</table></div>';
+        }
+
+        // 5. Посещенные уроки (Взаимопосещение)
+        const visits = records.filter(r => r.type === 'activity' && r.activityType === 'взаимопосещение (свой)');
+        if (visits.length) {
+            html += '<div class="card"><h3>Взаимопосещение уроков</h3><table class="portfolio-table"><tr><th>Тема</th><th>Дата</th></tr>';
+            visits.forEach(v => html += `<tr><td>${v.name||'—'}</td><td>${v.date||'—'}</td></tr>`);
+            html += '</table></div>';
+        }
+
+        if (!html) html = '<p style="text-align:center;color:#8892a0;padding:20px;">Нет данных для портфолио. Добавьте записи.</p>';
+        c.innerHTML = html;
     } catch(e) { c.innerHTML = '<p style="text-align:center;color:red;padding:20px;">Ошибка: ' + e.message + '</p>'; }
 }
-function switchQualsYear(year) { currentQualsYear = year; renderQualifications(document.getElementById('stats-content')); }
 
-// --- ОСТАЛЬНАЯ СТАТИСТИКА ---
+// --- МОЯ СТАТИСТИКА (КАРТОЧКИ КРИТЕРИЕВ) ---
 async function renderMyStats(c) {
     c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;">Загрузка...</p>';
     const myRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
     let cloudStats = null; try { cloudStats = await downloadJson(getStatsFolder(profile.fio, profile.login) + '/statistics.json'); } catch(e) {}
+    
     const total = (cloudStats && typeof cloudStats.total === 'number') ? cloudStats.total : 0;
-    const totalMax = (cloudStats && typeof cloudStats.total_max === 'number') ? cloudStats.total_max : 100;
-    c.innerHTML = '<div class="stats-summary"><div class="big">' + total + ' <span style="font-size:16px;opacity:0.8;">/ ' + totalMax + '</span></div><div style="font-size:12px;opacity:0.9;">Баллы по критериям</div></div><p style="text-align:center;color:#8892a0;font-size:12px;">Обновите данные кнопкой 🔄 вверху</p>';
+    const totalMax = 100; // Максимально возможный балл
+    const percent = Math.round(total * 100 / totalMax);
+
+    let html = '<div class="stats-summary">' +
+        '<div class="big">' + total + ' <span style="font-size:20px;opacity:0.85;">/ ' + totalMax + '</span></div>' +
+        '<div style="font-size:12px;opacity:0.9;">Баллы по критериям</div>' +
+        '<div class="bar"><div style="width:' + percent + '%"></div></div>' +
+        '<div style="font-size:11px;opacity:0.85;text-align:right;margin-top:4px;">' + percent + '% от максимума</div>' +
+        '</div>';
+
+    // Рендерим 15 карточек критериев (даже если баллов 0)
+    for (let i = 1; i <= 15; i++) {
+        let score = 0;
+        if (cloudStats && cloudStats.scores && cloudStats.scores['K'+i]) {
+            score = cloudStats.scores['K'+i].score;
+        }
+        html += `<div class="crit-card ${score > 0 ? 'partial' : 'zero'}" data-code="${i}">
+            <div class="crit-head" onclick="toggleCritCard(${i})">
+                <div class="crit-head-num">${i}</div>
+                <div class="crit-head-name">Критерий ${i}</div>
+                <div class="crit-head-score">${score} б.</div>
+            </div>
+            <div class="crit-body">
+                <div class="crit-desc">Данные обновляются после запуска анализа в облаке.</div>
+            </div>
+        </div>`;
+    }
+    c.innerHTML = html;
 }
+
+function toggleCritCard(code) { const card = document.querySelector('.crit-card[data-code="' + code + '"]'); if (card) card.classList.toggle('open'); }
 
 async function renderPckStats(c) {
     c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;">Загрузка...</p>';
