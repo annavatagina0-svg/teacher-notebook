@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 1 · ОФОРМЛЕНИЕ (СЖАТОЕ)
+   ЛИСТ 1 · ОФОРМЛЕНИЕ (КОМПАКТНОЕ)
    ═══════════════════════════════════════════════════════════════ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2c3e50; min-height: 100vh; -webkit-font-smoothing: antialiased; }
@@ -23,6 +23,9 @@ h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4A6CF7, #6B8AFF); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
 .profile-name { font-size: 14px; font-weight: 600; }
 .profile-hint { font-size: 11px; color: #8892a0; margin-top: 1px; }
+
+/* Виджет часов */
+#hours-widget { background: #4A6CF7; color:white; border-radius:12px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
 
 /* Быстрые кнопки */
 .quick-actions { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -55,6 +58,7 @@ label { display: block; font-size: 12px; color: #6b7684; margin-bottom: 4px; fon
 input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 8px 10px; border: 1.5px solid #e6ecff; border-radius: 10px; font-size: 14px; background: #fafbfe; font-family: inherit; color: #2c3e50; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: #4A6CF7; background: white; }
 textarea { min-height: 50px; resize: vertical; }
+.toggle-group { display: flex; flex-wrap: wrap; gap: 8px; }
 .toggle { display: flex; align-items: center; gap: 6px; background: #fafbfe; border: 1.5px solid #e6ecff; padding: 8px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; flex: 1; font-weight: 500; }
 .toggle input { width: auto; margin: 0; }
 .toggle:has(input:checked) { background: #eef2ff; border-color: #4A6CF7; color: #4A6CF7; }
@@ -83,32 +87,6 @@ textarea { min-height: 50px; resize: vertical; }
 .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
 .tab { flex: 1; padding: 8px; text-align: center; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 12px; color: #8892a0; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
 .tab.active { background: #4A6CF7; color: white; }
-
-/* Модалка и тост */
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-.modal.active { display: flex; }
-.modal-content { background: white; padding: 20px; border-radius: 16px; width: 100%; max-width: 400px; }
-.profile-item { padding: 10px 12px; border-radius: 8px; background: #fafbfe; margin-bottom: 6px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2c3e50; color: white; padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 2000; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-/* Расписание */
-.dropdown-block { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.03); margin-bottom: 8px; overflow: hidden; }
-.dropdown-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; font-size: 14px; font-weight: 700; }
-.dropdown-head .dd-icon { font-size: 18px; }
-.dropdown-head .dd-arrow { margin-left: auto; font-size: 12px; color: #8892a0; transition: transform 0.25s; }
-.dropdown-block.open .dropdown-head .dd-arrow { transform: rotate(180deg); }
-.dropdown-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; padding: 0 12px; }
-.dropdown-block.open .dropdown-body { max-height: 70vh; overflow-y: auto; padding: 0 12px 10px; }
-.sched-day { border-top: 1px solid #eef2ff; padding: 6px 0; }
-.sched-day-head { display: flex; align-items: center; gap: 6px; padding: 6px; cursor: pointer; font-weight: 600; font-size: 12px; color: #4A6CF7; }
-.sched-day-head .sched-count { background: #eef2ff; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
-.sched-day-list { display: none; padding: 4px 0; }
-.sched-day.open .sched-day-list { display: block; }
-.pair-card { background: #fafbfe; border-left: 3px solid #4A6CF7; border-radius: 6px; padding: 6px 8px; margin: 4px 0; font-size: 12px; }
-.pair-title { font-weight: 600; font-size: 12px; color: #2c3e50; }
-.pair-desc { font-size: 11px; color: #6b7684; }
-.sched-empty { text-align: center; color: #8892a0; font-size: 12px; padding: 12px; }
 
 /* Статистика */
 .stats-summary { background: #4A6CF7; color: white; padding: 16px; border-radius: 14px; margin-bottom: 10px; }
@@ -165,8 +143,8 @@ textarea { min-height: 50px; resize: vertical; }
         <div class="form-group" style="text-align:left;"><label>Председатель ПЦК *</label><select id="input-pck"></select></div>
         <div class="form-group" style="text-align:left;"><label>Категория *</label><select id="input-category"><option value="">— выберите —</option><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
         <div class="form-group" style="text-align:left;"><label>Классное руководство</label><input type="text" id="input-class-group" placeholder="АЭ-11 (если нет — пусто)"></div>
-        <label class="checkbox-line" style="margin-bottom: 10px;"><input type="checkbox" id="input-is-class-teacher"><span>Я классный руководитель</span></label>
-        <label class="checkbox-line" style="margin-bottom: 16px;"><input type="checkbox" id="existing-profile-check"><span>У меня уже есть профиль (в облаке)</span></label>
+        <label class="checkbox-line" style="margin-bottom: 10px; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="input-is-class-teacher"><span>Я классный руководитель</span></label>
+        <label class="checkbox-line" style="margin-bottom: 16px; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="existing-profile-check"><span>У меня уже есть профиль (в облаке)</span></label>
         <button class="btn-primary" onclick="saveProfile()" style="padding: 12px; font-size: 15px;">Войти / Создать</button>
     </div>
 </div>
@@ -182,7 +160,7 @@ textarea { min-height: 50px; resize: vertical; }
     </div>
 
     <!-- ВИДЖЕТ ЧАСОВ -->
-    <div id="hours-widget" class="hidden" style="background: #4A6CF7; color:white; border-radius:12px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+    <div id="hours-widget" class="hidden">
         <div>
             <div style="font-size:11px; opacity:0.9;">Выдано часов</div>
             <div style="font-size:20px; font-weight:800;" id="total-hours-display">0 ч</div>
@@ -191,14 +169,14 @@ textarea { min-height: 50px; resize: vertical; }
     </div>
 
     <!-- РАСПИСАНИЕ -->
-    <div class="dropdown-block" id="schedule-block">
-        <div class="dropdown-head" onclick="toggleScheduleBlock()">
-            <span class="dd-icon">📅</span>
+    <div class="dropdown-block" id="schedule-block" style="background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03); margin-bottom:8px; overflow:hidden;">
+        <div class="dropdown-head" onclick="toggleScheduleBlock()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer; font-size:14px; font-weight:700;">
+            <span class="dd-icon" style="font-size:18px;">📅</span>
             <span>Расписание</span>
-            <span class="dd-arrow">▼</span>
+            <span class="dd-arrow" style="margin-left:auto; font-size:12px; color:#8892a0;">▼</span>
         </div>
-        <div class="dropdown-body" id="schedule-body">
-            <div class="sched-empty">Нажми, чтобы загрузить</div>
+        <div class="dropdown-body" id="schedule-body" style="max-height:0; overflow:hidden; padding:0 12px; transition:0.3s;">
+            <div class="sched-empty" style="text-align:center; color:#8892a0; font-size:12px; padding:12px;">Нажми, чтобы загрузить</div>
         </div>
     </div>
 
@@ -262,8 +240,8 @@ textarea { min-height: 50px; resize: vertical; }
 <div id="screen-records" class="screen">
     <div class="form-header"><button class="back-btn" onclick="backToMain()">←</button><h2>Мои записи</h2></div>
     <div class="tabs">
-        <div class="tab active" onclick="switchRecordsTab('my')">📋 Мои</div>
-        <div class="tab" onclick="switchRecordsTab('orders')">📎 Приказы</div>
+        <div class="tab active" onclick="switchRecordsTab('my')">📋 Мои записи</div>
+        <div class="tab" onclick="switchRecordsTab('stub')">📎 В разработке</div>
     </div>
     <div class="cloud-btn-row" id="cloud-row" style="display:flex; gap:6px; margin-bottom:8px;">
         <button class="load" onclick="loadFromCloud()" id="load-cloud-btn" style="flex:1; padding:8px; border-radius:8px; font-size:12px; background:#e8f8ee; color:#27ae60; border:1.5px solid #d5f0e0;">☁️ Загрузить</button>
@@ -292,7 +270,7 @@ textarea { min-height: 50px; resize: vertical; }
         <div class="form-group"><label>Председатель ПЦК</label><select id="edit-pck"></select></div>
         <div class="form-group"><label>Категория</label><select id="edit-category"><option value="высшая">Высшая</option><option value="первая">Первая</option><option value="нет">Нет</option></select></div>
         <div class="form-group"><label>Группа</label><input type="text" id="edit-class-group"></div>
-        <label class="checkbox-line"><input type="checkbox" id="edit-is-class-teacher"><span>Я классный руководитель</span></label>
+        <label class="checkbox-line" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="edit-is-class-teacher"><span>Я классный руководитель</span></label>
     </div>
     <button class="save-btn" onclick="saveEditedProfile()">💾 Сохранить</button>
 </div>
@@ -310,7 +288,7 @@ textarea { min-height: 50px; resize: vertical; }
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 2 · ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ (ВОССТАНОВЛЕНЫ)
+   ЛИСТ 2 · ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
    ═══════════════════════════════════════════════════════════════ */
 const YANDEX_TOKEN = 'y0__wgBEJ3Zn40JGLPrSiD-pYmbGfNv7tdZYi0Z7LRVHG1Sw4vAgj2G';
 const ROOT_FOLDER = 'Приложение_Блокнот';
@@ -389,7 +367,7 @@ async function updateUnsentCount() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 4 · ФОРМЫ И ЗАПИСИ
+   ЛИСТ 4 · ФОРМЫ И ЗАПИСИ (ПОЛНОСТЬЮ ВОССТАНОВЛЕНЫ)
    ═══════════════════════════════════════════════════════════════ */
 function openForm(type) {
     editingRecordId = null;
@@ -428,25 +406,36 @@ function removeFormPhoto(idx) { formPhotos.splice(idx, 1); renderFormPhotoPrevie
 function renderEventForm() {
     return '<div class="card"><h3>Основное</h3>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
-        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')"><option value="конкурс">Конкурс</option><option value="олимпиада">Олимпиада</option><option value="конференция">Конференция</option><option value="Абилимпикс">Абилимпикс</option><option value="другое">Другое</option></select></div>' +
-        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните</label><input type="text" id="f-type-custom"></div>' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')">' +
+            '<option value="конкурс">Конкурс</option><option value="олимпиада">Олимпиада</option><option value="конференция">Конференция</option>' +
+            '<option value="форум">Форум</option><option value="семинар">Семинар</option><option value="соревнование">Соревнование</option>' +
+            '<option value="круглый стол">Круглый стол</option><option value="фестиваль">Фестиваль</option>' +
+            '<option value="Абилимпикс">Абилимпикс</option><option value="акция/диктант">Акция / Диктант</option><option value="другое">Другое</option>' +
+        '</select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните тип</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Уровень</label>' + levelsSelect('f-level') + '</div>' +
+        '<div class="form-group"><label>Вид участия</label><select id="f-participation">' +
+            '<option value="очно">Очно</option><option value="дистанционно">Дистанционно</option><option value="заочно">Заочно</option><option value="интернет-конкурс">Интернет-конкурс</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Место проведения</label><input type="text" id="f-place"></div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
-        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> В рамках ФП Профессионалитет</label></div>' +
     '</div>' +
     '<div class="card"><h3>Участники</h3><div class="toggle-group">' +
         '<label class="toggle"><input type="checkbox" id="f-has-teacher" onchange="document.getElementById(\'f-teacher-block\').classList.toggle(\'hidden\',!this.checked)"> Преподаватель</label>' +
         '<label class="toggle"><input type="checkbox" id="f-has-students" onchange="toggleStudentsBlock()"> Студенты</label>' +
     '</div></div>' +
-    '<div id="f-teacher-block" class="card hidden"><h3>Моё участие</h3><div id="f-roles-container"></div><button type="button" class="add-btn" onclick="addTeacherRole()">+ Роль</button></div>' +
-    '<div id="f-students-block" class="card hidden"><h3>Студенты</h3><div id="f-students-container"></div><button type="button" class="add-btn" onclick="addStudentsGroup()">+ Группа</button></div>' +
+    '<div id="f-teacher-block" class="card hidden"><h3>Моё участие</h3><div id="f-roles-container"></div><button type="button" class="add-btn" onclick="addTeacherRole()">+ Добавить роль</button></div>' +
+    '<div id="f-students-block" class="card hidden"><h3>Студенты</h3><div id="f-students-container"></div><button type="button" class="add-btn" onclick="addStudentsGroup()">+ Добавить группу</button></div>' +
     '<div class="card"><h3>Фото</h3><input type="file" id="f-photo" accept="image/*" multiple><div id="f-photo-preview-container" class="photo-previews"></div></div>';
 }
 function renderTrainingForm() {
     return '<div class="card"><h3>Обучение</h3>' +
-        '<div class="form-group"><label>Вид</label><select id="f-type"><option value="КПК">КПК</option><option value="стажировка">Стажировка</option><option value="переподготовка">Переподготовка</option></select></div>' +
+        '<div class="form-group"><label>Вид</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')"><option value="КПК">КПК</option><option value="стажировка">Стажировка</option><option value="переподготовка">Переподготовка</option><option value="другое">Другое</option></select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
         '<div class="form-group"><label>Часы</label><input type="number" id="f-hours"></div>' +
+        '<div class="form-group"><label>Место</label><input type="text" id="f-place"></div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
         '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-prof"> Профессионалитет</label></div>' +
     '</div>';
@@ -459,6 +448,7 @@ function renderAssessmentForm() {
         '<div class="form-group"><label>Всего</label><input type="number" id="f-total"></div>' +
         '<div class="form-group"><label>Отсутствовали</label><input type="number" id="f-absent"></div>' +
         '<div class="form-group"><label>Дата</label><input type="date" id="f-date"></div>' +
+        '<div class="form-group"><label class="toggle"><input type="checkbox" id="f-ovz"> ОВЗ</label></div>' +
     '</div>' +
     '<div id="f-grades-block" class="card"><h3>Оценки</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
         '<div><label>"5"</label><input type="number" id="f-c5"></div><div><label>"4"</label><input type="number" id="f-c4"></div>' +
@@ -468,7 +458,8 @@ function renderAssessmentForm() {
 }
 function renderMethodicalForm() {
     return '<div class="card"><h3>Методическая</h3>' +
-        '<div class="form-group"><label>Тип</label><select id="f-type"><option value="УМК">УМК</option><option value="рабочая программа">Программа</option><option value="публикация">Публикация</option></select></div>' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="toggleCustom(\'f-type\',\'f-type-custom-group\')"><option value="УМК">УМК</option><option value="рабочая программа">Программа</option><option value="публикация">Публикация</option><option value="другое">Другое</option></select></div>' +
+        '<div class="form-group hidden" id="f-type-custom-group"><label>Уточните</label><input type="text" id="f-type-custom"></div>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
         '<div class="form-group"><label>Роль</label><select id="f-role"><option value="автор">Автор</option><option value="соавтор">Соавтор</option></select></div>' +
         '<div class="form-group"><label>Статус</label><select id="f-status"><option value="утверждён">Утверждён</option><option value="разработан">Разработан</option></select></div>' +
@@ -478,7 +469,7 @@ function renderMethodicalForm() {
 }
 function renderActivityForm() {
     return '<div class="card"><h3>Активность</h3>' +
-        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="onActivityTypeChange()"><option value="открытый урок">Открытый урок</option><option value="мастер-класс">Мастер-класс</option><option value="выступление на педсовете">Педсовет</option><option value="профориентация">Профориентация</option><option value="неделя ПЦК">Неделя ПЦК</option></select></div>' +
+        '<div class="form-group"><label>Тип</label><select id="f-type" onchange="onActivityTypeChange()"><option value="открытый урок">Открытый урок</option><option value="мастер-класс">Мастер-класс</option><option value="выступление на педсовете">Педсовет</option><option value="выступление на методсовете">Методсовет</option><option value="публикация">Публикация</option><option value="наставничество">Наставничество</option><option value="органы самоуправления">Самоуправление</option><option value="экскурсия">Экскурсия</option><option value="приглашение специалиста">Специалист</option><option value="профориентация">Профориентация</option><option value="работа с ОВЗ">ОВЗ</option><option value="неделя ПЦК">Неделя ПЦК</option></select></div>' +
         '<div class="form-group hidden" id="f-ict-group"><label class="toggle"><input type="checkbox" id="f-ict"> С ИКТ</label></div>' +
         '<div class="form-group hidden" id="f-role-pck-group"><label>Роль</label><select id="f-role-pck"><option value="участник">Участник</option><option value="организатор">Организатор</option></select></div>' +
         '<div class="form-group"><label>Название *</label><input type="text" id="f-name"></div>' +
@@ -563,6 +554,7 @@ async function editRecord(id) {
     const all = await getAllRecords();
     const rec = all.find(r => r.id === id);
     if (!rec) return;
+    // 48-часовое ограничение убрано, можно редактировать всегда
     editingRecordId = id; currentFormType = rec.type;
     document.getElementById('form-title').textContent = '✏️ Редактирование';
     renderForm(rec.type);
@@ -590,16 +582,20 @@ async function addPhotoToRecord(id) {
 function switchRecordsTab(tab) {
     currentRecordsTab = tab; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab')[tab === 'my' ? 0 : 1].classList.add('active');
     const cloudRow = document.getElementById('cloud-row');
-    if (tab === 'my') { if (cloudRow) cloudRow.classList.remove('hidden'); showLocalRecords(); } else { if (cloudRow) cloudRow.classList.add('hidden'); renderOrders(); }
+    const container = document.getElementById('records-list');
+    if (tab === 'my') { if (cloudRow) cloudRow.classList.remove('hidden'); showLocalRecords(); } 
+    else { 
+        if (cloudRow) cloudRow.classList.add('hidden'); 
+        container.innerHTML = '<div style="text-align:center; padding:40px 20px; color:#8892a0;"><div style="font-size:40px; margin-bottom:10px;">🚧</div><h3>Раздел в разработке</h3><p style="font-size:13px; margin-top:8px;">Скоро здесь появится выгрузка из приказов.</p></div>';
+    }
 }
 
 async function showLocalRecords() {
     const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.deleted);
-    const filtered = records.filter(r => currentRecordsTab === 'my' ? (r.source !== 'order') : (r.source === 'order'));
     const c = document.getElementById('records-list');
-    if (!filtered.length) { c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;font-size:13px;">Пока нет записей.</p>'; return; }
+    if (!records.length) { c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:20px;font-size:13px;">Пока нет записей.</p>'; return; }
     
-    c.innerHTML = filtered.reverse().map(r => {
+    c.innerHTML = records.reverse().map(r => {
         const editBtn = '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>';
         const photoBtn = '<button class="record-photo" onclick="addPhotoToRecord(' + r.id + ')" title="Прикрепить фото">📷</button>';
         const photoCount = (r.photos && r.photos.length) ? r.photos.length : 0;
@@ -699,7 +695,7 @@ async function buildDataFile() { const records = (await getAllRecords()).filter(
 async function forceUpdate() { if (!confirm('Обновить?')) return; if ('serviceWorker' in navigator) { const regs = await navigator.serviceWorker.getRegistrations(); for (const r of regs) await r.unregister(); } if ('caches' in window) { const keys = await caches.keys(); for (const k of keys) await caches.delete(k); } location.reload(); }
 
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 6 · СТАТИСТИКА И ПОРТФОЛИО (ОБЪЕДИНЕНЫ)
+   ЛИСТ 6 · СТАТИСТИКА И ПОРТФОЛИО
    ═══════════════════════════════════════════════════════════════ */
 function normalizeFio(fio) {
     const raw = String(fio || '').trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
