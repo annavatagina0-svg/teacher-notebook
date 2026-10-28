@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-notebook-v61';
+const CACHE_NAME = 'teacher-notebook-v62';
 const FILES_TO_CACHE = ['./', './index.html', './manifest.json'];
 
 // Установка: кешируем оболочку
