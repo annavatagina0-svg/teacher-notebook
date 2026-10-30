@@ -520,6 +520,7 @@ const SVODKA_PATH = ROOT_FOLDER + '/Справочники/svodka.json';
 const AUTHOR_FIO = 'Ватагина Анна Николаевна';
 
 /* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    ЛИСТ 2 · ЗАПИСИ В БЛОКНОТЕ
    ═══════════════════════════════════════════════════════════════ */
 
@@ -666,7 +667,6 @@ function renderForm(type) {
     else if (type === 'methodical') c.innerHTML = renderMethodicalForm();
     else if (type === 'activity') c.innerHTML = renderActivityForm();
     bindPhotoPreview();
-    // Гидратация селекта группы для формы «Контроль»
     if (type === 'assessment') {
         setTimeout(() => {
             if (typeof hydrateGroupSelect === 'function') {
@@ -880,7 +880,6 @@ function addStudentsGroup(data) {
         '<div class="form-group"><label>ФИО участников</label><textarea class="s-names">' + (g.names || '') + '</textarea></div>' +
         '<p class="hint">Победители</p><div class="s-diplomas" id="s-diplomas-' + id + '"></div>' +
         '<button type="button" class="add-btn" onclick="addDiploma(' + id + ')">+ Добавить место</button></div>');
-    // Гидратация селекта группы
     setTimeout(() => {
         if (typeof hydrateGroupSelect === 'function') {
             hydrateGroupSelect('s-group-select-' + id, 's-group-custom-' + id, g.group || '');
@@ -904,7 +903,6 @@ function addDiploma(groupId, data) {
         '<div class="form-group"><label>ФИО победителя</label><input type="text" class="s-winner" value="' + (d.winner || '') + '"></div></div>');
 }
 
-// ─── Хелпер: достать значение группы из селекта + ручного ввода ───
 function getGroupValue(selectEl, customInputEl) {
     if (!selectEl) return '';
     const v = selectEl.value;
@@ -912,6 +910,9 @@ function getGroupValue(selectEl, customInputEl) {
     return v || '';
 }
 
+// ─── КОНЕЦ ЛИСТА 2.1 ───
+// Следующая часть (2.2) идёт сразу после этой строки: saveRecord, clearForm, compressImage,
+// editRecord, addPhotoToRecord, switchRecordsTab, showLocalRecords.
 async function saveRecord() {
     try {
         const type = currentFormType;
@@ -932,6 +933,7 @@ async function saveRecord() {
         record.year = getYear();
         const getVal = id => { const el = document.getElementById(id); return el ? String(el.value || '') : ''; };
         const getCheck = id => { const el = document.getElementById(id); return el ? !!el.checked : false; };
+
         if (type !== 'assessment') {
             record.name = getVal('f-name').trim();
             if (!record.name) { showToast('Введите название'); return; }
@@ -977,7 +979,6 @@ async function saveRecord() {
             if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         } else if (type === 'assessment') {
             record.assessmentType = getVal('f-type');
-            // Группа: из селекта + ручной ввод
             const selEl = document.getElementById('f-group-select');
             const custEl = document.getElementById('f-group');
             record.group = getGroupValue(selEl, custEl);
@@ -1079,7 +1080,6 @@ async function editRecord(id) {
             set('f-type', rec.assessmentType);
             set('f-subject', rec.subject); set('f-total', rec.total); set('f-absent', rec.absent);
             setC('f-ovz', rec.ovz);
-            // Гидратация селекта группы с текущим значением
             if (typeof hydrateGroupSelect === 'function') {
                 hydrateGroupSelect('f-group-select', 'f-group', rec.group || '');
             } else {
@@ -1191,7 +1191,9 @@ async function showLocalRecords() {
     showScreen('screen-records');
 }
 
+// ─── КОНЕЦ ЛИСТА 2.2 ───
 // deleteRecord — в ЛИСТЕ 9 (soft-delete)
+  
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 3 · ПРОФИЛЬ И ОБЛАКО
    ═══════════════════════════════════════════════════════════════ */
