@@ -350,10 +350,11 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     </div>
 
     <!-- РАСПИСАНИЕ -->
-    <div class="dropdown-block" id="schedule-block">
+       <div class="dropdown-block" id="schedule-block">
         <div class="dropdown-head" onclick="toggleScheduleBlock()">
             <span class="dd-icon">📅</span>
             <span>Расписание</span>
+            <span id="schedule-cache-badge"></span>
             <span class="dd-arrow">▼</span>
         </div>
         <div class="dropdown-body" id="schedule-body">
@@ -362,10 +363,11 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
     </div>
 
     <!-- МЕРОПРИЯТИЯ -->
-    <div class="dropdown-block hidden" id="events-block">
+        <div class="dropdown-block hidden" id="events-block">
         <div class="dropdown-head" onclick="toggleEventsBlock()">
             <span class="dd-icon">📌</span>
             <span id="events-block-title">Мероприятия</span>
+            <span id="events-cache-badge"></span>
             <span class="dd-arrow">▼</span>
         </div>
         <div class="dropdown-body" id="events-body">
@@ -426,16 +428,23 @@ input[type="file"] { width: 100%; padding: 10px; font-size: 14px; background: #f
             <div class="menu-title">Методическая</div>
             <div class="menu-sub">УМК, публикации</div>
         </button>
-        <button class="menu-card menu-card-wide" onclick="openForm('activity')">
+              <button class="menu-card menu-card-wide" onclick="openForm('activity')">
             <span class="menu-icon">🗣</span>
             <div>
                 <div class="menu-title">Трансляция и активность</div>
                 <div class="menu-sub">Уроки, выступления, профориентация</div>
             </div>
         </button>
+        <button class="menu-card menu-card-wide" onclick="showLessonsList()">
+            <span class="menu-icon">📓</span>
+            <div>
+                <div class="menu-title">Нагрузка (ежедневник)</div>
+                <div class="menu-sub">Посещаемость и оценки по парам</div>
+            </div>
+        </button>
     </div>
 
-    <button class="btn-primary" onclick="forceUpdate()" style="margin-top:12px;background:white;color:#8892a0;border:2px solid #eef1f5;box-shadow:none;font-size:13px;padding:10px;">🔄 Обновить приложение</button>
+        <div id="refresh-buttons-wrap"></div>
 </div>
 
 <!-- ЭКРАН ФОРМА -->
@@ -1001,13 +1010,16 @@ async function saveRecord() {
             record.status = getVal('f-status');
             record.level = getVal('f-level');
             if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
-        } else if (type === 'activity') {
+              } else if (type === 'activity') {
             record.activityType = getVal('f-type');
             if (record.activityType === 'другое') record.activityTypeCustom = getVal('f-type-custom');
             record.level = getVal('f-level');
             if (record.activityType === 'открытый урок') record.withICT = getCheck('f-ict');
             if (record.activityType === 'неделя ПЦК') record.rolePCK = getVal('f-role-pck') || 'участник';
             if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
+        } else if (type === 'lesson') {
+            await saveLesson();
+            return;
         }
         if (editingRecordId) {
             record.sent = false; record.fromCloud = false;
@@ -1182,9 +1194,15 @@ async function showLocalRecords() {
                 if (r.rolePCK === 'участник') extraTags.push('<span class="tag" style="background:#f0f3f7;color:#6b7684;">👤 участник</span>');
                 body = '<p>' + [t, r.level, r.date].filter(Boolean).join(' • ') + '</p><div class="tags">' + extraTags.join('') + photoTag + (r.fromCloud ? '<span class="tag cloud">☁️ из облака</span>' : (!r.sent ? '<span class="tag unsent">⏳ не отправлено</span>' : '')) + '</div>';
             }
-            let cls = 'record';
+                        let cls = 'record';
             if (r.fromCloud) cls += ' cloud'; else if (!r.sent) cls += ' unsent';
-            return '<div class="' + cls + '"><div class="record-header"><h3>' + title + '</h3><div class="record-actions">' + photoBtn + editBtn + delBtn + '</div></div>' + body + '</div>';
+            // Бейджи источника записи (КПК, ежедневник и т.д.)
+            let sourceBadgesHtml = '';
+            if (typeof recordSourceBadges === 'function') {
+                const sb = recordSourceBadges(r);
+                if (sb) sourceBadgesHtml = '<div class="tags" style="margin-top:6px;">' + sb + '</div>';
+            }
+            return '<div class="' + cls + '"><div class="record-header"><h3>' + title + '</h3><div class="record-actions">' + photoBtn + editBtn + delBtn + '</div></div>' + body + sourceBadgesHtml + '</div>';
         }).join('');
     }
     showScreen('screen-records');
@@ -1252,13 +1270,33 @@ async function saveProfile() {
         alert('Не удалось загрузить данные из облака.');
         return;
     }
-    profile = { fio, login, pck, category, isClassTeacher, classGroup, year: getYear(), createdAt: new Date().toISOString() };
+      profile = { fio, login, pck, category, isClassTeacher, classGroup, year: getYear(), createdAt: new Date().toISOString() };
     await saveSetting('profile', profile);
     updateProfileUI();
     showScreen('screen-main');
     loadEventsCache();
     loadReminders();
     showToast('Профиль создан');
+
+    // Автозаполнение КПК: если для ФИО есть записи в kpk.json — предложить импорт
+    try {
+        if (typeof checkKpkForFio === 'function') {
+            const kpkInfo = await checkKpkForFio(fio);
+            if (kpkInfo && kpkInfo.actual > 0) {
+                setTimeout(async () => {
+                    if (confirm('В справочнике КПК найдено ' + kpkInfo.actual + ' актуальных записей для вас.\nИмпортировать их в раздел «Обучение»?')) {
+                        let added = 0;
+                        for (const k of kpkInfo.actualList) {
+                            const ok = await createTrainingFromKpk(k);
+                            if (ok) added++;
+                        }
+                        showToast('✅ Импортировано КПК: ' + added);
+                        if (added > 0) showLocalRecords();
+                    }
+                }, 500);
+            }
+        }
+    } catch (e) { console.warn('kpk autoimport:', e); }
 }
 
 function updateProfileUI() {
@@ -1276,6 +1314,7 @@ function showProfileSwitcher() {
     document.getElementById('modal-profile').classList.add('active');
     document.getElementById('profiles-list').innerHTML =
         '<div class="profile-item active"><span>' + profile.fio + '</span><span>✓</span></div>' +
+        '<div class="profile-item" onclick="openKpkImport()">🎓 Импортировать КПК</div>' +
         '<div class="profile-item" onclick="openEditProfile()">✏️ Редактировать профиль</div>' +
         '<div class="profile-item" onclick="resetProfile()" style="color:#e74c3c;">🗑 Сбросить профиль</div>';
 }
@@ -1696,7 +1735,12 @@ const CRITERIA = [
             { p: '4 б', t: '2 и более КПК по 16 часов' },
             { p: '+1 б', t: 'переподготовка или ПК от 180 часов' }
         ],
-        calc: r => {
+                calc: r => {
+            // Критерий 7 — только КПК за 3 года от 1 сентября (ЛИСТ 14)
+            if (typeof calcCriterion7 === 'function') {
+                return calcCriterion7(r).score;
+            }
+            // Fallback, если ЛИСТ 14 не загружен
             const t = r.filter(x => x.type === 'training');
             if (!t.length) return 0;
             const short16 = t.filter(x => { const h = parseInt(x.hours) || 0; return h >= 16 && h < 180; }).length;
@@ -1707,7 +1751,12 @@ const CRITERIA = [
             if (big >= 1) s = Math.min(5, s + 1);
             return s;
         },
-        details: r => {
+                details: r => {
+            // Критерий 7 — только КПК за 3 года (ЛИСТ 14)
+            if (typeof calcCriterion7 === 'function') {
+                return calcCriterion7(r).details;
+            }
+            // Fallback
             const t = r.filter(x => x.type === 'training');
             if (!t.length) return [{ kind: 'absent', desc: 'Нет записей об обучении', score: '' }];
             const rows = [];
@@ -2042,6 +2091,7 @@ function renderStatsTabs() {
     const wrap = document.getElementById('stats-tabs-wrap');
     if (!wrap) return;
     const tabs = [{ key: 'my', label: '📊 Моя' }];
+    if (typeof isClassTeacherActive === 'function' && isClassTeacherActive()) tabs.push({ key: 'class', label: '👥 Моя группа' });
     if (isPredsedatel()) tabs.push({ key: 'pck', label: '👥 ПЦК' });
     if (isAuthor() || isMura()) tabs.push({ key: 'general', label: '🏫 Техникум' });
     tabs.push({ key: 'portfolio', label: '📚 Портфолио' });
@@ -2059,11 +2109,11 @@ async function switchStatsTab(tab) {
 async function renderStatsContent() {
     const c = document.getElementById('stats-content');
     if (statsActiveTab === 'my')        return renderMyStats(c);
+    if (statsActiveTab === 'class')     return renderClassSummary(c);
     if (statsActiveTab === 'pck')       return renderPckStats(c);
     if (statsActiveTab === 'general')   return renderGeneralStats(c);
     if (statsActiveTab === 'portfolio') return renderPortfolio(c);
 }
-
 async function renderMyStats(c) {
     c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;">Загрузка...</p>';
     const myRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio && r.year === getYear());
@@ -2439,6 +2489,11 @@ async function renderSchedule() {
     const body = document.getElementById('schedule-body');
     if (!body) return;
     body.innerHTML = '<div class="sched-empty">Загрузка...</div>';
+    // Бейдж кэша (ЛИСТ 15)
+    const badgeEl = document.getElementById('schedule-cache-badge');
+    if (badgeEl && typeof renderCacheBadge === 'function') {
+        setTimeout(() => { badgeEl.innerHTML = renderCacheBadge(getSchedulePath()); }, 100);
+    }
 
     if (!profile || !profile.fio) {
         body.innerHTML = '<div class="sched-empty">Нет профиля</div>';
@@ -2480,8 +2535,12 @@ async function renderSchedule() {
                'Фамилия (по умолчанию — ваша)';
     html += '<div class="search-input-wrap"><input type="text" id="sched-search-input" placeholder="' + ph + '" value="' + (scheduleSearchQuery || '') + '" oninput="onSearchInput(this.value)"></div></div>';
     html += '<div id="sched-days-list"></div>';
-    body.innerHTML = html;
+       body.innerHTML = html;
     renderScheduleListOnly(data);
+    // Тост офлайна (ЛИСТ 15)
+    if (typeof showOfflineToastIfNeeded === 'function') {
+        showOfflineToastIfNeeded([getSchedulePath()]);
+    }
 }
 
 function renderScheduleListOnly(data) {
@@ -2537,9 +2596,11 @@ function renderScheduleListOnly(data) {
             const timeStr = (info && info.display) ? info.display + ' · ' : '';
             let teacherLine = '';
             if (scheduleSearchMode !== 'teacher') teacherLine = ' · <span class="pair-teacher">' + item.teacher + '</span>';
-            pairsHtml += '<div class="' + cls + '"><div class="pair-title">' + p.pair + ' пара · ' + timeStr +
-                (p.group ? p.group : '') + ' · <span class="pair-room">каб. ' + (p.room || '—') + '</span>' + teacherLine + '</div>' +
-                '<div class="pair-desc">' + (p.discipline || '') + '</div></div>';
+           pairsHtml += '<div class="' + cls + '"><div class="pair-title">' + p.pair + ' пара · ' + timeStr +
+    (p.group ? p.group : '') + ' · <span class="pair-room">каб. ' + (p.room || '—') + '</span>' + teacherLine + '</div>' +
+    '<div class="pair-desc">' + (p.discipline || '') + '</div>' +
+    (typeof renderLessonButton === 'function' ? renderLessonButton(day.date, p.pair, p.group, p.discipline, item.teacher) : '') +
+    '</div>';
         }
         html += '<div class="sched-day' + dayOpen + '" id="sched-day-' + day.date + '">' +
             '<div class="sched-day-head" onclick="toggleScheduleDay(\'' + day.date + '\')">' +
@@ -2649,7 +2710,11 @@ async function loadEventsCache() {
         block.classList.remove('hidden');
         const title = document.getElementById('events-block-title');
         if (title) title.textContent = 'Мероприятия ' + getYear();
-    } else if (block) block.classList.add('hidden');
+     } else if (block) block.classList.add('hidden');
+    // Тост офлайна (ЛИСТ 15)
+    if (typeof showOfflineToastIfNeeded === 'function') {
+        showOfflineToastIfNeeded([getEventsPath()]);
+    }
     return parsed;
 }
 function parseCSV(text) {
@@ -2695,6 +2760,11 @@ async function toggleEventsBlock() {
 function renderEvents() {
     const body = document.getElementById('events-body');
     if (!body) return;
+    // Бейдж кэша (ЛИСТ 15)
+    const badgeEl = document.getElementById('events-cache-badge');
+    if (badgeEl && typeof renderCacheBadge === 'function') {
+        badgeEl.innerHTML = renderCacheBadge(getEventsPath());
+    }
     if (!eventsCache || !eventsCache.length) { body.innerHTML = '<div class="sched-empty">Нет данных</div>'; return; }
     const future = [], past = [];
     for (const ev of eventsCache) { if (eventIsPast(ev)) past.push(ev); else future.push(ev); }
@@ -3024,17 +3094,22 @@ async function renderPortfolio(c) {
 
         const sections = [];
 
-        // 1. КПК и обучение
-        const trainings = records.filter(r => r.type === 'training');
-        sections.push(table('🎓 КПК и обучение',
-            ['Название', 'Тип', 'Часы', 'Дата'],
-            trainings.map(t => [
-                t.name || '—',
-                t.trainingType === 'другое' && t.trainingTypeCustom ? t.trainingTypeCustom : (t.trainingType || '—'),
-                t.hours || '—',
-                t.date || '—'
-            ])
-        ));
+             // 1. КПК и обучение — таблица с колонкой «актуально» (ЛИСТ 14)
+        if (typeof renderPortfolioKpkTable === 'function') {
+            const kpkHtml = renderPortfolioKpkTable(records);
+            if (kpkHtml) sections.push(kpkHtml);
+        } else {
+            const trainings = records.filter(r => r.type === 'training');
+            sections.push(table('🎓 КПК и обучение',
+                ['Название', 'Тип', 'Часы', 'Дата'],
+                trainings.map(t => [
+                    t.name || '—',
+                    t.trainingType === 'другое' && t.trainingTypeCustom ? t.trainingTypeCustom : (t.trainingType || '—'),
+                    t.hours || '—',
+                    t.date || '—'
+                ])
+            ));
+        }
 
         // 2. Конкурсы преподавателя
         const tEvents = records.filter(r => r.type === 'event' && r.hasTeacher);
@@ -4718,6 +4793,13 @@ async function forceUpdate() {
     }
     location.reload();
 }
+   // ─── Рендер кнопок обновления при загрузке главного экрана ───
+document.addEventListener('DOMContentLoaded', () => {
+    const wrap = document.getElementById('refresh-buttons-wrap');
+    if (wrap && typeof renderRefreshButtons === 'function') {
+        wrap.innerHTML = renderRefreshButtons();
+    }
+});
 </script>
 <script>
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
