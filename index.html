@@ -1021,10 +1021,8 @@ async function editRecord(id) {
     const all = await getAllRecords();
     const rec = all.find(r => r.id === id);
     if (!rec) return;
-    const age = Date.now() - new Date(rec.createdAt).getTime();
-    if (age > 48 * 60 * 60 * 1000) { showToast('Прошло 48 часов'); return; }
     editingRecordId = id;
-    currentFormType = rec.type;
+        currentFormType = rec.type;
     document.getElementById('form-title').textContent = '✏️ Редактирование';
     renderForm(rec.type);
     formPhotos = (rec.photos || (rec.photo ? [rec.photo] : [])).slice();
@@ -1115,10 +1113,10 @@ async function showLocalRecords() {
         c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей.</p>';
     } else {
         c.innerHTML = filtered.reverse().map(r => {
-            const age = Date.now() - new Date(r.createdAt).getTime();
-            const canEdit = age < 48*60*60*1000;
-            const editBtn = canEdit ? '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>' : '';
-            const delBtn = canEdit ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить">🗑</button>' : '';
+           const age = Date.now() - new Date(r.createdAt).getTime();
+const canDelete = age < 48 * 60 * 60 * 1000;
+const editBtn = '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>';
+const delBtn = canDelete ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить (доступно 48 ч после создания)">🗑</button>' : '';
             const photoBtn = '<button class="record-photo" onclick="addPhotoToRecord(' + r.id + ')" title="Прикрепить фото">📷</button>';
             const photoCount = (r.photos && r.photos.length) ? r.photos.length : (r.photoFilenames && r.photoFilenames.length) ? r.photoFilenames.length : (r.photo ? 1 : 0);
             const photoTag = photoCount > 0 ? '<span class="photo-count">📷 ' + photoCount + '</span>' : '';
@@ -2440,12 +2438,7 @@ function fmtUpdated(iso) {
 function renderHoursBanner(hoursStats, updatedIso) {
     if (!profile) return '';
 
-    const refreshBtn = isAuthor()
-        ? '<button onclick="triggerFullScheduleRecalc()" title="Полный пересчёт часов" ' +
-          'style="margin-left:auto;background:white;border:1.5px solid #d9e2ff;color:#4A6CF7;' +
-          'border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;font-family:inherit;' +
-          'flex-shrink:0;">🔄</button>'
-        : '';
+   const refreshBtn = '';
 
     const updatedLabel = updatedIso
         ? '<span style="color:#8892a0;font-size:10px;margin-left:auto;">обновлено ' + fmtUpdated(updatedIso) + '</span>'
@@ -2934,9 +2927,8 @@ async function triggerFullScheduleRecalc() {
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 8 · CLOUD CACHE (offline-first)
    ═══════════════════════════════════════════════════════════════
-   Переопределяет только downloadJson и downloadText.
-   Все существующие функции (loadScheduleCache, renderPckStats и т.д.)
-   получают кэш автоматически, без правок.
+   Переопределяет downloadJson и downloadText. Все существующие
+   функции получают кэш автоматически, без правок.
 
    Логика:
    - Свежий кэш (< 15 мин) → отдаём сразу, сеть не трогаем
@@ -2960,19 +2952,27 @@ function withTimeout(promise, ms) {
 // Журнал: path → { source: 'network'|'cache'|'none', ts, stale }
 window.__fetchInfo = window.__fetchInfo || {};
 
-// Сохраняем оригиналы ДО переопределения
-const __origDownloadJson = window.downloadJson || downloadJson;
-const __origDownloadText = window.downloadText || (async function(path) {
-    // fallback, если downloadText нет в файле
+// ─── Базовые функции (единственное объявление в файле) ───
+async function downloadText(diskPath) {
     try {
-        const url = PROXY_URL + 'path=' + encodeURIComponent(path) + '&token=' + encodeURIComponent(YANDEX_TOKEN) + '&_=' + Date.now();
+        const url = PROXY_URL + 'path=' + encodeURIComponent(diskPath) +
+            '&token=' + encodeURIComponent(YANDEX_TOKEN) + '&_=' + Date.now();
         const res = await fetch(url);
         if (!res.ok) return null;
         return await res.text();
     } catch (e) { return null; }
-});
+}
+async function downloadJson(diskPath) {
+    const text = await downloadText(diskPath);
+    if (!text) return null;
+    try { return JSON.parse(text); } catch (e) { return null; }
+}
 
-// ─── Переопределение downloadJson ───
+// Сохраняем оригиналы ДО переопределения
+const __origDownloadText = downloadText;
+const __origDownloadJson = downloadJson;
+
+// ─── Переопределение downloadJson (с кэшем) ───
 window.downloadJson = async function(path, options) {
     options = options || {};
     const bypassCache = !!options.bypassCache;
@@ -3000,9 +3000,7 @@ window.downloadJson = async function(path, options) {
             window.__fetchInfo[path] = { source: 'network', ts: Date.now(), stale: false };
             return data;
         }
-    } catch (e) {
-        // timeout или сетевая ошибка — идём в fallback
-    }
+    } catch (e) {}
 
     if (cached && cached.data !== undefined) {
         window.__fetchInfo[path] = { source: 'cache', ts: cached.ts, stale: true };
@@ -3013,7 +3011,7 @@ window.downloadJson = async function(path, options) {
     return null;
 };
 
-// ─── Переопределение downloadText ───
+// ─── Переопределение downloadText (с кэшем) ───
 window.downloadText = async function(path, options) {
     options = options || {};
     const bypassCache = !!options.bypassCache;
@@ -3053,50 +3051,8 @@ window.downloadText = async function(path, options) {
     return null;
 };
 
-// ─── Сброс всего кэша справочников (для кнопки «Обновить данные») ───
-async function invalidateAllCache() {
-    const d = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = d.transaction('settings', 'readwrite');
-        const store = tx.objectStore('settings');
-        const req = store.openCursor();
-        req.onsuccess = e => {
-            const cursor = e.target.result;
-            if (cursor) {
-                const k = String(cursor.key);
-                if (k.indexOf('dl_') === 0 || k.indexOf('dlt_') === 0) {
-                    cursor.delete();
-                }
-                cursor.continue();
-            }
-        };
-        req.onerror = () => reject(req.error);
-        tx.oncomplete = () => resolve();
-    });
-}
-
-// ─── Бейдж-индикатор источника данных (для будущего ЛИСТА UI) ───
-function cacheBadgeFor(path) {
-    const info = window.__fetchInfo[path];
-    if (!info) return '';
-    if (info.source === 'network') {
-        return '<span style="font-size:10px;color:#1e8449;background:#e8f8ee;padding:1px 6px;border-radius:6px;margin-left:6px;">🟢 свежие</span>';
-    }
-    if (info.source === 'cache') {
-        const d = info.ts ? new Date(info.ts) : null;
-        const label = d
-            ? (String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + ' ' +
-               String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'))
-            : '—';
-        const color = info.stale ? '#b8860b' : '#8892a0';
-        const bg = info.stale ? '#fff8e6' : '#f0f3f7';
-        return '<span style="font-size:10px;color:' + color + ';background:' + bg + ';padding:1px 6px;border-radius:6px;margin-left:6px;" title="Кэш от ' + label + '">🟡 кэш ' + label + '</span>';
-    }
-    return '<span style="font-size:10px;color:#e74c3c;background:#fde2e2;padding:1px 6px;border-radius:6px;margin-left:6px;">⚪ нет данных</span>';
-}
-
 /* ═══════════════════════════════════════════════════════════════
-   ЛИСТ 8, 5· ПОРТФОЛИО (табличное отображение в статистике)
+   ЛИСТ 8.5 · ПОРТФОЛИО (табличное отображение в статистике)
    ═══════════════════════════════════════════════════════════════ */
 
 async function renderPortfolio(c) {
@@ -3205,6 +3161,426 @@ async function renderPortfolio(c) {
     }
 }
 
+   /* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 9 · SYNC ENGINE
+   ═══════════════════════════════════════════════════════════════
+   Двусторонний merge + soft-delete.
+   - При отправке: скачиваем облако, сливаем с локальными, заливаем merged
+   - Конфликт (изменено на двух устройствах): побеждает более поздний updatedAt
+   - Удаление: ставим deleted:true + deletedAt, запись остаётся в БД и в облаке
+   - Томбстоуны побеждают, если их updatedAt новее
+   ═══════════════════════════════════════════════════════════════ */
+
+function getRecordTimestamp(r) {
+    return new Date(r.updatedAt || r.createdAt || 0).getTime();
+}
+
+// ─── Слияние облачных и локальных записей ───
+// Возвращает { merged: [...], added, updated, deleted } — итоговый список для БД и облака
+async function mergeRecords(cloudRecords, localRecords) {
+    const localByKey = new Map();
+    for (const r of localRecords) {
+        const k = recordKey(r);
+        if (k) localByKey.set(k, r);
+    }
+    const cloudByKey = new Map();
+    for (const r of cloudRecords) {
+        const k = recordKey(r);
+        if (k) cloudByKey.set(k, r);
+    }
+
+    const allKeys = new Set([...localByKey.keys(), ...cloudByKey.keys()]);
+    const result = [];
+    let added = 0, updated = 0, deleted = 0;
+
+    for (const key of allKeys) {
+        const local = localByKey.get(key);
+        const cloud = cloudByKey.get(key);
+
+        // Только в локальных — добавляем в облако
+        if (local && !cloud) {
+            if (!local.deleted) {
+                result.push({ record: local, action: 'toCloud' });
+                added++;
+            } else {
+                result.push({ record: local, action: 'toCloud' });  // томбстоун тоже отправляем
+            }
+            continue;
+        }
+
+        // Только в облаке — добавляем локально
+        if (cloud && !local) {
+            if (!cloud.deleted) {
+                result.push({ record: cloud, action: 'toLocal' });
+                added++;
+            }
+            continue;
+        }
+
+        // Есть в обоих — сравниваем
+        const lTime = getRecordTimestamp(local);
+        const cTime = getRecordTimestamp(cloud);
+
+        if (cTime > lTime) {
+            // Облако новее — берём облачное
+            if (cloud.deleted) {
+                result.push({ record: cloud, action: 'deleteLocal' });
+                deleted++;
+            } else {
+                result.push({ record: cloud, action: 'toLocal' });
+                updated++;
+            }
+        } else if (lTime > cTime) {
+            // Локальное новее — отправляем в облако
+            if (local.deleted) {
+                result.push({ record: local, action: 'toCloud' });
+                deleted++;
+            } else {
+                result.push({ record: local, action: 'toCloud' });
+                updated++;
+            }
+        }
+        // Равные — ничего не делаем (обе версии идентичны)
+    }
+
+    return { result, added, updated, deleted };
+}
+
+// ─── Применение результата merge к локальной БД ───
+async function applyMergeToLocal(mergeResult, localRecords) {
+    const localByKey = new Map();
+    for (const r of localRecords) {
+        const k = recordKey(r);
+        if (k) localByKey.set(k, r);
+    }
+
+    for (const item of mergeResult) {
+        const rec = item.record;
+        const key = recordKey(rec);
+        const local = localByKey.get(key);
+
+        if (item.action === 'toLocal') {
+            if (local && local.id) {
+                rec.id = local.id;
+                rec.teacher = profile.fio;
+                rec.teacherLogin = profile.login;
+                rec.pck = profile.pck;
+                rec.sent = true;
+                rec.fromCloud = true;
+                await updateRecord(rec);
+            } else {
+                rec.teacher = profile.fio;
+                rec.teacherLogin = profile.login;
+                rec.pck = profile.pck;
+                rec.sent = true;
+                rec.fromCloud = true;
+                if (!rec.uid) rec.uid = key;
+                await saveRecordToDB(rec);
+            }
+        } else if (item.action === 'deleteLocal') {
+            if (local && local.id) {
+                rec.id = local.id;
+                await updateRecord(rec);
+            }
+        }
+        // 'toCloud' — ничего с локальной БД, она уже правильная
+    }
+}
+
+// ─── Переопределение mergeWithCloud ───
+async function mergeWithCloud() {
+    if (!profile) return { added: 0, updated: 0, deleted: 0 };
+
+    const res = await getCloudData('data_' + profile.login,
+        getDataFile(profile.fio, profile.login), { force: true, ttl: 0 });
+    const data = res.data;
+    if (!data) return { added: 0, updated: 0, deleted: 0 };
+
+    const cloudRecords = [];
+    for (const key of ['events','trainings','assessments','methodical','activity','lessons']) {
+        if (data[key] && Array.isArray(data[key])) {
+            cloudRecords.push.apply(cloudRecords, data[key]);
+        }
+    }
+
+    const localRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+    const { result, added, updated, deleted } = await mergeRecords(cloudRecords, localRecords);
+    await applyMergeToLocal(result, localRecords);
+
+    return { added, updated, deleted };
+}
+
+// ─── Переопределение sendToCloud ───
+async function sendToCloud() {
+    const btn = document.getElementById('send-cloud-btn');
+    const mainBtn = document.getElementById('main-send-btn');
+    const mainIcon = document.getElementById('main-send-icon');
+    const mainText = document.getElementById('main-send-text');
+    const mainBadge = document.getElementById('unsent-count');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+    if (mainBtn) mainBtn.disabled = true;
+    if (mainIcon) mainIcon.textContent = '⏳';
+    if (mainText) mainText.textContent = 'Отправляем...';
+    if (mainBadge) mainBadge.style.display = 'none';
+
+    try {
+        // 1. Скачиваем облако и сливаем с локальными
+        const res = await getCloudData('data_' + profile.login,
+            getDataFile(profile.fio, profile.login), { force: true, ttl: 0 });
+        const cloudData = res.data;
+        const cloudRecords = [];
+        if (cloudData) {
+            for (const key of ['events','trainings','assessments','methodical','activity','lessons']) {
+                if (cloudData[key] && Array.isArray(cloudData[key])) {
+                    cloudRecords.push.apply(cloudRecords, cloudData[key]);
+                }
+            }
+        }
+
+        const allLocal = await getAllRecords();
+        const localRecords = allLocal.filter(r => r.teacher === profile.fio);
+        const { result } = await mergeRecords(cloudRecords, localRecords);
+        await applyMergeToLocal(result, localRecords);
+
+        // 2. Формируем итоговый файл из объединённых данных
+        const finalRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
+
+        if (finalRecords.length === 0) {
+            showToast('Нет данных для отправки');
+        } else {
+            await ensureFolder(ROOT_FOLDER);
+            await ensureFolder(ROOT_FOLDER + '/Входящие');
+            await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
+            await ensureFolder(getPhotosFolder(profile.fio, profile.login));
+
+            // Загрузка фото
+            for (const record of finalRecords) {
+                if (!record.photos) record.photos = record.photo ? [record.photo] : [];
+                if (record.photos.length && !record.photosUploaded) {
+                    try {
+                        const filenames = [];
+                        for (let i = 0; i < record.photos.length; i++) {
+                            const filename = buildPhotoName(record, i, record.photos.length);
+                            const blob = await (await fetch(record.photos[i])).blob();
+                            await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
+                            filenames.push(filename);
+                        }
+                        record.photoFilenames = filenames;
+                        record.photosUploaded = true;
+                        delete record.photo; delete record.photos;
+                        await updateRecord(record);
+                    } catch (e) { console.error('photo upload error', e); }
+                }
+            }
+
+            // Формируем файл
+            const finalData = {
+                profile: { fio: profile.fio, login: profile.login },
+                events: finalRecords.filter(r => r.type === 'event'),
+                trainings: finalRecords.filter(r => r.type === 'training'),
+                assessments: finalRecords.filter(r => r.type === 'assessment'),
+                methodical: finalRecords.filter(r => r.type === 'methodical'),
+                activity: finalRecords.filter(r => r.type === 'activity'),
+                lessons: finalRecords.filter(r => r.type === 'lesson'),
+                updated: new Date().toISOString()
+            };
+
+            await uploadToYandex(getDataFile(profile.fio, profile.login), JSON.stringify(finalData, null, 2));
+
+            // Помечаем всё как sent
+            for (const r of finalRecords) {
+                if (!r.sent) { r.sent = true; await updateRecord(r); }
+            }
+            showToast('✅ Отправлено: ' + finalRecords.length);
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Ошибка: ' + e.message);
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить'; }
+    if (mainBtn) mainBtn.disabled = false;
+    if (mainIcon) mainIcon.textContent = '📤';
+    if (mainText) mainText.textContent = 'Отправить в облако';
+    if (mainBadge) mainBadge.style.display = '';
+    updateUnsentCount();
+    if (document.getElementById('screen-records').classList.contains('active')) showLocalRecords();
+}
+
+// ─── Переопределение deleteRecord (soft-delete) ───
+async function deleteRecord(id) {
+    if (!confirm('Удалить запись? Она исчезнет на всех устройствах после синхронизации.')) return;
+    const all = await getAllRecords();
+    const rec = all.find(r => r.id === id);
+    if (!rec) return;
+    rec.deleted = true;
+    rec.deletedAt = new Date().toISOString();
+    rec.updatedAt = new Date().toISOString();
+    rec.sent = false;
+    await updateRecord(rec);
+    showToast('🗑 Удалено');
+    showLocalRecords();
+    updateUnsentCount();
+}
+
+   /* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 10 · СПРАВОЧНИК СТУДЕНТОВ
+   ═══════════════════════════════════════════════════════════════
+   Читает students.json, даёт список групп и студентов.
+   Используется в формах «Контроль» и «Событие → Студенты».
+   ═══════════════════════════════════════════════════════════════ */
+
+const STUDENTS_PATH = ROOT_FOLDER + '/Справочники/students.json';
+
+let studentsCache = null;   // { groups: { "ИС-21": [...], ... } }
+let studentsLoadPromise = null;
+
+// ─── Загрузка справочника (с кэшем через ЛИСТ 8) ───
+async function loadStudents(forceReload) {
+    if (studentsCache && !forceReload) return studentsCache;
+    if (studentsLoadPromise && !forceReload) return studentsLoadPromise;
+
+    studentsLoadPromise = (async () => {
+        try {
+            const data = await downloadJson(STUDENTS_PATH);
+            if (data && data.groups && typeof data.groups === 'object') {
+                studentsCache = data;
+                return data;
+            }
+            studentsCache = { groups: {} };
+            return studentsCache;
+        } catch (e) {
+            console.warn('students load error:', e);
+            studentsCache = { groups: {} };
+            return studentsCache;
+        } finally {
+            studentsLoadPromise = null;
+        }
+    })();
+    return studentsLoadPromise;
+}
+
+// ─── Список групп (отсортированный) ───
+async function getGroups() {
+    const data = await loadStudents();
+    if (!data || !data.groups) return [];
+    return Object.keys(data.groups).sort((a, b) => {
+        // Сортируем по алфавиту, но числа в конце — по возрастанию
+        const an = a.replace(/\s+/g, ''), bn = b.replace(/\s+/g, '');
+        return an.localeCompare(bn, 'ru');
+    });
+}
+
+// ─── Студенты по группе ───
+async function getStudentsByGroup(group) {
+    if (!group) return [];
+    const data = await loadStudents();
+    if (!data || !data.groups) return [];
+    // Ищем точное совпадение, потом — с нормализацией (убираем пробелы)
+    if (data.groups[group]) return data.groups[group].slice();
+    const norm = String(group).replace(/\s+/g, '').toLowerCase();
+    for (const g of Object.keys(data.groups)) {
+        if (String(g).replace(/\s+/g, '').toLowerCase() === norm) {
+            return data.groups[g].slice();
+        }
+    }
+    return [];
+}
+
+// ─── Обратный поиск: группа по ФИО ───
+async function getGroupOfStudent(fio) {
+    if (!fio) return null;
+    const data = await loadStudents();
+    if (!data || !data.groups) return null;
+    const target = String(fio).trim().toLowerCase().replace(/\s+/g, ' ');
+    for (const group of Object.keys(data.groups)) {
+        for (const student of data.groups[group]) {
+            if (String(student).trim().toLowerCase().replace(/\s+/g, ' ') === target) {
+                return group;
+            }
+        }
+    }
+    return null;
+}
+
+// ─── HTML: <select> групп с возможностью ввода вручную ───
+// Возвращает строку для вставки в форму
+async function groupsSelectHtml(id, selected, opts) {
+    opts = opts || {};
+    const groups = await getGroups();
+    const placeholder = opts.placeholder || '— выберите группу —';
+    const allowCustom = opts.allowCustom !== false;   // по умолчанию разрешаем ввод
+
+    let html = '<select id="' + id + '"' +
+        (opts.onchange ? ' onchange="' + opts.onchange + '"' : '') + '>';
+    html += '<option value="">' + placeholder + '</option>';
+    for (const g of groups) {
+        html += '<option value="' + g.replace(/"/g, '&quot;') + '"' +
+            (g === selected ? ' selected' : '') + '>' + g + '</option>';
+    }
+    if (allowCustom) {
+        // Если выбранное значение не из списка — добавляем как «другое»
+        if (selected && !groups.includes(selected)) {
+            html += '<option value="' + selected.replace(/"/g, '&quot;') + '" selected>' +
+                selected + ' (вручную)</option>';
+        }
+        html += '<option value="__custom__">— другая (ввести вручную) —</option>';
+    }
+    html += '</select>';
+    return html;
+}
+
+// ─── Переключение на ручной ввод группы ───
+// Вызывается из onchange select'а, если выбран __custom__
+function onGroupSelectChange(selectEl, inputId) {
+    if (!selectEl || !inputId) return;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (selectEl.value === '__custom__') {
+        input.classList.remove('hidden');
+        input.focus();
+        selectEl.value = '';
+    } else {
+        input.classList.add('hidden');
+        input.value = '';
+    }
+}
+
+// ─── Обновление селекта группы при открытии формы ───
+// Вызывается из renderAssessmentForm / addStudentsGroup после вставки
+async function hydrateGroupSelect(selectId, inputId, currentValue) {
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl) return;
+    const groups = await getGroups();
+    let html = '<option value="">— выберите группу —</option>';
+    for (const g of groups) {
+        html += '<option value="' + g.replace(/"/g, '&quot;') + '"' +
+            (g === currentValue ? ' selected' : '') + '>' + g + '</option>';
+    }
+    if (currentValue && !groups.includes(currentValue)) {
+        html += '<option value="' + currentValue.replace(/"/g, '&quot;') + '" selected>' +
+            currentValue + ' (вручную)</option>';
+    }
+    html += '<option value="__custom__">— другая (ввести вручную) —</option>';
+    selectEl.innerHTML = html;
+    if (inputId) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            if (currentValue && !groups.includes(currentValue)) {
+                input.classList.remove('hidden');
+                input.value = currentValue;
+            } else {
+                input.classList.add('hidden');
+                input.value = '';
+            }
+        }
+    }
+}
+   
+/* ═══════════════════════════════════════════════════════════════
+   ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+   ═══════════════════════════════════════════════════════════════ */
+
 /* ─── Тост ─── */
 function showToast(msg) {
     const t = document.getElementById('toast');
@@ -3212,23 +3588,6 @@ function showToast(msg) {
     t.classList.add('show');
     clearTimeout(t._timer);
     t._timer = setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-/* ─── Утилита: скачивание текста через прокси ─── */
-async function downloadText(diskPath) {
-    try {
-        const url = PROXY_URL + 'path=' + encodeURIComponent(diskPath) + '&token=' + encodeURIComponent(YANDEX_TOKEN) + '&_=' + Date.now();
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        return await res.text();
-    } catch (e) { return null; }
-}
-
-/* ─── Утилита: скачивание JSON через прокси ─── */
-async function downloadJson(diskPath) {
-    const text = await downloadText(diskPath);
-    if (!text) return null;
-    try { return JSON.parse(text); } catch (e) { return null; }
 }
 
 /* ─── Сборка data-файла для облака ─── */
