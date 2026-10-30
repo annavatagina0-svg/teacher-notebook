@@ -930,28 +930,8 @@ async function saveRecord() {
         record.teacherLogin = profile.login;
         record.pck = profile.pck;
         record.year = getYear();
-        const
-           async function saveRecord() {
-    try {
-        const type = currentFormType;
-        const now = new Date().toISOString();
-        let record;
-        if (!profile || !profile.fio) { alert('Профиль не загружен'); return; }
-        if (editingRecordId) {
-            const all = await getAllRecords();
-            record = all.find(r => r.id === editingRecordId) || {};
-            record.updatedAt = now;
-        } else {
-            record = { uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8), createdAt: now, updatedAt: now, sent: false, fromCloud: false };
-        }
-        record.type = type;
-        record.teacher = profile.fio;
-        record.teacherLogin = profile.login;
-        record.pck = profile.pck;
-        record.year = getYear();
         const getVal = id => { const el = document.getElementById(id); return el ? String(el.value || '') : ''; };
         const getCheck = id => { const el = document.getElementById(id); return el ? !!el.checked : false; };
-
         if (type !== 'assessment') {
             record.name = getVal('f-name').trim();
             if (!record.name) { showToast('Введите название'); return; }
