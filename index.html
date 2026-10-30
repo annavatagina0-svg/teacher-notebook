@@ -520,7 +520,6 @@ const SVODKA_PATH = ROOT_FOLDER + '/Справочники/svodka.json';
 const AUTHOR_FIO = 'Ватагина Анна Николаевна';
 
 /* ═══════════════════════════════════════════════════════════════
-/* ═══════════════════════════════════════════════════════════════
    ЛИСТ 2 · ЗАПИСИ В БЛОКНОТЕ
    ═══════════════════════════════════════════════════════════════ */
 
@@ -1327,39 +1326,6 @@ async function saveEditedProfile() {
     backToMain();
 }
 
-async function mergeWithCloud() {
-    if (!profile) return { added: 0, updated: 0 };
-    const data = await downloadJson(getDataFile(profile.fio, profile.login));
-    if (!data) return { added: 0, updated: 0 };
-    const cloudRecords = [];
-    for (const key of ['events','trainings','assessments','methodical','activity']) {
-        if (data[key] && Array.isArray(data[key])) cloudRecords.push.apply(cloudRecords, data[key]);
-    }
-    const localRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-    const localByKey = new Map();
-    for (const r of localRecords) { const k = recordKey(r); if (k) localByKey.set(k, r); }
-    let added = 0, updated = 0;
-    for (const cloud of cloudRecords) {
-        const key = recordKey(cloud);
-        if (!key) continue;
-        const local = localByKey.get(key);
-        if (!local) {
-            cloud.teacher = profile.fio; cloud.teacherLogin = profile.login; cloud.pck = profile.pck;
-            cloud.sent = true; cloud.photoUploaded = true; cloud.photosUploaded = true; cloud.fromCloud = true;
-            if (!cloud.uid) cloud.uid = key;
-            await saveRecordToDB(cloud); added++;
-        } else {
-            const ct = new Date(cloud.updatedAt || cloud.createdAt).getTime();
-            const lt = new Date(local.updatedAt || local.createdAt).getTime();
-            if (ct > lt) {
-                const merged = Object.assign({}, cloud, { id: local.id, teacher: profile.fio, teacherLogin: profile.login, pck: profile.pck, sent: true, photoUploaded: true, photosUploaded: true, fromCloud: true });
-                if (!merged.uid) merged.uid = local.uid || key;
-                await updateRecord(merged); updated++;
-            }
-        }
-    }
-    return { added, updated };
-}
 function recordKey(r) { return r.uid || (r.createdAt ? 'c:' + r.createdAt : null); }
 
 function handleManualUpload(event) {
@@ -1438,58 +1404,6 @@ async function loadFromCloud() {
     if (btn) { btn.disabled = false; btn.textContent = '☁️ Загрузить'; }
 }
 
-async function sendToCloud() {
-    const btn = document.getElementById('send-cloud-btn');
-    const mainBtn = document.getElementById('main-send-btn');
-    const mainIcon = document.getElementById('main-send-icon');
-    const mainText = document.getElementById('main-send-text');
-    const mainBadge = document.getElementById('unsent-count');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
-    if (mainBtn) mainBtn.disabled = true;
-    if (mainIcon) mainIcon.textContent = '⏳';
-    if (mainText) mainText.textContent = 'Отправляем...';
-    if (mainBadge) mainBadge.style.display = 'none';
-    try {
-        await mergeWithCloud();
-        const allRecords = (await getAllRecords()).filter(r => r.teacher === profile.fio);
-        if (allRecords.length === 0) showToast('Нет данных для отправки');
-        else {
-            await ensureFolder(ROOT_FOLDER);
-            await ensureFolder(ROOT_FOLDER + '/Входящие');
-            await ensureFolder(ROOT_FOLDER + '/Входящие/photos');
-            await ensureFolder(getPhotosFolder(profile.fio, profile.login));
-            for (const record of allRecords) {
-                if (!record.photos) record.photos = record.photo ? [record.photo] : [];
-                if (record.photos.length && !record.photosUploaded) {
-                    try {
-                        const filenames = [];
-                        for (let i = 0; i < record.photos.length; i++) {
-                            const filename = buildPhotoName(record, i, record.photos.length);
-                            const blob = await (await fetch(record.photos[i])).blob();
-                            await uploadBlobToYandex(getPhotosFolder(profile.fio, profile.login) + '/' + filename, blob);
-                            filenames.push(filename);
-                        }
-                        record.photoFilenames = filenames;
-                        record.photosUploaded = true;
-                        delete record.photo; delete record.photos;
-                        await updateRecord(record);
-                    } catch (e) { console.error('photo upload error', e); }
-                }
-            }
-            const data = await buildDataFile();
-            await uploadToYandex(getDataFile(profile.fio, profile.login), JSON.stringify(data, null, 2));
-            for (const r of allRecords) if (!r.sent) { r.sent = true; await updateRecord(r); }
-            showToast('✅ Отправлено: ' + allRecords.length);
-        }
-    } catch (e) { console.error(e); alert('Ошибка: ' + e.message); }
-    if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить'; }
-    if (mainBtn) mainBtn.disabled = false;
-    if (mainIcon) mainIcon.textContent = '📤';
-    if (mainText) mainText.textContent = 'Отправить в облако';
-    if (mainBadge) mainBadge.style.display = '';
-    updateUnsentCount();
-    if (document.getElementById('screen-records').classList.contains('active')) showLocalRecords();
-}
 
 function getYear() { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth() + 1; const start = m >= 9 ? y : y - 1; return start + '-' + (start + 1); }
 function slug(str) { return String(str || '').trim().replace(/[^a-zA-Zа-яА-Я0-9\s\-_.]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 60) || 'без_названия'; }
@@ -3645,7 +3559,363 @@ async function hydrateGroupSelect(selectId, inputId, currentValue) {
         }
     }
 }
-   
+
+   /* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 11 · ЕЖЕДНЕВНИК (посещаемость + оценки)
+   ═══════════════════════════════════════════════════════════════
+   Одна запись = одна пара. Тип: 'lesson'.
+   Точка входа: тап по паре в расписании → кнопка «✏️ Отметить».
+   uid: lesson_<date>_<pairNum>_<group> — стабильный.
+   Если тип занятия ≠ «обычная» → создаётся assessment с uid
+   'assessment_from_' + lesson.uid (критерии 3, 4, 12 работают без правок).
+   ═══════════════════════════════════════════════════════════════ */
+
+let currentLessonContext = null;   // { date, pairNum, group, subject, teacher }
+
+// ─── Открыть ежедневник по паре из расписания ───
+async function openLessonDiary(dateIso, pairNum, group, subject, teacher) {
+    const uid = 'lesson_' + dateIso + '_' + pairNum + '_' + group;
+    currentLessonContext = { date: dateIso, pairNum: pairNum, group: group, subject: subject || '', teacher: teacher || profile.fio };
+    currentFormType = 'lesson';
+    editingRecordId = null;
+
+    // Ищем существующую запись по uid
+    const all = await getAllRecords();
+    const existing = all.find(r => r.uid === uid && r.teacher === profile.fio && !r.deleted);
+
+    document.getElementById('form-title').textContent = '📓 Ежедневник · ' + group + ' · ' + pairNum + ' пара';
+    renderLessonForm(existing || null);
+    showScreen('screen-form');
+}
+
+// ─── Форма ежедневника ───
+async function renderLessonForm(existing) {
+    const c = document.getElementById('form-content');
+    const ctx = currentLessonContext;
+    const dateRuStr = formatDateRu ? formatDateRu(ctx.date) : ctx.date;
+    const pairInfo = (typeof PAIR_TIMES !== 'undefined' && PAIR_TIMES.find(p => p.num === ctx.pairNum)) || null;
+    const timeStr = pairInfo ? pairInfo.display : '';
+
+    // Загружаем студентов из справочника
+    let students = [];
+    try { students = await getStudentsByGroup(ctx.group); } catch (e) { students = []; }
+
+    // Если есть существующая запись — берём из неё
+    let studentStates = [];
+    if (existing && existing.students && existing.students.length) {
+        studentStates = existing.students.map(s => ({ name: s.name, present: s.present !== false, grade: s.grade || null, note: s.note || '' }));
+    } else {
+        studentStates = students.map(name => ({ name, present: true, grade: null, note: '' }));
+    }
+
+    let html = '';
+    html += '<div class="card"><h3>Информация о паре</h3>' +
+        '<p style="font-size:13px;color:#6b7684;margin-bottom:6px;">' +
+        '📅 ' + dateRuStr + (timeStr ? ' · ' + timeStr : '') + '<br>' +
+        '👥 Группа: <b>' + ctx.group + '</b><br>' +
+        '📚 ' + (ctx.subject || '—') + '<br>' +
+        '👤 ' + (ctx.teacher || '—') + '</p></div>';
+
+    // Тип занятия
+    const lessonTypes = ['обычная','входной','срезовая','итоговая','зачёт','экзамен','проект'];
+    const curType = (existing && existing.lessonType) || 'обычная';
+    html += '<div class="card"><h3>Тип занятия</h3>' +
+        '<div class="form-group"><select id="l-type">' +
+        lessonTypes.map(t => '<option value="' + t + '"' + (t === curType ? ' selected' : '') + '>' + t + '</option>').join('') +
+        '</select><p class="hint">Если не «обычная» — автоматически создастся запись «Контроль» для критериев 3, 4, 12.</p></div></div>';
+
+    // Список студентов
+    if (!studentStates.length) {
+        html += '<div class="card"><h3>Студенты</h3>' +
+            '<p style="font-size:13px;color:#8892a0;">Группа «' + ctx.group + '» не найдена в справочнике.<br>' +
+            'Можно вести учёт без списка: отметь ниже тип и сохрани.</p>' +
+            '<div class="form-group" style="margin-top:10px;"><label>Всего в группе</label><input type="number" id="l-total" value="' + ((existing && existing.total) || 0) + '"></div>' +
+            '<div class="form-group"><label>Присутствовало</label><input type="number" id="l-present" value="' + ((existing && existing.presentCount) || 0) + '"></div>' +
+            '</div>';
+    } else {
+        html += '<div class="card"><h3>Посещаемость и оценки <span style="font-size:11px;color:#8892a0;font-weight:400;">(' + studentStates.length + ' чел.)</span></h3>' +
+            '<p class="hint" style="margin-bottom:10px;">По умолчанию все <b>присутствуют</b>. Отметь отсутствующих и поставь оценки.</p>' +
+            '<div id="l-students-list">';
+        studentStates.forEach((s, i) => {
+            html += '<div class="sub-block" data-idx="' + i + '" style="padding:8px 10px;margin-bottom:6px;">' +
+                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                '<span style="flex:1;font-size:13px;font-weight:500;">' + s.name + '</span>' +
+                '<label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;">' +
+                '<input type="checkbox" class="l-present" ' + (s.present ? 'checked' : '') + '> присутствует' +
+                '</label>' +
+                '<select class="l-grade" style="width:60px;padding:4px 6px;font-size:13px;">' +
+                '<option value="">—</option>' +
+                [2,3,4,5].map(g => '<option value="' + g + '"' + (s.grade === g ? ' selected' : '') + '>' + g + '</option>').join('') +
+                '</select>' +
+                '</div>' +
+                '<input type="text" class="l-note" placeholder="комментарий (необязательно)" value="' + (s.note || '').replace(/"/g, '&quot;') + '" style="margin-top:6px;padding:6px 8px;font-size:12px;">' +
+                '</div>';
+        });
+        html += '</div></div>';
+    }
+
+    // Заметка к паре
+    html += '<div class="card"><h3>Заметка к паре</h3>' +
+        '<div class="form-group"><textarea id="l-lesson-note" placeholder="Что прошли, что задали, что важно...">' + ((existing && existing.lessonNote) || '') + '</textarea></div></div>';
+
+    c.innerHTML = html;
+}
+
+// ─── Кнопка «Отметить» на карточке пары в расписании ───
+// Вызывается из renderScheduleListOnly — добавляем в pairsHtml
+function renderLessonButton(dateIso, pairNum, group, subject, teacher) {
+    // Кнопка только если есть группа (иначе некого отмечать)
+    if (!group) return '';
+    const encoded = encodeURIComponent(JSON.stringify({ dateIso, pairNum, group, subject, teacher }));
+    return '<button class="event-create-btn" style="margin-top:6px;padding:6px 10px;font-size:12px;" ' +
+        'onclick="event.stopPropagation(); openLessonDiaryEnc(\'' + encoded + '\')">✏️ Отметить</button>';
+}
+function openLessonDiaryEnc(encoded) {
+    try {
+        const d = JSON.parse(decodeURIComponent(encoded));
+        openLessonDiary(d.dateIso, d.pairNum, d.group, d.subject, d.teacher);
+    } catch (e) { console.warn('openLessonDiaryEnc:', e); }
+}
+
+// ─── Конец ЛИСТА 11.1 ───
+// Продолжение (11.2): saveLesson, слияние с assessment, рендер «Нагрузки».
+   // ─── Сохранение ежедневника ───
+async function saveLesson() {
+    try {
+        if (!profile || !profile.fio) { alert('Профиль не загружен'); return; }
+        const ctx = currentLessonContext;
+        if (!ctx) { alert('Нет контекста пары'); return; }
+
+        const lessonType = (document.getElementById('l-type') || {}).value || 'обычная';
+        const lessonNote = (document.getElementById('l-lesson-note') || {}).value || '';
+
+        // Собираем студентов
+        let students = [];
+        let total = 0, presentCount = 0;
+        const list = document.getElementById('l-students-list');
+        if (list) {
+            const blocks = list.querySelectorAll('.sub-block');
+            blocks.forEach(b => {
+                const nameEl = b.querySelector('span[style*="flex:1"]');
+                const name = nameEl ? nameEl.textContent.trim() : '';
+                const present = b.querySelector('.l-present').checked;
+                const gradeVal = b.querySelector('.l-grade').value;
+                const grade = gradeVal ? parseInt(gradeVal) : null;
+                const note = b.querySelector('.l-note').value.trim();
+                students.push({ name, present, grade, note });
+                total++;
+                if (present) presentCount++;
+            });
+        } else {
+            total = parseInt((document.getElementById('l-total') || {}).value) || 0;
+            presentCount = parseInt((document.getElementById('l-present') || {}).value) || 0;
+        }
+
+        const now = new Date().toISOString();
+        const uid = 'lesson_' + ctx.date + '_' + ctx.pairNum + '_' + ctx.group;
+
+        // Ищем существующую запись
+        const all = await getAllRecords();
+        const existing = all.find(r => r.uid === uid && r.teacher === profile.fio);
+
+        let rec;
+        if (existing) {
+            rec = existing;
+            rec.updatedAt = now;
+        } else {
+            rec = {
+                uid: uid,
+                createdAt: now,
+                updatedAt: now,
+                sent: false,
+                fromCloud: false
+            };
+        }
+        rec.type = 'lesson';
+        rec.teacher = profile.fio;
+        rec.teacherLogin = profile.login;
+        rec.pck = profile.pck;
+        rec.year = getYear();
+        rec.date = ctx.date;
+        rec.pairNum = ctx.pairNum;
+        rec.group = ctx.group;
+        rec.subject = ctx.subject || '';
+        rec.teacherName = ctx.teacher || profile.fio;
+        rec.lessonType = lessonType;
+        rec.lessonNote = lessonNote;
+        rec.students = students;
+        rec.total = total;
+        rec.presentCount = presentCount;
+
+        if (existing) await updateRecord(rec);
+        else await saveRecordToDB(rec);
+
+        // Если тип ≠ обычная → создаём/обновляем assessment
+        if (lessonType !== 'обычная') {
+            await mergeLessonIntoAssessment(rec);
+        }
+
+        currentLessonContext = null;
+        clearForm();
+        backToMain();
+        showToast('✅ Пара сохранена: ' + ctx.group + ', ' + ctx.pairNum + ' пара');
+    } catch (e) {
+        console.error('saveLesson error:', e);
+        alert('Ошибка при сохранении пары:\n' + e.message);
+    }
+}
+
+// ─── Автоматическое создание assessment из пары ───
+async function mergeLessonIntoAssessment(lesson) {
+    try {
+        const uid = 'assessment_from_' + lesson.uid;
+        const now = new Date().toISOString();
+        const all = await getAllRecords();
+        const existing = all.find(r => r.uid === uid && r.teacher === profile.fio);
+
+        // Считаем оценки
+        let count5 = 0, count4 = 0, count3 = 0, count2 = 0;
+        for (const s of (lesson.students || [])) {
+            if (s.grade === 5) count5++;
+            else if (s.grade === 4) count4++;
+            else if (s.grade === 3) count3++;
+            else if (s.grade === 2) count2++;
+        }
+        const taken = count5 + count4 + count3 + count2;
+
+        // Маппинг типа занятия в assessmentType
+        const typeMap = {
+            'входной': 'входной контроль',
+            'срезовая': 'срезовая к/р',
+            'итоговая': 'итоговая оценка',
+            'зачёт': 'итоговая оценка',
+            'экзамен': 'итоговая оценка',
+            'проект': 'проектная деятельность'
+        };
+        const assessmentType = typeMap[lesson.lessonType] || 'другое';
+
+        let rec;
+        if (existing) {
+            rec = existing;
+            rec.updatedAt = now;
+        } else {
+            rec = {
+                uid: uid,
+                createdAt: now,
+                updatedAt: now,
+                sent: false,
+                fromCloud: false
+            };
+        }
+        rec.type = 'assessment';
+        rec.teacher = profile.fio;
+        rec.teacherLogin = profile.login;
+        rec.pck = profile.pck;
+        rec.year = lesson.year;
+        rec.date = lesson.date;
+        rec.group = lesson.group;
+        rec.subject = lesson.subject;
+        rec.name = lesson.subject || 'Контроль';
+        rec.assessmentType = assessmentType;
+        rec.total = lesson.total || 0;
+        rec.absent = (lesson.total || 0) - (lesson.presentCount || 0);
+        rec.ovz = false;
+        rec.count5 = count5;
+        rec.count4 = count4;
+        rec.count3 = count3;
+        rec.count2 = count2;
+        rec.taken = taken;
+        rec.fromLesson = lesson.uid;
+
+        if (existing) await updateRecord(rec);
+        else await saveRecordToDB(rec);
+    } catch (e) {
+        console.warn('mergeLessonIntoAssessment error:', e);
+    }
+}
+
+// ─── Раздел «Нагрузка» — список отмеченных пар ───
+async function showLessonsList() {
+    const c = document.getElementById('records-list');
+    if (!c) return;
+
+    const all = await getAllRecords();
+    const lessons = all.filter(r => r.type === 'lesson' && r.teacher === profile.fio && !r.deleted);
+    lessons.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    if (!lessons.length) {
+        c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">' +
+            'Пока нет отмеченных пар.<br>Открой расписание и нажми «✏️ Отметить» на карточке пары.</p>';
+        showScreen('screen-records');
+        return;
+    }
+
+    // Группируем по дате
+    const byDate = new Map();
+    for (const l of lessons) {
+        if (!byDate.has(l.date)) byDate.set(l.date, []);
+        byDate.get(l.date).push(l);
+    }
+
+    let html = '';
+    for (const [date, list] of byDate) {
+        list.sort((a, b) => (a.pairNum || 0) - (b.pairNum || 0));
+        const dateRuStr = formatDateRu ? formatDateRu(date) : date;
+        html += '<h3 style="font-size:14px;font-weight:700;margin:14px 4px 8px;color:#4A6CF7;">📅 ' + dateRuStr + '</h3>';
+        for (const l of list) {
+            const total = l.total || 0;
+            const present = l.presentCount || 0;
+            const absent = total - present;
+            const pairInfo = (typeof PAIR_TIMES !== 'undefined' && PAIR_TIMES.find(p => p.num === l.pairNum)) || null;
+            const timeStr = pairInfo ? pairInfo.display : '';
+            const absentNames = (l.students || []).filter(s => !s.present).map(s => s.name).slice(0, 5).join(', ');
+            const absentMore = absent > 5 ? ' и ещё ' + (absent - 5) : '';
+
+            let body = '<p>' + [l.pairNum + ' пара', timeStr, l.group].filter(Boolean).join(' • ') + '</p>';
+            body += '<p>' + (l.subject || '—') + '</p>';
+            if (l.lessonType && l.lessonType !== 'обычная') {
+                body += '<div class="tags"><span class="tag" style="background:#fff4e6;color:#d97706;">' + l.lessonType + '</span></div>';
+            }
+            body += '<p style="margin-top:6px;">👥 ' + present + ' из ' + total + ' (отсутствуют: ' + absent + ')' + '</p>';
+            if (absentNames) body += '<p style="font-size:12px;color:#e74c3c;">🚫 ' + absentNames + absentMore + '</p>';
+            if (l.lessonNote) body += '<p style="font-size:12px;color:#6b7684;font-style:italic;">📝 ' + l.lessonNote + '</p>';
+
+            const editBtn = '<button class="record-edit" onclick="openLessonDiaryForEdit(' + l.id + ')" title="Редактировать">✏️</button>';
+            const delBtn = '<button class="record-delete" onclick="deleteRecord(' + l.id + ')" title="Удалить">🗑</button>';
+
+            let cls = 'record';
+            if (l.fromCloud) cls += ' cloud'; else if (!l.sent) cls += ' unsent';
+
+            html += '<div class="' + cls + '">' +
+                '<div class="record-header"><h3>📓 ' + l.group + ' · ' + l.pairNum + ' пара</h3>' +
+                '<div class="record-actions">' + editBtn + delBtn + '</div></div>' +
+                body + '</div>';
+        }
+    }
+    c.innerHTML = html;
+    showScreen('screen-records');
+}
+
+// ─── Открыть пару на редактирование ───
+async function openLessonDiaryForEdit(id) {
+    const all = await getAllRecords();
+    const rec = all.find(r => r.id === id);
+    if (!rec) return;
+    currentLessonContext = {
+        date: rec.date,
+        pairNum: rec.pairNum,
+        group: rec.group,
+        subject: rec.subject,
+        teacher: rec.teacherName
+    };
+    currentFormType = 'lesson';
+    editingRecordId = id;
+    document.getElementById('form-title').textContent = '📓 Ежедневник · ' + rec.group + ' · ' + rec.pairNum + ' пара';
+    await renderLessonForm(rec);
+    showScreen('screen-form');
+}
+
+// ─── Конец ЛИСТА 11.2 ───
 /* ═══════════════════════════════════════════════════════════════
    ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
    ═══════════════════════════════════════════════════════════════ */
