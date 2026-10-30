@@ -597,7 +597,7 @@ function cancelForm() { editingRecordId = null; backToMain(); }
 async function updateUnsentCount() {
     if (!profile) return;
     try {
-        const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.sent);
+        const records = (await getAllRecords()).filter(r => r.teacher === profile.fio && !r.sent && !r.deleted);
         const btn = document.getElementById('main-send-btn');
         const badge = document.getElementById('unsent-count');
         if (!btn) return;
@@ -666,6 +666,14 @@ function renderForm(type) {
     else if (type === 'methodical') c.innerHTML = renderMethodicalForm();
     else if (type === 'activity') c.innerHTML = renderActivityForm();
     bindPhotoPreview();
+    // Гидратация селекта группы для формы «Контроль»
+    if (type === 'assessment') {
+        setTimeout(() => {
+            if (typeof hydrateGroupSelect === 'function') {
+                hydrateGroupSelect('f-group-select', 'f-group', '');
+            }
+        }, 50);
+    }
 }
 function bindPhotoPreview() {
     formPhotos = [];
@@ -740,7 +748,10 @@ function renderAssessmentForm() {
             '<option value="входной контроль">Входной контроль</option><option value="срезовая к/р">Срезовая к/р</option>' +
             '<option value="итоговая оценка">Итоговая оценка</option><option value="проектная деятельность">Проектная деятельность</option><option value="другое">Другое</option>' +
         '</select></div>' +
-        '<div class="form-group"><label>Группа</label><input type="text" id="f-group"></div>' +
+        '<div class="form-group"><label>Группа</label>' +
+            '<select id="f-group-select" onchange="onGroupSelectChange(this, \'f-group\')"></select>' +
+            '<input type="text" id="f-group" class="hidden" style="margin-top:6px;" placeholder="Введите группу вручную">' +
+        '</div>' +
         '<div class="form-group"><label>Предмет/МДК</label><input type="text" id="f-subject"></div>' +
         '<div class="form-group"><label>Всего в группе</label><input type="number" id="f-total"></div>' +
         '<div class="form-group"><label>Отсутствовали</label><input type="number" id="f-absent"></div>' +
@@ -861,11 +872,20 @@ function addStudentsGroup(data) {
     document.getElementById('f-students-container').insertAdjacentHTML('beforeend',
         '<div class="sub-block" id="sgroup-' + id + '">' +
         '<div class="sub-block-header"><span>Группа</span><button type="button" onclick="document.getElementById(\'sgroup-' + id + '\').remove()">✕</button></div>' +
-        '<div class="form-group"><label>Группа</label><input type="text" class="s-group" value="' + (g.group || '') + '"></div>' +
+        '<div class="form-group"><label>Группа</label>' +
+            '<select class="s-group-select" onchange="onGroupSelectChange(this, \'s-group-custom-' + id + '\')"></select>' +
+            '<input type="text" class="s-group-custom hidden" id="s-group-custom-' + id + '" style="margin-top:6px;" placeholder="Введите группу вручную" value="' + (g.group || '') + '">' +
+        '</div>' +
         '<div class="form-group"><label>Количество участников</label><input type="number" class="s-count" value="' + (g.count || '') + '"></div>' +
         '<div class="form-group"><label>ФИО участников</label><textarea class="s-names">' + (g.names || '') + '</textarea></div>' +
         '<p class="hint">Победители</p><div class="s-diplomas" id="s-diplomas-' + id + '"></div>' +
         '<button type="button" class="add-btn" onclick="addDiploma(' + id + ')">+ Добавить место</button></div>');
+    // Гидратация селекта группы
+    setTimeout(() => {
+        if (typeof hydrateGroupSelect === 'function') {
+            hydrateGroupSelect('s-group-select-' + id, 's-group-custom-' + id, g.group || '');
+        }
+    }, 30);
     if (g.diplomas && g.diplomas.length) for (const d of g.diplomas) addDiploma(id, d);
 }
 function addDiploma(groupId, data) {
@@ -884,7 +904,34 @@ function addDiploma(groupId, data) {
         '<div class="form-group"><label>ФИО победителя</label><input type="text" class="s-winner" value="' + (d.winner || '') + '"></div></div>');
 }
 
+// ─── Хелпер: достать значение группы из селекта + ручного ввода ───
+function getGroupValue(selectEl, customInputEl) {
+    if (!selectEl) return '';
+    const v = selectEl.value;
+    if (v === '__custom__') return customInputEl ? String(customInputEl.value || '').trim() : '';
+    return v || '';
+}
+
 async function saveRecord() {
+    try {
+        const type = currentFormType;
+        const now = new Date().toISOString();
+        let record;
+        if (!profile || !profile.fio) { alert('Профиль не загружен'); return; }
+        if (editingRecordId) {
+            const all = await getAllRecords();
+            record = all.find(r => r.id === editingRecordId) || {};
+            record.updatedAt = now;
+        } else {
+            record = { uid: 'l' + Date.now() + Math.random().toString(36).slice(2,8), createdAt: now, updatedAt: now, sent: false, fromCloud: false };
+        }
+        record.type = type;
+        record.teacher = profile.fio;
+        record.teacherLogin = profile.login;
+        record.pck = profile.pck;
+        record.year = getYear();
+        const
+           async function saveRecord() {
     try {
         const type = currentFormType;
         const now = new Date().toISOString();
@@ -930,12 +977,15 @@ async function saveRecord() {
             }
             if (record.hasStudents) {
                 record.studentsGroups = [...document.querySelectorAll('#f-students-container .sub-block')].map(g => {
-                    const gEl = g.querySelector('.s-group'), cEl = g.querySelector('.s-count'), nEl = g.querySelector('.s-names');
+                    const selEl = g.querySelector('.s-group-select');
+                    const custEl = g.querySelector('.s-group-custom');
+                    const cEl = g.querySelector('.s-count'), nEl = g.querySelector('.s-names');
+                    const groupVal = getGroupValue(selEl, custEl);
                     const diplomas = [...g.querySelectorAll('.s-diplomas .sub-block')].map(d => {
                         const pEl = d.querySelector('.s-place'), wEl = d.querySelector('.s-winner');
                         return { place: pEl ? pEl.value : '', winner: wEl ? wEl.value : '' };
                     });
-                    return { group: gEl ? gEl.value : '', count: cEl ? cEl.value : '', names: nEl ? nEl.value : '', diplomas };
+                    return { group: groupVal, count: cEl ? cEl.value : '', names: nEl ? nEl.value : '', diplomas };
                 });
             }
             if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
@@ -947,7 +997,10 @@ async function saveRecord() {
             if (formPhotos.length) { record.photos = formPhotos.slice(); delete record.photo; record.photosUploaded = false; }
         } else if (type === 'assessment') {
             record.assessmentType = getVal('f-type');
-            record.group = getVal('f-group');
+            // Группа: из селекта + ручной ввод
+            const selEl = document.getElementById('f-group-select');
+            const custEl = document.getElementById('f-group');
+            record.group = getGroupValue(selEl, custEl);
             record.subject = getVal('f-subject');
             record.total = parseInt(getVal('f-total')) || 0;
             record.absent = parseInt(getVal('f-absent')) || 0;
@@ -1022,7 +1075,7 @@ async function editRecord(id) {
     const rec = all.find(r => r.id === id);
     if (!rec) return;
     editingRecordId = id;
-        currentFormType = rec.type;
+    currentFormType = rec.type;
     document.getElementById('form-title').textContent = '✏️ Редактирование';
     renderForm(rec.type);
     formPhotos = (rec.photos || (rec.photo ? [rec.photo] : [])).slice();
@@ -1044,8 +1097,14 @@ async function editRecord(id) {
             set('f-hours', rec.hours); set('f-place', rec.place);
         } else if (rec.type === 'assessment') {
             set('f-type', rec.assessmentType);
-            set('f-group', rec.group); set('f-subject', rec.subject); set('f-total', rec.total); set('f-absent', rec.absent);
+            set('f-subject', rec.subject); set('f-total', rec.total); set('f-absent', rec.absent);
             setC('f-ovz', rec.ovz);
+            // Гидратация селекта группы с текущим значением
+            if (typeof hydrateGroupSelect === 'function') {
+                hydrateGroupSelect('f-group-select', 'f-group', rec.group || '');
+            } else {
+                set('f-group', rec.group);
+            }
             if (rec.assessmentType === 'проектная деятельность') {
                 document.getElementById('f-grades-block').classList.add('hidden');
                 document.getElementById('f-project-block').classList.remove('hidden');
@@ -1113,10 +1172,10 @@ async function showLocalRecords() {
         c.innerHTML = '<p style="text-align:center;color:#8892a0;padding:40px 20px;font-size:14px;">Пока нет записей.</p>';
     } else {
         c.innerHTML = filtered.reverse().map(r => {
-           const age = Date.now() - new Date(r.createdAt).getTime();
-const canDelete = age < 48 * 60 * 60 * 1000;
-const editBtn = '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>';
-const delBtn = canDelete ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить (доступно 48 ч после создания)">🗑</button>' : '';
+            const age = Date.now() - new Date(r.createdAt).getTime();
+            const canDelete = age < 48 * 60 * 60 * 1000;
+            const editBtn = '<button class="record-edit" onclick="editRecord(' + r.id + ')" title="Редактировать">✏️</button>';
+            const delBtn = canDelete ? '<button class="record-delete" onclick="deleteRecord(' + r.id + ')" title="Удалить (доступно 48 ч после создания)">🗑</button>' : '';
             const photoBtn = '<button class="record-photo" onclick="addPhotoToRecord(' + r.id + ')" title="Прикрепить фото">📷</button>';
             const photoCount = (r.photos && r.photos.length) ? r.photos.length : (r.photoFilenames && r.photoFilenames.length) ? r.photoFilenames.length : (r.photo ? 1 : 0);
             const photoTag = photoCount > 0 ? '<span class="photo-count">📷 ' + photoCount + '</span>' : '';
@@ -1152,13 +1211,7 @@ const delBtn = canDelete ? '<button class="record-delete" onclick="deleteRecord(
     showScreen('screen-records');
 }
 
-async function deleteRecord(id) {
-    if (!confirm('Удалить эту запись?')) return;
-    await deleteRecordById(id);
-    showToast('🗑 Удалено');
-    showLocalRecords();
-}
-
+// deleteRecord — в ЛИСТЕ 9 (soft-delete)
 /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 3 · ПРОФИЛЬ И ОБЛАКО
    ═══════════════════════════════════════════════════════════════ */
@@ -3160,7 +3213,41 @@ async function renderPortfolio(c) {
         c.innerHTML = '<p style="text-align:center;color:#e74c3c;padding:20px;">Ошибка: ' + e.message + '</p>';
     }
 }
+       
+/* ═══════════════════════════════════════════════════════════════
+   ЛИСТ 9.1 · getCloudData (обёртка над downloadJson)
+   ═══════════════════════════════════════════════════════════════
+   ЛИСТ 9 вызывает getCloudData(...) для загрузки облачного файла.
+   Эта обёртка:
+   - по умолчанию использует кэш ЛИСТА 8 (TTL 15 мин)
+   - если opts.force === true → идёт в сеть, игнорируя кэш
+   - если opts.ttl задан → переопределяет TTL
+   - возвращает { data, source, stale } — как в ЛИСТЕ 8
+   ═══════════════════════════════════════════════════════════════ */
 
+async function getCloudData(cacheKey, path, opts) {
+    opts = opts || {};
+    const force = !!opts.force;
+    const ttl = (typeof opts.ttl === 'number') ? opts.ttl : undefined;
+
+    // Скачиваем через downloadJson (ЛИСТ 8), передавая опции
+    // bypassCache = force (если force → игнорируем кэш, идём в сеть)
+    const data = await downloadJson(path, {
+        bypassCache: force,
+        ttl: ttl
+    });
+
+    // Информация об источнике (ставится в downloadJson из ЛИСТА 8)
+    const info = (window.__fetchInfo && window.__fetchInfo[path]) || { source: 'none', ts: null, stale: true };
+
+    return {
+        data: data,
+        source: info.source,   // 'network' | 'cache' | 'none'
+        stale: info.stale,     // true если кэш устарел / сети не было
+        ts: info.ts
+    };
+}
+       
    /* ═══════════════════════════════════════════════════════════════
    ЛИСТ 9 · SYNC ENGINE
    ═══════════════════════════════════════════════════════════════
